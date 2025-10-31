@@ -1,0 +1,657 @@
+-- | Aegis RFQ - Yield Generation and Liquidity Pool System
+-- Diversified lending pools, LP tokens, yield strategies, and automated optimization
+
+module Yield where
+
+import DA.Time
+import Types
+import qualified Aegis
+
+-- LIQUIDITY POOL TEMPLATE
+-- | Diversified lending pool with multi-participant support
+-- Issues LP tokens and manages yield distribution
+template LiquidityPool with
+    poolId: Text
+    poolManager: Party
+    poolName: Text
+    poolStrategy: YieldStrategy
+    participants: [PoolParticipant]
+    totalLiquidity: Decimal
+    totalLPTokens: Decimal
+    activeLoans: [Text]  -- List of loan IDs funded by this pool
+    totalDeployed: Decimal
+    totalYieldEarned: Decimal
+    performanceMetrics: PoolPerformanceMetrics
+    createdAt: Time
+    lastRebalanceDate: Time
+  where
+    signatory poolManager
+    observer map (\p -> p.participant) participants
+
+    ensure
+      totalLiquidity >= 0.0 &&
+      totalLPTokens >= 0.0 &&
+      totalDeployed >= 0.0 &&
+      totalDeployed <= totalLiquidity &&
+      totalYieldEarned >= 0.0
+
+    key (poolManager, poolId): (Party, Text)
+    maintainer key._1
+
+    
+    -- PARTICIPATION CHOICES
+    
+
+    -- | Join pool by providing liquidity
+    choice JoinPool: ContractId LiquidityPool with
+        participant: Party
+        contributionAmount: Decimal
+      controller participant
+      do
+        now <- getTime
+        
+        assertMsg "Contribution must be positive" (contributionAmount > 0.0)
+        
+        -- Calculate LP tokens to issue (proportional to pool share)
+        let lpTokensToIssue = if totalLiquidity > 0.0
+              then (contributionAmount / totalLiquidity) * totalLPTokens
+              else contributionAmount  -- First participant gets 1:1
+        
+        -- Create new participant record
+        let newParticipant = PoolParticipant with
+              participant
+              contribution = contributionAmount
+              lpTokens = lpTokensToIssue
+              joinedAt = now
+              lastRewardClaim = now
+              accumulatedYield = 0.0
+        
+        -- Check if participant already exists
+        let existingParticipant = find (\p -> p.participant == participant) participants
+        
+        let updatedParticipants = case existingParticipant of
+              Some existing -> map (\p ->
+                if p.participant == participant
+                  then p with
+                    contribution = p.contribution + contributionAmount
+                    lpTokens = p.lpTokens + lpTokensToIssue
+                  else p
+                ) participants
+              None -> newParticipant :: participants
+        
+        create this with
+          participants = updatedParticipants
+          totalLiquidity = totalLiquidity + contributionAmount
+          totalLPTokens = totalLPTokens + lpTokensToIssue
+
+    -- | Withdraw liquidity from pool
+    choice WithdrawFromPool: (ContractId LiquidityPool, Decimal) with
+        participant: Party
+        lpTokensToRedeem: Decimal
+      controller participant
+      do
+        now <- getTime
+        
+        -- Find participant
+        let maybeParticipant = find (\p -> p.participant == participant) participants
+        
+        case maybeParticipant of
+          None -> abort "Participant not found in pool"
+          Some p -> do
+            assertMsg "Insufficient LP tokens" (p.lpTokens >= lpTokensToRedeem)
+            
+            -- Calculate withdrawal amount (proportional to LP tokens)
+            let withdrawalAmount = (lpTokensToRedeem / totalLPTokens) * totalLiquidity
+            
+            assertMsg "Insufficient liquidity" (totalLiquidity - totalDeployed >= withdrawalAmount)
+            
+            -- Update participant record
+            let updatedParticipants = map (\participant ->
+                  if participant.participant == p.participant
+                    then participant with
+                      contribution = participant.contribution - withdrawalAmount
+                      lpTokens = participant.lpTokens - lpTokensToRedeem
+                    else participant
+                  ) participants
+            
+            -- Remove participant if they have no more tokens
+            let finalParticipants = filter (\participant -> participant.lpTokens > 0.0) updatedParticipants
+            
+            poolCid <- create this with
+              participants = finalParticipants
+              totalLiquidity = totalLiquidity - withdrawalAmount
+              totalLPTokens = totalLPTokens - lpTokensToRedeem
+            
+            return (poolCid, withdrawalAmount)
+
+    
+    -- YIELD DISTRIBUTION CHOICES
+    
+
+    -- | Distribute yield to all participants
+    choice DistributeYield: ContractId LiquidityPool with
+        yieldAmount: Decimal
+        source: Text  -- Description of yield source
+      controller poolManager
+      do
+        now <- getTime
+        
+        assertMsg "Yield amount must be positive" (yieldAmount > 0.0)
+        
+        -- Distribute yield proportionally to LP token holdings
+        let updatedParticipants = map (\p ->
+              let participantShare = p.lpTokens / totalLPTokens
+                  participantYield = yieldAmount * participantShare
+              in p with accumulatedYield = p.accumulatedYield + participantYield
+              ) participants
+        
+        create this with
+          participants = updatedParticipants
+          totalYieldEarned = totalYieldEarned + yieldAmount
+
+    -- | Participant claims their accumulated yield
+    choice ClaimYield: (ContractId LiquidityPool, Decimal) with
+        participant: Party
+      controller participant
+      do
+        now <- getTime
+        
+        -- Find participant
+        let maybeParticipant = find (\p -> p.participant == participant) participants
+        
+        case maybeParticipant of
+          None -> abort "Participant not found in pool"
+          Some p -> do
+            let yieldToClaim = p.accumulatedYield
+            
+            assertMsg "No yield to claim" (yieldToClaim > 0.0)
+            
+            -- Update participant record
+            let updatedParticipants = map (\participant ->
+                  if participant.participant == p.participant
+                    then participant with
+                      accumulatedYield = 0.0
+                      lastRewardClaim = now
+                    else participant
+                  ) participants
+            
+            poolCid <- create this with
+              participants = updatedParticipants
+            
+            return (poolCid, yieldToClaim)
+
+    -- | Reinvest yield (compound growth)
+    choice ReinvestYield: ContractId LiquidityPool with
+        participant: Party
+      controller participant
+      do
+        now <- getTime
+        
+        -- Find participant
+        let maybeParticipant = find (\p -> p.participant == participant) participants
+        
+        case maybeParticipant of
+          None -> abort "Participant not found in pool"
+          Some p -> do
+            let yieldToReinvest = p.accumulatedYield
+            
+            assertMsg "No yield to reinvest" (yieldToReinvest > 0.0)
+            
+            -- Calculate additional LP tokens
+            let additionalLPTokens = (yieldToReinvest / totalLiquidity) * totalLPTokens
+            
+            -- Update participant record
+            let updatedParticipants = map (\participant ->
+                  if participant.participant == p.participant
+                    then participant with
+                      contribution = participant.contribution + yieldToReinvest
+                      lpTokens = participant.lpTokens + additionalLPTokens
+                      accumulatedYield = 0.0
+                      lastRewardClaim = now
+                    else participant
+                  ) participants
+            
+            create this with
+              participants = updatedParticipants
+              totalLiquidity = totalLiquidity + yieldToReinvest
+              totalLPTokens = totalLPTokens + additionalLPTokens
+
+    
+    -- POOL MANAGEMENT CHOICES
+    
+
+    -- | Deploy liquidity to fund a loan
+    choice DeployLiquidity: ContractId LiquidityPool with
+        loanId: Text
+        amount: Decimal
+      controller poolManager
+      do
+        assertMsg "Deployment amount must be positive" (amount > 0.0)
+        assertMsg "Insufficient available liquidity" 
+          (totalLiquidity - totalDeployed >= amount)
+        
+        create this with
+          activeLoans = loanId :: activeLoans
+          totalDeployed = totalDeployed + amount
+
+    -- | Receive repayment from a loan
+    choice ReceiveRepayment: ContractId LiquidityPool with
+        loanId: Text
+        principalAmount: Decimal
+        interestAmount: Decimal
+      controller poolManager
+      do
+        assertMsg "Loan must be in active loans" (loanId `elem` activeLoans)
+        
+        -- Return principal to available liquidity
+        let newDeployed = totalDeployed - principalAmount
+        
+        -- Interest becomes yield to distribute
+        let updatedParticipants = map (\p ->
+              let participantShare = p.lpTokens / totalLPTokens
+                  participantYield = interestAmount * participantShare
+              in p with accumulatedYield = p.accumulatedYield + participantYield
+              ) participants
+        
+        create this with
+          totalDeployed = newDeployed
+          totalYieldEarned = totalYieldEarned + interestAmount
+          participants = updatedParticipants
+
+    -- | Update pool performance metrics
+    choice UpdatePerformanceMetrics: ContractId LiquidityPool with
+        newMetrics: PoolPerformanceMetrics
+      controller poolManager
+      do
+        create this with
+          performanceMetrics = newMetrics
+
+    -- | Rebalance pool strategy
+    choice RebalancePool: ContractId LiquidityPool with
+        newStrategy: YieldStrategy
+      controller poolManager
+      do
+        now <- getTime
+        
+        create this with
+          poolStrategy = newStrategy
+          lastRebalanceDate = now
+
+
+-- POOL PERFORMANCE METRICS
+data PoolPerformanceMetrics = PoolPerformanceMetrics with
+    currentAPY: Decimal  -- Annual Percentage Yield
+    totalReturn: Decimal  -- Total return since inception
+    sharpeRatio: Decimal  -- Risk-adjusted return
+    volatility: Decimal  -- Return volatility
+    maxDrawdown: Decimal  -- Maximum peak-to-trough decline
+    utilizationRate: Decimal  -- Deployed / Total liquidity
+  deriving (Eq, Show)
+
+
+-- LP TOKEN TEMPLATE
+-- | Tradeable LP token representing pool position
+-- Can be transferred between parties
+template LPToken with
+    tokenId: Text
+    poolId: Text
+    owner: Party
+    amount: Decimal
+    poolManager: Party
+  where
+    signatory owner
+
+    ensure
+      amount > 0.0
+
+    key (owner, tokenId): (Party, Text)
+    maintainer key._1
+
+    -- | Transfer LP tokens to another party
+    choice TransferLPToken: ContractId LPToken with
+        newOwner: Party
+      controller owner
+      do
+        create this with owner = newOwner
+
+    -- | Split LP tokens into multiple tokens
+    choice SplitLPToken: [ContractId LPToken] with
+        amounts: [Decimal]
+      controller owner
+      do
+        assertMsg "Split amounts must sum to total" 
+          (sum amounts == amount)
+        assertMsg "All amounts must be positive"
+          (all (> 0.0) amounts)
+        
+        mapA (\(idx, amt) ->
+          create LPToken with
+            tokenId = tokenId <> "-" <> show idx
+            poolId
+            owner
+            amount = amt
+            poolManager
+          ) (zip [1..length amounts] amounts)
+
+
+-- YIELD OPTIMIZATION TEMPLATE
+-- | Automated yield optimization strategy
+template YieldOptimizer with
+    optimizerId: Text
+    owner: Party
+    strategy: YieldStrategy
+    managedPools: [Text]  -- Pool IDs being managed
+    totalValue: Decimal
+    targetYield: Decimal
+    riskTolerance: RiskTolerance
+    autoRebalance: Bool
+    lastOptimizationDate: Time
+  where
+    signatory owner
+
+    key (owner, optimizerId): (Party, Text)
+    maintainer key._1
+
+    -- | Execute optimization (rebalance across pools)
+    choice OptimizeYield: ContractId YieldOptimizer with
+        newAllocations: [(Text, Decimal)]  -- (poolId, amount)
+      controller owner
+      do
+        now <- getTime
+        
+        -- Validate allocations sum to total value
+        let totalAllocated = sum (map snd newAllocations)
+        assertMsg "Allocations must sum to total value" 
+          (abs (totalAllocated - totalValue) < 0.01)
+        
+        create this with
+          lastOptimizationDate = now
+
+    -- | Update strategy parameters
+    choice UpdateStrategy: ContractId YieldOptimizer with
+        newStrategy: YieldStrategy
+        newTargetYield: Decimal
+        newRiskTolerance: RiskTolerance
+      controller owner
+      do
+        create this with
+          strategy = newStrategy
+          targetYield = newTargetYield
+          riskTolerance = newRiskTolerance
+
+    -- | Add pool to managed pools
+    choice AddManagedPool: ContractId YieldOptimizer with
+        poolId: Text
+      controller owner
+      do
+        assertMsg "Pool not already managed" (not (poolId `elem` managedPools))
+        
+        create this with
+          managedPools = poolId :: managedPools
+
+    -- | Remove pool from managed pools
+    choice RemoveManagedPool: ContractId YieldOptimizer with
+        poolId: Text
+      controller owner
+      do
+        assertMsg "Pool must be managed" (poolId `elem` managedPools)
+        
+        create this with
+          managedPools = filter (/= poolId) managedPools
+
+
+-- STAKING REWARDS TEMPLATE
+-- | Long-term staking rewards for liquidity providers
+template StakingRewards with
+    stakingId: Text
+    poolId: Text
+    staker: Party
+    poolManager: Party
+    stakedLPTokens: Decimal
+    stakingStartDate: Time
+    lockupPeriod: RelTime
+    rewardRate: Decimal  -- Additional APY for staking
+    accumulatedRewards: Decimal
+  where
+    signatory staker, poolManager
+
+    ensure
+      stakedLPTokens > 0.0 &&
+      rewardRate >= 0.0 &&
+      accumulatedRewards >= 0.0
+
+    key (staker, stakingId): (Party, Text)
+    maintainer key._1
+
+    -- | Claim staking rewards
+    choice ClaimStakingRewards: (ContractId StakingRewards, Decimal) with
+      controller staker
+      do
+        now <- getTime
+        
+        -- Check if lockup period has passed
+        let lockupEnd = addRelTime stakingStartDate lockupPeriod
+        assertMsg "Lockup period not yet complete" (now >= lockupEnd)
+        
+        let rewardsToClaim = accumulatedRewards
+        assertMsg "No rewards to claim" (rewardsToClaim > 0.0)
+        
+        stakingCid <- create this with
+          accumulatedRewards = 0.0
+        
+        return (stakingCid, rewardsToClaim)
+
+    -- | Unstake LP tokens (after lockup period)
+    choice Unstake: Decimal with
+      controller staker
+      do
+        now <- getTime
+        
+        -- Check if lockup period has passed
+        let lockupEnd = addRelTime stakingStartDate lockupPeriod
+        assertMsg "Lockup period not yet complete" (now >= lockupEnd)
+        
+        return stakedLPTokens
+
+    -- | Accrue staking rewards
+    choice AccrueRewards: ContractId StakingRewards with
+        rewardAmount: Decimal
+      controller poolManager
+      do
+        create this with
+          accumulatedRewards = accumulatedRewards + rewardAmount
+
+
+-- PERFORMANCE BONUS TEMPLATE
+-- | Performance-based bonus distribution
+template PerformanceBonus with
+    bonusId: Text
+    poolId: Text
+    poolManager: Party
+    participants: [(Party, Decimal)]  -- (participant, bonus amount)
+    totalBonusPool: Decimal
+    performancePeriodStart: Time
+    performancePeriodEnd: Time
+    distributed: Bool
+  where
+    signatory poolManager
+
+    ensure
+      totalBonusPool >= 0.0 &&
+      sum (map snd participants) <= totalBonusPool
+
+    key (poolManager, bonusId): (Party, Text)
+    maintainer key._1
+
+    -- | Participant claims their performance bonus
+    choice ClaimBonus: Decimal with
+        participant: Party
+      controller participant
+      do
+        assertMsg "Bonus must not be distributed yet" (not distributed)
+        
+        -- Find participant's bonus
+        let maybeBonus = find (\(p, _) -> p == participant) participants
+        
+        case maybeBonus of
+          None -> abort "Participant not eligible for bonus"
+          Some (_, bonusAmount) -> do
+            assertMsg "No bonus to claim" (bonusAmount > 0.0)
+            return bonusAmount
+
+    -- | Mark bonus as fully distributed
+    choice MarkDistributed: ContractId PerformanceBonus with
+      controller poolManager
+      do
+        create this with distributed = True
+
+
+-- HELPER FUNCTIONS
+-- | Calculate pool utilization rate
+calculateUtilizationRate : Decimal -> Decimal -> Decimal
+calculateUtilizationRate totalDeployed totalLiquidity =
+  if totalLiquidity > 0.0
+    then totalDeployed / totalLiquidity
+    else 0.0
+
+-- | Calculate APY from yield earned over time period
+calculateAPY : Decimal -> Decimal -> RelTime -> Decimal
+calculateAPY yieldEarned principal timePeriod =
+  if principal > 0.0
+    then
+      let periodReturn = yieldEarned / principal
+          -- Convert time period to years (approximate)
+          yearsElapsed = intToDecimal (convertRelTimeToMicroseconds timePeriod) 
+                        / (365.0 * 24.0 * 60.0 * 60.0 * 1000000.0)
+          apy = if yearsElapsed > 0.0
+                  then periodReturn / yearsElapsed
+                  else 0.0
+      in apy
+    else 0.0
+
+-- | Calculate participant's share of pool
+calculatePoolShare : PoolParticipant -> Decimal -> Decimal
+calculatePoolShare participant totalLPTokens =
+  if totalLPTokens > 0.0
+    then participant.lpTokens / totalLPTokens
+    else 0.0
+
+
+
+-- AEGIS PLATFORM INTEGRATION
+-- | Create liquidity pool with platform registration
+-- Aegis Role: Registers pools, collects management fees, provides insurance
+createPoolWithPlatformRegistration : Party -> Text -> Text -> YieldStrategy -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId LiquidityPool, ContractId Aegis.AegisPlatform)
+createPoolWithPlatformRegistration poolManager poolId poolName strategy platformCid assetType = do
+  now <- getTime
+  
+  -- Create the liquidity pool
+  poolCid <- create LiquidityPool with
+    poolId
+    poolManager
+    poolName
+    poolStrategy = strategy
+    participants = []
+    totalLiquidity = 0.0
+    totalLPTokens = 0.0
+    activeLoans = []
+    totalDeployed = 0.0
+    totalYieldEarned = 0.0
+    performanceMetrics = PoolPerformanceMetrics with
+      currentAPY = 0.0
+      totalReturn = 0.0
+      sharpeRatio = 0.0
+      volatility = 0.0
+      maxDrawdown = 0.0
+      utilizationRate = 0.0
+    createdAt = now
+    lastRebalanceDate = now
+  
+  -- Register pool with platform (no fee for registration)
+  newPlatformCid <- exercise platformCid Aegis.RegisterLiquidityPool with
+    poolId
+    poolManager
+    initialLiquidity = 0.0
+    assetType
+  
+  return (poolCid, newPlatformCid)
+
+-- | Collect platform management fee from pool
+-- Aegis Role: Collects periodic management fees (e.g., 0.5% annually)
+collectPoolManagementFee : ContractId LiquidityPool -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId LiquidityPool, ContractId Aegis.AegisPlatform)
+collectPoolManagementFee poolCid platformCid assetType = do
+  pool <- fetch poolCid
+  platform <- fetch platformCid
+  
+  -- Calculate management fee (annual rate applied to total liquidity)
+  let annualFeeRate = platform.platformFeeRate
+  let managementFee = pool.totalLiquidity * annualFeeRate
+  
+  -- Deduct fee from pool
+  let newLiquidity = pool.totalLiquidity - managementFee
+  
+  newPoolCid <- create pool with
+    totalLiquidity = newLiquidity
+  
+  -- Collect fee to platform
+  newPlatformCid <- exercise platformCid Aegis.CollectPoolManagementFee with
+    poolId = pool.poolId
+    poolManager = pool.poolManager
+    managementFee
+    totalLiquidity = pool.totalLiquidity
+    assetType
+  
+  return (newPoolCid, newPlatformCid)
+
+-- | Request emergency liquidity for pool
+-- Aegis Role: Provides emergency liquidity to maintain pool operations
+requestPoolEmergencyLiquidity : ContractId LiquidityPool -> ContractId Aegis.AegisPlatform -> Decimal -> AssetType -> LiquiditySupportTerms -> Update (ContractId LiquidityPool, ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance)
+requestPoolEmergencyLiquidity poolCid platformCid amount assetType supportTerms = do
+  pool <- fetch poolCid
+  
+  -- Request liquidity from platform
+  (newPlatformCid, balanceCid) <- exercise platformCid Aegis.ProvideLiquiditySupport with
+    lender = pool.poolManager
+    assetType
+    supportAmount = amount
+    supportReason = "Emergency liquidity for pool: " <> pool.poolId
+    repaymentTerms = supportTerms
+  
+  -- Add liquidity to pool
+  newPoolCid <- create pool with
+    totalLiquidity = pool.totalLiquidity + amount
+  
+  return (newPoolCid, newPlatformCid, balanceCid)
+
+-- | Distribute yield with platform performance bonus
+-- Aegis Role: Provides performance bonuses for high-performing pools
+distributeYieldWithPlatformBonus : ContractId LiquidityPool -> Decimal -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId LiquidityPool, ContractId Aegis.AegisPlatform)
+distributeYieldWithPlatformBonus poolCid yieldAmount platformCid assetType = do
+  pool <- fetch poolCid
+  platform <- fetch platformCid
+  
+  -- Calculate platform bonus for high-performing pools
+  let performanceThreshold = 0.15  -- 15% APY
+  let platformBonus = if pool.performanceMetrics.currentAPY > performanceThreshold
+                      then yieldAmount * 0.05  -- 5% bonus
+                      else 0.0
+  
+  -- Add yield and bonus to pool
+  let totalYieldWithBonus = yieldAmount + platformBonus
+  
+  newPoolCid <- create pool with
+    totalYieldEarned = pool.totalYieldEarned + totalYieldWithBonus
+    totalLiquidity = pool.totalLiquidity + totalYieldWithBonus
+  
+  -- Platform provides bonus if applicable
+  newPlatformCid <- if platformBonus > 0.0
+    then do
+      exercise platformCid Aegis.ProvidePoolPerformanceBonus with
+        poolId = pool.poolId
+        poolManager = pool.poolManager
+        bonusAmount = platformBonus
+        performanceMetric = pool.performanceMetrics.currentAPY
+        assetType
+    else return platformCid
+  
+  return (newPoolCid, newPlatformCid)

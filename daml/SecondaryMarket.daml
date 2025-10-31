@@ -1,0 +1,502 @@
+-- | Aegis RFQ - Secondary Market and Loan Trading System
+-- Privacy-preserving loan marketplace with atomic transfers and risk assessment
+
+module SecondaryMarket where
+
+import DA.Time
+import Types
+import RFQ (Loan)
+import qualified Aegis
+import qualified AuditLog
+
+
+-- LOAN LISTING TEMPLATE
+-- | Loan listing for secondary market
+-- Privacy-preserving with selective information disclosure
+template LoanListing with
+    listingId: Text
+    seller: Party
+    loanId: Text
+    loanAmount: Decimal
+    outstandingPrincipal: Decimal
+    interestRate: Decimal
+    maturityDate: Time
+    collateralValue: Decimal
+    loanPerformance: LoanPerformanceMetrics
+    askingPrice: Decimal
+    privacyLevel: MarketPrivacyLevel
+    listedAt: Time
+    expiresAt: Time
+    status: ListingStatus
+  where
+    signatory seller
+
+    ensure
+      loanAmount > 0.0 &&
+      outstandingPrincipal >= 0.0 &&
+      outstandingPrincipal <= loanAmount &&
+      askingPrice > 0.0 &&
+      expiresAt > listedAt
+
+    key (seller, listingId): (Party, Text)
+    maintainer key._1
+
+    
+    -- TRADING CHOICES
+    
+
+    -- | Buyer makes an offer on the loan
+    choice MakeOffer: ContractId LoanOffer with
+        buyer: Party
+        offerPrice: Decimal
+        offerExpiresAt: Time
+      controller buyer
+      do
+        now <- getTime
+        
+        assertMsg "Listing must be active" (status == ListingActive)
+        assertMsg "Listing must not be expired" (now < expiresAt)
+        assertMsg "Offer price must be positive" (offerPrice > 0.0)
+        assertMsg "Offer expiration must be in future" (offerExpiresAt > now)
+        
+        create LoanOffer with
+          offerId = listingId <> "-OFFER-" <> show now
+          listingId
+          seller
+          buyer
+          loanId
+          offerPrice
+          offerExpiresAt
+          status = OfferPending
+
+    -- | Seller accepts an offer (creates transfer contract)
+    choice AcceptOffer: ContractId SecondaryLoanTransfer with
+        offerCid: ContractId LoanOffer
+        borrower: Party  -- Borrower must be notified
+      controller seller
+      do
+        now <- getTime
+        
+        assertMsg "Listing must be active" (status == ListingActive)
+        
+        -- Fetch the offer
+        offer <- fetch offerCid
+        
+        assertMsg "Offer must be pending" (offer.status == OfferPending)
+        assertMsg "Offer must not be expired" (now < offer.offerExpiresAt)
+        
+        -- Archive the offer
+        archive offerCid
+        
+        -- Create loan transfer contract
+        create SecondaryLoanTransfer with
+          transferId = listingId <> "-TRANSFER"
+          seller
+          buyer = offer.buyer
+          borrower
+          loanId
+          transferPrice = offer.offerPrice
+          outstandingPrincipal
+          interestRate
+          maturityDate
+          collateralValue
+          initiatedAt = now
+          status = TransferPending
+
+    -- | Cancel the listing
+    choice CancelListing: () with
+        reason: Text
+      controller seller
+      do
+        assertMsg "Listing must be active" (status == ListingActive)
+        return ()
+
+    -- | Update asking price
+    choice UpdateAskingPrice: ContractId LoanListing with
+        newPrice: Decimal
+      controller seller
+      do
+        assertMsg "New price must be positive" (newPrice > 0.0)
+        assertMsg "Listing must be active" (status == ListingActive)
+        
+        create this with askingPrice = newPrice
+
+
+-- LOAN OFFER TEMPLATE
+-- | Offer to purchase a loan from secondary market
+template LoanOffer with
+    offerId: Text
+    listingId: Text
+    seller: Party
+    buyer: Party
+    loanId: Text
+    offerPrice: Decimal
+    offerExpiresAt: Time
+    status: OfferStatus
+  where
+    signatory buyer
+    observer seller
+
+    ensure
+      offerPrice > 0.0
+
+    key (buyer, offerId): (Party, Text)
+    maintainer key._1
+
+    -- | Buyer withdraws their offer
+    choice WithdrawOffer: () with
+      controller buyer
+      do
+        assertMsg "Offer must be pending" (status == OfferPending)
+        return ()
+
+    -- | Seller rejects the offer
+    choice RejectOffer: () with
+        rejectionReason: Text
+      controller seller
+      do
+        assertMsg "Offer must be pending" (status == OfferPending)
+        return ()
+
+
+-- SECONDARY LOAN TRANSFER TEMPLATE
+-- | Atomic loan transfer between lenders in secondary market
+-- Ensures all rights and obligations transfer correctly
+template SecondaryLoanTransfer with
+    transferId: Text
+    seller: Party
+    buyer: Party
+    borrower: Party
+    loanId: Text
+    transferPrice: Decimal
+    outstandingPrincipal: Decimal
+    interestRate: Decimal
+    maturityDate: Time
+    collateralValue: Decimal
+    initiatedAt: Time
+    status: TransferStatus
+  where
+    signatory seller, buyer
+    observer borrower
+
+    ensure
+      transferPrice > 0.0 &&
+      outstandingPrincipal >= 0.0
+
+    key (seller, buyer, transferId): (Party, Party, Text)
+    maintainer key._1
+
+    -- | Execute the loan transfer
+    choice ExecuteTransfer: ContractId TransferSettlement with
+        originalLoanCid: ContractId Loan
+        transferFee: Decimal
+      controller seller, buyer
+      do
+        now <- getTime
+        
+        assertMsg "Transfer must be pending" (status == TransferPending)
+        
+        -- Fetch and archive original loan
+        originalLoan <- fetch originalLoanCid
+        archive originalLoanCid
+        
+        -- Calculate fees
+        let netProceeds = transferPrice - transferFee
+        
+        -- Manual logging: Log loan transfer to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.LoanTransferredSecondaryMarket
+              eventDescription = "Loan transferred on secondary market from " <> show seller <> " to " <> show buyer
+              performedBy = seller
+              eventData = [("transferPrice", show transferPrice), ("transferFee", show transferFee), ("netProceeds", show netProceeds), ("buyer", show buyer)]
+              financialImpact = Some AuditLog.FinancialImpact with
+                totalAmount = transferPrice
+                principalAmount = Some netProceeds
+                interestAmount = None
+                feesAmount = Some transferFee
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        -- Create settlement record
+        create TransferSettlement with
+          settlementId = transferId <> "-SETTLED"
+          seller
+          buyer
+          borrower
+          loanId
+          transferPrice
+          transferFee
+          netProceeds
+          settledAt = now
+
+    -- | Cancel the transfer
+    choice CancelTransfer: () with
+        cancellationReason: Text
+      controller seller, buyer
+      do
+        return ()
+
+
+-- TRANSFER SETTLEMENT TEMPLATE
+-- | Settlement record for completed loan transfer
+template TransferSettlement with
+    settlementId: Text
+    seller: Party
+    buyer: Party
+    borrower: Party
+    loanId: Text
+    transferPrice: Decimal
+    transferFee: Decimal
+    netProceeds: Decimal
+    settledAt: Time
+  where
+    signatory seller, buyer
+    observer borrower
+
+    ensure
+      transferPrice > 0.0 &&
+      transferFee >= 0.0 &&
+      netProceeds == transferPrice - transferFee
+
+    key (seller, buyer, settlementId): (Party, Party, Text)
+    maintainer key._1
+
+    -- | Acknowledge settlement
+    choice AcknowledgeSettlement: () with
+        party: Party
+      controller party
+      do
+        assertMsg "Party must be involved in transfer" 
+          (party == seller || party == buyer || party == borrower)
+        return ()
+
+
+-- LOAN VALUATION TEMPLATE
+-- | Independent loan valuation for secondary market pricing
+template LoanValuation with
+    valuationId: Text
+    valuator: Party
+    loanId: Text
+    loanAmount: Decimal
+    outstandingPrincipal: Decimal
+    interestRate: Decimal
+    remainingTerm: RelTime
+    collateralValue: Decimal
+    borrowerCreditScore: Int
+    loanPerformance: LoanPerformanceMetrics
+    fairValue: Decimal
+    discountRate: Decimal
+    riskPremium: Decimal
+    valuationDate: Time
+  where
+    signatory valuator
+
+    ensure
+      loanAmount > 0.0 &&
+      outstandingPrincipal >= 0.0 &&
+      fairValue >= 0.0 &&
+      discountRate >= 0.0
+
+    key (valuator, valuationId): (Party, Text)
+    maintainer key._1
+
+    -- | Update valuation
+    choice UpdateValuation: ContractId LoanValuation with
+        newFairValue: Decimal
+        newDiscountRate: Decimal
+        newRiskPremium: Decimal
+      controller valuator
+      do
+        now <- getTime
+        
+        create this with
+          fairValue = newFairValue
+          discountRate = newDiscountRate
+          riskPremium = newRiskPremium
+          valuationDate = now
+
+
+-- BORROWER NOTIFICATION TEMPLATE
+-- | Notification to borrower about lender change
+template BorrowerNotification with
+    notificationId: Text
+    borrower: Party
+    oldLender: Party
+    newLender: Party
+    loanId: Text
+    transferDate: Time
+    acknowledged: Bool
+  where
+    signatory borrower, oldLender, newLender
+
+    key (borrower, notificationId): (Party, Text)
+    maintainer key._1
+
+    -- | Borrower acknowledges the lender change
+    choice AcknowledgeNotification: ContractId BorrowerNotification with
+      controller borrower
+      do
+        create this with acknowledged = True
+
+
+-- ENUMERATIONS
+data ListingStatus
+  = ListingActive
+  | ListingUnderOffer
+  | ListingSold
+  | ListingCancelled
+  | ListingExpired
+  deriving (Eq, Show)
+
+data OfferStatus
+  = OfferPending
+  | OfferAccepted
+  | OfferRejected
+  | OfferWithdrawn
+  | OfferExpired
+  deriving (Eq, Show)
+
+data TransferStatus
+  = TransferPending
+  | TransferCompleted
+  | TransferCancelled
+  deriving (Eq, Show)
+
+data MarketPrivacyLevel
+  = FullDisclosure  -- All loan details visible
+  | PartialDisclosure  -- Limited information
+  | AnonymousListing  -- Borrower identity hidden
+  deriving (Eq, Show)
+
+
+-- LOAN PERFORMANCE METRICS
+data LoanPerformanceMetrics = LoanPerformanceMetrics with
+    paymentsOnTime: Int
+    paymentsMissed: Int
+    totalPaymentsMade: Int
+    averageDaysLate: Decimal
+    currentStatus: LoanStatus
+  deriving (Eq, Show)
+
+
+-- HELPER FUNCTIONS
+-- | Calculate loan fair value using discounted cash flow
+calculateLoanFairValue : Decimal -> Decimal -> Decimal -> RelTime -> Decimal
+calculateLoanFairValue outstandingPrincipal interestRate discountRate remainingTerm =
+  let -- Calculate expected cash flows
+      expectedInterest = outstandingPrincipal * interestRate
+      totalExpectedCashFlow = outstandingPrincipal + expectedInterest
+      
+      -- Convert remaining term to years (approximate)
+      yearsRemaining = intToDecimal (convertRelTimeToMicroseconds remainingTerm) 
+                      / (365.0 * 24.0 * 60.0 * 60.0 * 1000000.0)
+      
+      -- Discount to present value (simple approximation)
+      discountFactor = 1.0 / (1.0 + (discountRate * yearsRemaining))
+      fairValue = totalExpectedCashFlow * discountFactor
+  in fairValue
+
+-- | Calculate discount rate based on risk
+calculateDiscountRate : Decimal -> Int -> Decimal -> Decimal
+calculateDiscountRate baseRate creditScore riskPremium =
+  let -- Adjust for credit risk
+      creditAdjustment = if creditScore >= 750
+        then -0.01  -- Lower discount for excellent credit
+        else if creditScore >= 670
+          then 0.0
+          else 0.02  -- Higher discount for poor credit
+      
+      discountRate = baseRate + creditAdjustment + riskPremium
+  in max 0.01 discountRate
+
+-- | Calculate transfer fee (typically percentage of transfer price)
+calculateTransferFee : Decimal -> Decimal -> Decimal
+calculateTransferFee transferPrice feeRate =
+  transferPrice * feeRate
+
+-- | Assess loan performance quality
+assessLoanPerformance : LoanPerformanceMetrics -> PerformanceRating
+assessLoanPerformance metrics =
+  let onTimeRate = if metrics.totalPaymentsMade > 0
+        then intToDecimal metrics.paymentsOnTime / intToDecimal metrics.totalPaymentsMade
+        else 1.0
+  in
+    if onTimeRate >= 0.95 && metrics.paymentsMissed == 0
+      then Excellent
+    else if onTimeRate >= 0.85
+      then Good
+    else if onTimeRate >= 0.70
+      then Fair
+    else Poor
+
+data PerformanceRating
+  = Excellent
+  | Good
+  | Fair
+  | Poor
+  deriving (Eq, Show, Ord)
+
+-- | Calculate suggested asking price for loan
+calculateSuggestedAskingPrice : Decimal -> Decimal -> LoanPerformanceMetrics -> Decimal
+calculateSuggestedAskingPrice outstandingPrincipal fairValue metrics =
+  let performanceRating = assessLoanPerformance metrics
+      
+      -- Adjust based on performance
+      performanceMultiplier = case performanceRating of
+        Excellent -> 1.05  -- 5% premium
+        Good -> 1.0
+        Fair -> 0.95  -- 5% discount
+        Poor -> 0.85  -- 15% discount
+      
+      suggestedPrice = fairValue * performanceMultiplier
+  in max (outstandingPrincipal * 0.5) suggestedPrice  -- Minimum 50% of principal
+
+
+-- AEGIS PLATFORM INTEGRATION
+
+
+-- | Execute transfer with platform fee collection
+executeTransferWithPlatformFee : ContractId SecondaryLoanTransfer -> ContractId Loan -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId TransferSettlement, ContractId Aegis.AegisPlatform)
+executeTransferWithPlatformFee transferCid loanCid platformCid assetType = do
+  transfer <- fetch transferCid
+  platform <- fetch platformCid
+  
+  -- Calculate platform fee (e.g., 0.5% of transfer price)
+  let platformFee = transfer.transferPrice * platform.platformFeeRate
+  
+  -- Execute the transfer
+  settlementCid <- exercise transferCid ExecuteTransfer with
+    originalLoanCid = loanCid
+    transferFee = platformFee
+  
+  -- Collect platform fee
+  newPlatformCid <- exercise platformCid Aegis.CollectSecondaryMarketFee with
+    transferId = transfer.transferId
+    transferAmount = transfer.transferPrice
+    seller = transfer.seller
+    buyer = transfer.buyer
+    assetType
+  
+  return (settlementCid, newPlatformCid)
+
+-- | Calculate fair market value for loan
+calculateFairMarketValue : Decimal -> Decimal -> Time -> Time -> Decimal -> Decimal
+calculateFairMarketValue outstandingPrincipal interestRate currentTime maturityDate collateralValue =
+  let timeToMaturity = subTime maturityDate currentTime
+      microseconds = convertRelTimeToMicroseconds timeToMaturity
+      yearsToMaturity = intToDecimal microseconds / (365.0 * 24.0 * 60.0 * 60.0 * 1000000.0)
+      
+      -- Present value of principal (simple discount)
+      discountRate = interestRate + 0.02  -- Add risk premium
+      discountFactor = 1.0 / (1.0 + (discountRate * yearsToMaturity))
+      pvPrincipal = outstandingPrincipal * discountFactor
+      
+      -- Consider collateral value
+      collateralAdjustment = min collateralValue (outstandingPrincipal * 1.2)
+      
+      -- Weighted fair value
+      fairValue = (pvPrincipal * 0.7) + (collateralAdjustment * 0.3)
+  in fairValue

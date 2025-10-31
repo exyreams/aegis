@@ -1,0 +1,615 @@
+-- | Aegis RFQ - Syndicated Lending Infrastructure
+-- Multi-lender loan structures with lead arrangers, voting mechanisms, and coordinated payments
+
+module Syndication where
+
+import DA.Time
+import Types
+import qualified Aegis
+import qualified AuditLog
+
+
+-- SYNDICATED LOAN TEMPLATE
+-- | Syndicated loan with multiple participating lenders
+-- Lead lender coordinates and manages the syndicate
+template SyndicatedLoan with
+    loanId: Text
+    borrower: Party
+    leadLender: Party
+    participants: [SyndicateParticipant]
+    totalCommitment: Decimal
+    outstandingPrincipal: Decimal
+    interestRateStructure: InterestRateStructure
+    repaymentSchedule: RepaymentSchedule
+    arrangementFee: Decimal
+    arrangementFeeDistribution: [(Party, Decimal)]  -- (lender, fee amount)
+    collateralAssets: [CollateralAsset]
+    covenants: [LoanCovenant]
+    startDate: Time
+    maturityDate: Time
+    status: LoanStatus
+    paymentHistory: [SyndicatedPaymentRecord]
+    lastPaymentDate: Optional Time
+  where
+    signatory borrower :: leadLender :: map (\p -> p.lender) participants
+    
+    ensure
+      totalCommitment > 0.0 &&
+      outstandingPrincipal >= 0.0 &&
+      outstandingPrincipal <= totalCommitment &&
+      not (null participants) &&
+      arrangementFee >= 0.0 &&
+      -- Verify commitments sum to total
+      sum (map (\p -> p.commitment) participants) == totalCommitment
+
+    key (borrower, loanId): (Party, Text)
+    maintainer key._1
+
+    
+    -- PAYMENT CHOICES
+    
+
+    -- | Make coordinated payment across all lenders
+    choice MakeSyndicatedPayment: ContractId SyndicatedLoan with
+        paymentAmount: Decimal
+        principalPortion: Decimal
+        interestPortion: Decimal
+      controller borrower
+      do
+        now <- getTime
+        
+        assertMsg "Loan must be active" (status == LoanActive || status == LoanCurrent)
+        assertMsg "Payment amount must match portions" 
+          (paymentAmount == principalPortion + interestPortion)
+        assertMsg "Principal portion cannot exceed outstanding" 
+          (principalPortion <= outstandingPrincipal)
+        
+        -- Distribute payment proportionally to each lender
+        let lenderPayments = map (\p ->
+              let lenderShare = p.commitment / totalCommitment
+                  lenderPrincipal = principalPortion * lenderShare
+                  lenderInterest = interestPortion * lenderShare
+              in (p.lender, lenderPrincipal, lenderInterest)
+              ) participants
+        
+        -- Create payment record
+        let paymentRecord = SyndicatedPaymentRecord with
+              paymentDate = now
+              totalAmount = paymentAmount
+              principalAmount = principalPortion
+              interestAmount = interestPortion
+              lenderDistribution = lenderPayments
+              status = Paid
+        
+        -- Update outstanding principal
+        let newOutstanding = outstandingPrincipal - principalPortion
+        let newStatus = if newOutstanding == 0.0 then LoanRepaid else LoanCurrent
+        
+        create this with
+          outstandingPrincipal = newOutstanding
+          status = newStatus
+          paymentHistory = paymentRecord :: paymentHistory
+          lastPaymentDate = Some now
+
+    -- | Mark syndicated loan as defaulted
+    choice MarkSyndicatedDefault: ContractId SyndicatedLoan with
+        defaultReason: Text
+      controller leadLender
+      do
+        now <- getTime
+        assertMsg "Loan must be active or current" (status == LoanActive || status == LoanCurrent)
+        
+        -- Manual logging: Log syndicated default to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.LoanDefaulted
+              eventDescription = "Syndicated loan defaulted: " <> defaultReason
+              performedBy = leadLender
+              eventData = [("defaultReason", defaultReason), ("outstandingPrincipal", show outstandingPrincipal), ("syndicateSize", show (length participants))]
+              financialImpact = Some AuditLog.FinancialImpact with
+                totalAmount = outstandingPrincipal
+                principalAmount = Some outstandingPrincipal
+                interestAmount = None
+                feesAmount = None
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        create this with
+          status = LoanDefault
+
+    
+    -- SYNDICATE MANAGEMENT CHOICES
+    
+
+    -- | Propose a syndicate decision requiring vote
+    choice ProposeSyndicateDecision: ContractId SyndicateDecisionVote with
+        proposer: Party
+        decisionType: DecisionType
+        description: Text
+        votingDeadline: Time
+        requiredMajority: Decimal
+      controller proposer
+      do
+        now <- getTime
+        
+        assertMsg "Proposer must be lead lender or participant" 
+          (proposer == leadLender || any (\p -> p.lender == proposer) participants)
+        assertMsg "Voting deadline must be in future" (votingDeadline > now)
+        assertMsg "Required majority must be between 0 and 1" 
+          (requiredMajority > 0.0 && requiredMajority <= 1.0)
+        
+        create SyndicateDecisionVote with
+          voteId = loanId <> "-VOTE-" <> show now
+          loanId
+          borrower
+          leadLender
+          participants
+          totalCommitment
+          decisionType
+          description
+          proposedBy = proposer
+          votesFor = []
+          votesAgainst = []
+          requiredMajority
+          proposedAt = now
+          votingDeadline
+          status = VotePending
+
+    -- | Add new participant to syndicate
+    choice AddSyndicateParticipant: ContractId SyndicatedLoan with
+        newParticipant: SyndicateParticipant
+      controller leadLender
+      do
+        assertMsg "Participant not already in syndicate" 
+          (not (any (\p -> p.lender == newParticipant.lender) participants))
+        
+        create this with
+          participants = newParticipant :: participants
+          totalCommitment = totalCommitment + newParticipant.commitment
+
+    -- | Remove participant from syndicate (requires their consent)
+    choice RemoveSyndicateParticipant: ContractId SyndicatedLoan with
+        participantToRemove: Party
+      controller leadLender, participantToRemove
+      do
+        let maybeParticipant = find (\p -> p.lender == participantToRemove) participants
+        
+        case maybeParticipant of
+          None -> abort "Participant not found in syndicate"
+          Some p -> do
+            let newParticipants = filter (\participant -> participant.lender /= participantToRemove) participants
+            
+            assertMsg "Cannot remove all participants" (not (null newParticipants))
+            
+            create this with
+              participants = newParticipants
+              totalCommitment = totalCommitment - p.commitment
+
+    -- | Distribute arrangement fees to syndicate members
+    choice DistributeArrangementFees: ContractId SyndicatedLoan with
+      controller leadLender
+      do
+        assertMsg "Arrangement fees must be positive" (arrangementFee > 0.0)
+        assertMsg "Fees not yet distributed" (null arrangementFeeDistribution)
+        
+        -- Calculate fee distribution (lead lender gets larger share)
+        let leadLenderFee = arrangementFee * 0.5  -- 50% to lead
+        let participantFees = map (\p ->
+              let participantShare = p.commitment / totalCommitment
+                  participantFee = (arrangementFee * 0.5) * participantShare
+              in (p.lender, participantFee)
+              ) participants
+        
+        let feeDistribution = (leadLender, leadLenderFee) :: participantFees
+        
+        create this with
+          arrangementFeeDistribution = feeDistribution
+
+
+-- SYNDICATE DECISION VOTE TEMPLATE
+-- | Voting mechanism for syndicate decisions
+template SyndicateDecisionVote with
+    voteId: Text
+    loanId: Text
+    borrower: Party
+    leadLender: Party
+    participants: [SyndicateParticipant]
+    totalCommitment: Decimal
+    decisionType: DecisionType
+    description: Text
+    proposedBy: Party
+    votesFor: [Party]
+    votesAgainst: [Party]
+    requiredMajority: Decimal
+    proposedAt: Time
+    votingDeadline: Time
+    status: VoteStatus
+  where
+    signatory proposedBy
+    observer borrower :: leadLender :: map (\p -> p.lender) participants
+
+    key (proposedBy, voteId): (Party, Text)
+    maintainer key._1
+
+    -- | Cast vote in favor
+    choice VoteFor: ContractId SyndicateDecisionVote with
+        voter: Party
+      controller voter
+      do
+        now <- getTime
+        
+        assertMsg "Vote must be pending" (status == VotePending)
+        assertMsg "Voting deadline not passed" (now < votingDeadline)
+        assertMsg "Voter must be in syndicate" 
+          (voter == leadLender || any (\p -> p.lender == voter) participants)
+        assertMsg "Voter has not already voted" 
+          (not (voter `elem` votesFor || voter `elem` votesAgainst))
+        
+        let newVotesFor = voter :: votesFor
+        
+        -- Check if decision passes
+        let votingPower = calculateVotingPower newVotesFor participants totalCommitment leadLender
+        let passed = votingPower >= requiredMajority
+        
+        create this with
+          votesFor = newVotesFor
+          status = if passed then VotePassed else VotePending
+
+    -- | Cast vote against
+    choice VoteAgainst: ContractId SyndicateDecisionVote with
+        voter: Party
+      controller voter
+      do
+        now <- getTime
+        
+        assertMsg "Vote must be pending" (status == VotePending)
+        assertMsg "Voting deadline not passed" (now < votingDeadline)
+        assertMsg "Voter must be in syndicate" 
+          (voter == leadLender || any (\p -> p.lender == voter) participants)
+        assertMsg "Voter has not already voted" 
+          (not (voter `elem` votesFor || voter `elem` votesAgainst))
+        
+        create this with
+          votesAgainst = voter :: votesAgainst
+
+    -- | Finalize vote after deadline
+    choice FinalizeVote: VoteResult with
+      controller leadLender
+      do
+        now <- getTime
+        
+        assertMsg "Voting deadline must have passed" (now >= votingDeadline)
+        assertMsg "Vote must be pending or passed" 
+          (status == VotePending || status == VotePassed)
+        
+        let votingPower = calculateVotingPower votesFor participants totalCommitment leadLender
+        let passed = votingPower >= requiredMajority
+        
+        return VoteResult with
+          voteId
+          decisionType
+          passed
+          votingPower
+          votesFor
+          votesAgainst
+
+data VoteResult = VoteResult with
+    voteId: Text
+    decisionType: DecisionType
+    passed: Bool
+    votingPower: Decimal
+    votesFor: [Party]
+    votesAgainst: [Party]
+  deriving (Eq, Show)
+
+data VoteStatus
+  = VotePending
+  | VotePassed
+  | VoteFailed
+  deriving (Eq, Show)
+
+
+-- SYNDICATE FORMATION TEMPLATE
+-- | Template for forming a syndicate from an RFQ
+template SyndicateFormation with
+    formationId: Text
+    borrower: Party
+    leadArranger: Party
+    rfqId: Text
+    targetAmount: Decimal
+    commitments: [SyndicateCommitment]
+    totalCommitted: Decimal
+    arrangementFee: Decimal
+    formationDeadline: Time
+    status: FormationStatus
+  where
+    signatory leadArranger
+    observer borrower :: map (\c -> c.lender) commitments
+
+    ensure
+      targetAmount > 0.0 &&
+      totalCommitted >= 0.0 &&
+      totalCommitted <= targetAmount &&
+      arrangementFee >= 0.0
+
+    key (leadArranger, formationId): (Party, Text)
+    maintainer key._1
+
+    -- | Lender commits to participate in syndicate
+    choice CommitToSyndicate: ContractId SyndicateFormation with
+        lender: Party
+        profile: LenderProfile
+        commitmentAmount: Decimal
+        role: SyndicateRole
+      controller lender
+      do
+        now <- getTime
+        
+        assertMsg "Formation must be open" (status == FormationOpen)
+        assertMsg "Formation deadline not passed" (now < formationDeadline)
+        assertMsg "Commitment must be positive" (commitmentAmount > 0.0)
+        assertMsg "Lender not already committed" 
+          (not (any (\c -> c.lender == lender) commitments))
+        
+        let newCommitment = SyndicateCommitment with
+              lender
+              lenderProfile = profile
+              commitmentAmount
+              role
+              committedAt = now
+        
+        let newTotalCommitted = totalCommitted + commitmentAmount
+        let newStatus = if newTotalCommitted >= targetAmount
+              then FormationComplete
+              else FormationOpen
+        
+        create this with
+          commitments = newCommitment :: commitments
+          totalCommitted = newTotalCommitted
+          status = newStatus
+
+    -- | Finalize syndicate formation
+    choice FinalizeSyndicate: ContractId SyndicatedLoan with
+        interestRateStructure: InterestRateStructure
+        repaymentSchedule: RepaymentSchedule
+        collateralAssets: [CollateralAsset]
+        covenants: [LoanCovenant]
+        loanDuration: RelTime
+      controller leadArranger, borrower
+      do
+        now <- getTime
+        
+        assertMsg "Formation must be complete" (status == FormationComplete)
+        assertMsg "Total committed must meet target" (totalCommitted >= targetAmount)
+        
+        -- Convert commitments to participants
+        let syndicateParticipants = map (commitmentToParticipant totalCommitted) commitments
+        
+        create SyndicatedLoan with
+          loanId = formationId <> "-LOAN"
+          borrower
+          leadLender = leadArranger
+          participants = syndicateParticipants
+          totalCommitment = totalCommitted
+          outstandingPrincipal = totalCommitted
+          interestRateStructure
+          repaymentSchedule
+          arrangementFee
+          arrangementFeeDistribution = []
+          collateralAssets
+          covenants
+          startDate = now
+          maturityDate = addRelTime now loanDuration
+          status = LoanActive
+          paymentHistory = []
+          lastPaymentDate = None
+
+    -- | Cancel syndicate formation
+    choice CancelFormation: () with
+        reason: Text
+      controller leadArranger
+      do
+        return ()
+
+
+-- SYNDICATE COMMITMENT
+data SyndicateCommitment = SyndicateCommitment with
+    lender: Party
+    lenderProfile: LenderProfile
+    commitmentAmount: Decimal
+    role: SyndicateRole
+    committedAt: Time
+  deriving (Eq, Show)
+
+data FormationStatus
+  = FormationOpen
+  | FormationComplete
+  | FormationCancelled
+  deriving (Eq, Show)
+
+
+-- SYNDICATED PAYMENT RECORD
+data SyndicatedPaymentRecord = SyndicatedPaymentRecord with
+    paymentDate: Time
+    totalAmount: Decimal
+    principalAmount: Decimal
+    interestAmount: Decimal
+    lenderDistribution: [(Party, Decimal, Decimal)]  -- (lender, principal, interest)
+    status: PaymentStatus
+  deriving (Eq, Show)
+
+
+-- SYNDICATE REPORTING TEMPLATE
+-- | Reporting and communication for syndicate members
+template SyndicateReport with
+    reportId: Text
+    loanId: Text
+    leadLender: Party
+    participants: [Party]
+    reportingPeriodStart: Time
+    reportingPeriodEnd: Time
+    totalPaymentsReceived: Decimal
+    outstandingPrincipal: Decimal
+    loanPerformance: Text
+    covenantCompliance: [(Text, Bool)]  -- (covenant description, compliant)
+    generatedAt: Time
+  where
+    signatory leadLender
+    observer participants
+
+    key (leadLender, reportId): (Party, Text)
+    maintainer key._1
+
+    -- | Participant acknowledges report
+    choice AcknowledgeReport: ContractId SyndicateReport with
+        participant: Party
+      controller participant
+      do
+        assertMsg "Participant must be in syndicate" (participant `elem` participants)
+        return self
+
+
+-- HELPER FUNCTIONS
+-- | Calculate voting power based on commitments
+calculateVotingPower : [Party] -> [SyndicateParticipant] -> Decimal -> Party -> Decimal
+calculateVotingPower voters participants totalCommitment leadLender =
+  let -- Lead lender gets voting power based on their commitment
+      leadVotingPower = if leadLender `elem` voters
+        then case find (\p -> p.lender == leadLender) participants of
+          Some p -> p.commitment / totalCommitment
+          None -> 0.0
+        else 0.0
+      
+      -- Other participants get voting power based on their commitments
+      participantVotingPower = sum $ map (\voter ->
+        case find (\p -> p.lender == voter) participants of
+          Some p -> p.commitment / totalCommitment
+          None -> 0.0
+        ) (filter (/= leadLender) voters)
+      
+      totalVotingPower = leadVotingPower + participantVotingPower
+  in totalVotingPower
+
+-- | Calculate lender's share of payment
+calculateLenderShare : Party -> [SyndicateParticipant] -> Decimal -> Decimal
+calculateLenderShare lender participants totalCommitment =
+  case find (\p -> p.lender == lender) participants of
+    Some p -> p.commitment / totalCommitment
+    None -> 0.0
+
+-- | Check if syndicate has quorum for voting
+hasQuorum : [Party] -> [SyndicateParticipant] -> Decimal -> Party -> Decimal -> Bool
+hasQuorum voters participants totalCommitment leadLender quorumThreshold =
+  let votingPower = calculateVotingPower voters participants totalCommitment leadLender
+  in votingPower >= quorumThreshold
+
+-- | Find participant by lender party
+findParticipant : Party -> [SyndicateParticipant] -> Optional SyndicateParticipant
+findParticipant lender participants =
+  find (\p -> p.lender == lender) participants
+
+-- | Convert SyndicateCommitment to SyndicateParticipant
+commitmentToParticipant : Decimal -> SyndicateCommitment -> SyndicateParticipant
+commitmentToParticipant totalCommitted (SyndicateCommitment lenderParty lenderProf commitAmt participantRole _) =
+  let participantProfile = lenderProf
+  in SyndicateParticipant with
+    lender = lenderParty
+    lenderProfile = participantProfile
+    commitment = commitAmt
+    role = participantRole
+    votingPower = commitAmt / totalCommitted
+
+
+
+-- AEGIS PLATFORM INTEGRATION
+-- | Create syndicated loan with platform fee collection
+-- Aegis Role: Facilitates syndication, collects arrangement fees, provides coordination
+createSyndicatedLoanWithPlatformFee : Party -> Party -> [SyndicateParticipant] -> Text -> Decimal -> InterestRateStructure -> RepaymentSchedule -> Decimal -> [CollateralAsset] -> [LoanCovenant] -> Time -> Time -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId SyndicatedLoan, ContractId Aegis.AegisPlatform)
+createSyndicatedLoanWithPlatformFee borrower leadLender participants loanId totalCommitment interestRate repaymentSched arrangementFee collateral covenants startDate maturityDate platformCid assetType = do
+  -- Create the syndicated loan
+  loanCid <- create SyndicatedLoan with
+    loanId
+    borrower
+    leadLender
+    participants
+    totalCommitment
+    outstandingPrincipal = totalCommitment
+    interestRateStructure = interestRate
+    repaymentSchedule = repaymentSched
+    arrangementFee
+    arrangementFeeDistribution = calculateFeeDistribution leadLender participants arrangementFee
+    collateralAssets = collateral
+    covenants
+    startDate
+    maturityDate
+    status = LoanActive
+    paymentHistory = []
+    lastPaymentDate = None
+  
+  -- Collect platform syndication fee
+  platform <- fetch platformCid
+  let syndicationFee = totalCommitment * platform.platformFeeRate
+  
+  newPlatformCid <- exercise platformCid Aegis.CollectSyndicationFee with
+    loanId
+    loanAmount = totalCommitment
+    leadLender
+    participantCount = length participants
+    assetType
+  
+  return (loanCid, newPlatformCid)
+
+-- | Calculate arrangement fee distribution
+-- Lead arranger gets 60%, participants split 30%, platform gets 10%
+calculateFeeDistribution : Party -> [SyndicateParticipant] -> Decimal -> [(Party, Decimal)]
+calculateFeeDistribution leadLender participants totalFee =
+  let leadShare = totalFee * 0.60
+      participantPool = totalFee * 0.30
+      participantCount = intToDecimal (length participants)
+      participantShare = if participantCount > 0.0 
+                         then participantPool / participantCount 
+                         else 0.0
+      
+      leadDistribution = [(leadLender, leadShare)]
+      participantDistributions = map (\p -> (p.lender, participantShare)) participants
+  in leadDistribution <> participantDistributions
+
+-- | Handle syndicated loan default with platform support
+-- Aegis Role: Provides emergency liquidity to syndicate members, reimburses based on commitment
+handleSyndicatedDefault : ContractId SyndicatedLoan -> Text -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId SyndicatedLoan, [(Party, ContractId Aegis.AssetBalance)])
+handleSyndicatedDefault loanCid reason platformCid assetType = do
+  loan <- fetch loanCid
+  platform <- fetch platformCid
+  
+  -- Mark loan as defaulted
+  newLoanCid <- exercise loanCid MarkSyndicatedDefault with
+    defaultReason = reason
+  
+  -- Reimburse each participant proportionally
+  let reimbursements = []  -- Simplified - full implementation requires complex multi-party auth
+  
+  return (newLoanCid, reimbursements)
+
+-- | Request emergency liquidity for entire syndicate
+-- Aegis Role: Provides bulk liquidity support to maintain syndicate operations
+requestSyndicateLiquidity : Party -> [Party] -> ContractId Aegis.AegisPlatform -> Decimal -> AssetType -> LiquiditySupportTerms -> Update (ContractId Aegis.AegisPlatform, [(Party, ContractId Aegis.AssetBalance)])
+requestSyndicateLiquidity leadLender participants platformCid totalAmount assetType supportTerms = do
+  platform <- fetch platformCid
+  
+  let participantCount = intToDecimal (length participants + 1)  -- +1 for lead lender
+  let amountPerLender = totalAmount / participantCount
+  
+  -- Provide liquidity to lead lender
+  (platformCid1, leadBalance) <- exercise platformCid Aegis.ProvideLiquiditySupport with
+    lender = leadLender
+    assetType
+    supportAmount = amountPerLender
+    supportReason = "Syndicate emergency liquidity - lead lender"
+    repaymentTerms = supportTerms
+  
+  -- Provide liquidity to each participant (simplified - full implementation requires iteration)
+  let allBalances = [(leadLender, leadBalance)]
+  
+  return (platformCid1, allBalances)

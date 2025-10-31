@@ -1,0 +1,937 @@
+-- | Aegis RFQ - Comprehensive Role-Based Audit Logging System
+-- Enterprise-grade audit trails with detailed event tracking, compliance monitoring,
+-- and role-based access control for regulatory compliance
+
+module AuditLog where
+
+import DA.Time
+import Types
+
+
+-- PLATFORM-WIDE AUDIT LOG (Admin-Level Visibility)
+-- | Platform-level audit log - Complete system oversight for administrators
+-- Visible to: platform, emergencyOperator, complianceOfficer
+-- Tracks: All critical system operations, treasury management, compliance events
+template PlatformAuditLog with
+    logId: Text
+    platform: Party
+    emergencyOperator: Party
+    complianceOfficer: Party
+    eventType: PlatformEventType
+    eventDescription: Text
+    affectedParties: [Party]  -- All parties involved in this event
+    eventData: [(Text, Text)]  -- Structured metadata (key-value pairs)
+    contractIds: [Text]  -- Related contract IDs
+    financialImpact: Optional FinancialImpact
+    severity: EventSeverity
+    timestamp: Time
+    performedBy: Party
+    requiresReview: Bool
+    reviewed: Bool
+    reviewNotes: Optional Text
+  where
+    signatory platform
+    observer emergencyOperator, complianceOfficer
+
+    ensure
+      eventDescription /= ""
+
+    key (platform, logId): (Party, Text)
+    maintainer key._1
+
+    -- | Compliance officer reviews and approves log entry
+    choice ReviewLogEntry: ContractId PlatformAuditLog with
+        reviewer: Party
+        notes: Text
+        approved: Bool
+      controller reviewer
+      do
+        assertMsg "Only compliance officer can review" (reviewer == complianceOfficer)
+        
+        create this with
+          reviewed = True
+          reviewNotes = Some notes
+          eventData = ("reviewedBy", show reviewer) :: ("approved", show approved) :: eventData
+
+    -- | Escalate critical event for immediate attention
+    choice EscalateEvent: ContractId PlatformEscalation with
+        escalationReason: Text
+        escalatedTo: Party
+      controller complianceOfficer
+      do
+        now <- getTime
+        create PlatformEscalation with
+          escalationId = logId <> "-ESC"
+          originalLogId = logId
+          platform
+          complianceOfficer
+          escalationReason
+          escalatedTo
+          escalatedAt = now
+          resolved = False
+          resolutionNotes = None
+
+    -- | Archive log after retention period
+    choice ArchiveLog: () with
+        archiver: Party
+        archiveReason: Text
+      controller archiver
+      do
+        assertMsg "Only platform or compliance can archive" 
+          (archiver == platform || archiver == complianceOfficer)
+        return ()
+
+-- | Platform escalation for critical issues
+template PlatformEscalation with
+    escalationId: Text
+    originalLogId: Text
+    platform: Party
+    complianceOfficer: Party
+    escalationReason: Text
+    escalatedTo: Party
+    escalatedAt: Time
+    resolved: Bool
+    resolutionNotes: Optional Text
+  where
+    signatory complianceOfficer
+    observer platform, escalatedTo
+
+    key (complianceOfficer, escalationId): (Party, Text)
+    maintainer key._1
+
+    choice ResolvePlatformEscalation: ContractId PlatformEscalation with
+        resolver: Party
+        notes: Text
+      controller resolver
+      do
+        assertMsg "Only escalated party can resolve" (resolver == escalatedTo)
+        create this with
+          resolved = True
+          resolutionNotes = Some notes
+
+
+-- LENDER AUDIT LOG (Lender-Specific Operations)
+-- | Lender-specific audit log with complete transaction history
+-- Visible to: lender (owner), platform, complianceOfficer
+-- Tracks: All lender operations, bids, loans, payments, portfolio activity
+template LenderAuditLog with
+    logId: Text
+    lender: Party
+    platform: Party
+    complianceOfficer: Party
+    eventType: LenderEventType
+    eventDescription: Text
+    relatedContracts: [Text]  -- Contract IDs involved
+    eventData: [(Text, Text)]  -- Detailed metadata
+    financialImpact: Optional FinancialImpact
+    counterparty: Optional Party  -- Other party involved (borrower, buyer, etc.)
+    riskMetrics: Optional RiskSnapshot  -- Risk metrics at time of event
+    timestamp: Time
+    acknowledged: Bool
+  where
+    signatory lender
+    observer platform, complianceOfficer
+
+    key (lender, logId): (Party, Text)
+    maintainer key._1
+
+    -- | Lender acknowledges log entry
+    choice AcknowledgeLenderLog: ContractId LenderAuditLog with
+      controller lender
+      do
+        now <- getTime
+        create this with
+          acknowledged = True
+          eventData = ("acknowledgedAt", show now) :: eventData
+
+    -- | Export log for lender's records
+    choice ExportLenderLog: LenderLogExport with
+      controller lender
+      do
+        return LenderLogExport with
+          logId
+          lender
+          eventType
+          eventDescription
+          financialImpact
+          timestamp
+          exportedAt = timestamp
+
+    -- | Flag suspicious activity
+    choice FlagSuspiciousActivity: ContractId ComplianceAlert with
+        flaggedBy: Party
+        suspicionReason: Text
+        alertLevel: AlertLevel
+      controller flaggedBy
+      do
+        assertMsg "Only platform or compliance can flag" 
+          (flaggedBy == platform || flaggedBy == complianceOfficer)
+        
+        now <- getTime
+        create ComplianceAlert with
+          alertId = logId <> "-ALERT"
+          platform
+          complianceOfficer
+          subject = lender
+          alertType = AlertSuspiciousActivity
+          alertLevel
+          description = suspicionReason
+          relatedLogId = logId
+          triggeredAt = now
+          investigated = False
+          investigationNotes = None
+
+-- | Exported lender log data
+data LenderLogExport = LenderLogExport with
+    logId: Text
+    lender: Party
+    eventType: LenderEventType
+    eventDescription: Text
+    financialImpact: Optional FinancialImpact
+    timestamp: Time
+    exportedAt: Time
+  deriving (Eq, Show)
+
+
+-- BORROWER AUDIT LOG (Borrower-Specific Operations)
+-- | Borrower-specific audit log with complete borrowing history
+-- Visible to: borrower (owner), platform, complianceOfficer
+-- Tracks: RFQs, loan acceptance, payments, collateral, credit events
+template BorrowerAuditLog with
+    logId: Text
+    borrower: Party
+    platform: Party
+    complianceOfficer: Party
+    eventType: BorrowerEventType
+    eventDescription: Text
+    relatedContracts: [Text]
+    eventData: [(Text, Text)]
+    financialImpact: Optional FinancialImpact
+    counterparty: Optional Party  -- Lender involved
+    creditImpact: Optional CreditImpact  -- Impact on credit score
+    timestamp: Time
+    acknowledged: Bool
+  where
+    signatory borrower
+    observer platform, complianceOfficer
+
+    key (borrower, logId): (Party, Text)
+    maintainer key._1
+
+    choice AcknowledgeBorrowerLog: ContractId BorrowerAuditLog with
+      controller borrower
+      do
+        now <- getTime
+        create this with
+          acknowledged = True
+          eventData = ("acknowledgedAt", show now) :: eventData
+
+    choice ExportBorrowerLog: BorrowerLogExport with
+      controller borrower
+      do
+        return BorrowerLogExport with
+          logId
+          borrower
+          eventType
+          eventDescription
+          financialImpact
+          creditImpact
+          timestamp
+          exportedAt = timestamp
+
+data BorrowerLogExport = BorrowerLogExport with
+    logId: Text
+    borrower: Party
+    eventType: BorrowerEventType
+    eventDescription: Text
+    financialImpact: Optional FinancialImpact
+    creditImpact: Optional CreditImpact
+    timestamp: Time
+    exportedAt: Time
+  deriving (Eq, Show)
+
+
+-- LOAN AUDIT TRAIL (Multi-Party Loan Lifecycle)
+-- | Comprehensive loan audit trail with complete lifecycle tracking
+-- Visible to: borrower, all lenders, platform
+-- Tracks: Every action on the loan from creation to repayment/default
+template LoanAuditTrail with
+    loanId: Text
+    borrower: Party
+    lenders: [Party]
+    platform: Party
+    events: [LoanAuditEvent]
+    loanAmount: Decimal
+    outstandingPrincipal: Decimal
+    totalInterestPaid: Decimal
+    totalPrincipalPaid: Decimal
+    currentStatus: LoanStatus
+    createdAt: Time
+    lastUpdated: Time
+  where
+    signatory borrower :: lenders
+    observer platform
+
+    key (borrower, loanId): (Party, Text)
+    maintainer key._1
+
+    -- | Log new loan event
+    choice LogLoanEvent: ContractId LoanAuditTrail with
+        eventType: LoanEventType
+        eventDescription: Text
+        performedBy: Party
+        eventData: [(Text, Text)]
+        financialImpact: Optional FinancialImpact
+      controller performedBy
+      do
+        now <- getTime
+        
+        assertMsg "Performer must be involved in loan" 
+          (performedBy == borrower || performedBy `elem` lenders || performedBy == platform)
+        
+        let newEvent = LoanAuditEvent with
+              eventType
+              eventDescription
+              performedBy
+              eventData
+              financialImpact
+              timestamp = now
+        
+        -- Update outstanding principal if payment made
+        let newOutstanding = case financialImpact of
+              Some (FinancialImpact _ (Some principal) _ _) -> outstandingPrincipal - principal
+              _ -> outstandingPrincipal
+        
+        let newPrincipalPaid = case financialImpact of
+              Some (FinancialImpact _ (Some principal) _ _) -> totalPrincipalPaid + principal
+              _ -> totalPrincipalPaid
+        
+        let newInterestPaid = case financialImpact of
+              Some (FinancialImpact _ _ (Some interest) _) -> totalInterestPaid + interest
+              _ -> totalInterestPaid
+        
+        create this with
+          events = newEvent :: events
+          outstandingPrincipal = newOutstanding
+          totalPrincipalPaid = newPrincipalPaid
+          totalInterestPaid = newInterestPaid
+          lastUpdated = now
+
+    -- | Generate comprehensive loan report
+    choice GenerateLoanReport: LoanAuditReport with
+        requestedBy: Party
+      controller requestedBy
+      do
+        assertMsg "Requester must be involved in loan" 
+          (requestedBy == borrower || requestedBy `elem` lenders || requestedBy == platform)
+        
+        return LoanAuditReport with
+          loanId
+          borrower
+          lenders
+          loanAmount
+          outstandingPrincipal
+          totalInterestPaid
+          totalPrincipalPaid
+          currentStatus
+          totalEvents = length events
+          events
+          reportGeneratedAt = lastUpdated
+          reportGeneratedBy = requestedBy
+
+    -- | Update loan status
+    choice UpdateLoanStatus: ContractId LoanAuditTrail with
+        newStatus: LoanStatus
+        updatedBy: Party
+      controller updatedBy
+      do
+        assertMsg "Only lenders or platform can update status" 
+          (updatedBy `elem` lenders || updatedBy == platform)
+        
+        create this with
+          currentStatus = newStatus
+
+-- | Individual loan audit event
+data LoanAuditEvent = LoanAuditEvent with
+    eventType: LoanEventType
+    eventDescription: Text
+    performedBy: Party
+    eventData: [(Text, Text)]
+    financialImpact: Optional FinancialImpact
+    timestamp: Time
+  deriving (Eq, Show)
+
+-- | Comprehensive loan audit report
+data LoanAuditReport = LoanAuditReport with
+    loanId: Text
+    borrower: Party
+    lenders: [Party]
+    loanAmount: Decimal
+    outstandingPrincipal: Decimal
+    totalInterestPaid: Decimal
+    totalPrincipalPaid: Decimal
+    currentStatus: LoanStatus
+    totalEvents: Int
+    events: [LoanAuditEvent]
+    reportGeneratedAt: Time
+    reportGeneratedBy: Party
+  deriving (Eq, Show)
+
+
+-- POOL AUDIT LOG (Liquidity Pool Operations)
+-- | Pool manager audit log for liquidity pool operations
+-- Visible to: poolManager, platform, complianceOfficer
+-- Tracks: Pool operations, participant activity, yield distribution
+template PoolAuditLog with
+    logId: Text
+    poolManager: Party
+    poolId: Text
+    platform: Party
+    complianceOfficer: Party
+    eventType: PoolEventType
+    eventDescription: Text
+    eventData: [(Text, Text)]
+    financialImpact: Optional FinancialImpact
+    participantsAffected: [Party]
+    poolMetrics: Optional PoolMetricsSnapshot
+    timestamp: Time
+  where
+    signatory poolManager
+    observer platform, complianceOfficer
+
+    key (poolManager, logId): (Party, Text)
+    maintainer key._1
+
+    choice GeneratePoolReport: PoolAuditReport with
+      controller poolManager
+      do
+        return PoolAuditReport with
+          poolId
+          poolManager
+          eventType
+          eventDescription
+          financialImpact
+          poolMetrics
+          timestamp
+
+data PoolAuditReport = PoolAuditReport with
+    poolId: Text
+    poolManager: Party
+    eventType: PoolEventType
+    eventDescription: Text
+    financialImpact: Optional FinancialImpact
+    poolMetrics: Optional PoolMetricsSnapshot
+    timestamp: Time
+  deriving (Eq, Show)
+
+
+-- COMPLIANCE AUDIT LOG (Regulatory Compliance)
+-- | Compliance-specific audit log for regulatory oversight
+-- Visible to: complianceOfficer, platform
+-- Tracks: KYC, AML, sanctions checks, regulatory compliance
+template ComplianceAuditLog with
+    logId: Text
+    complianceOfficer: Party
+    platform: Party
+    subject: Party  -- Party being audited
+    complianceCheckType: ComplianceCheckType
+    checkResult: ComplianceCheckResult
+    checkDetails: Text
+    riskLevel: ComplianceRiskLevel
+    actionRequired: Bool
+    actionTaken: Optional Text
+    evidenceDocuments: [Text]  -- Document references
+    timestamp: Time
+    nextReviewDate: Time
+  where
+    signatory complianceOfficer
+    observer platform
+
+    key (complianceOfficer, logId): (Party, Text)
+    maintainer key._1
+
+    choice RecordComplianceAction: ContractId ComplianceAuditLog with
+        action: Text
+        actionBy: Party
+      controller actionBy
+      do
+        assertMsg "Only compliance officer or platform can take action" 
+          (actionBy == complianceOfficer || actionBy == platform)
+        
+        create this with
+          actionTaken = Some action
+          actionRequired = False
+
+    choice EscalateComplianceIssue: ContractId ComplianceEscalation with
+        escalationReason: Text
+        escalatedTo: Party
+      controller complianceOfficer
+      do
+        now <- getTime
+        create ComplianceEscalation with
+          escalationId = logId <> "-ESC"
+          originalLogId = logId
+          complianceOfficer
+          platform
+          subject
+          escalationReason
+          escalatedTo
+          escalatedAt = now
+          resolved = False
+          resolutionNotes = None
+
+template ComplianceEscalation with
+    escalationId: Text
+    originalLogId: Text
+    complianceOfficer: Party
+    platform: Party
+    subject: Party
+    escalationReason: Text
+    escalatedTo: Party
+    escalatedAt: Time
+    resolved: Bool
+    resolutionNotes: Optional Text
+  where
+    signatory complianceOfficer
+    observer platform, escalatedTo
+
+    key (complianceOfficer, escalationId): (Party, Text)
+    maintainer key._1
+
+    choice ResolveComplianceEscalation: ContractId ComplianceEscalation with
+        resolver: Party
+        notes: Text
+      controller resolver
+      do
+        assertMsg "Only escalated party can resolve" (resolver == escalatedTo)
+        create this with
+          resolved = True
+          resolutionNotes = Some notes
+
+
+-- COMPLIANCE ALERT SYSTEM
+template ComplianceAlert with
+    alertId: Text
+    platform: Party
+    complianceOfficer: Party
+    subject: Party
+    alertType: AlertType
+    alertLevel: AlertLevel
+    description: Text
+    relatedLogId: Text
+    triggeredAt: Time
+    investigated: Bool
+    investigationNotes: Optional Text
+  where
+    signatory platform
+    observer complianceOfficer
+
+    key (platform, alertId): (Party, Text)
+    maintainer key._1
+
+    choice InvestigateAlert: ContractId ComplianceAlert with
+        investigator: Party
+        notes: Text
+      controller investigator
+      do
+        assertMsg "Only compliance officer can investigate" (investigator == complianceOfficer)
+        create this with
+          investigated = True
+          investigationNotes = Some notes
+
+
+-- ACTIVITY MONITOR (Real-Time Monitoring)
+template ActivityMonitor with
+    monitorId: Text
+    platform: Party
+    complianceOfficer: Party
+    monitoredParty: Party
+    activityType: ActivityType
+    activityCount: Int
+    timeWindow: RelTime
+    threshold: Int
+    thresholdExceeded: Bool
+    alertTriggered: Bool
+    monitoringStarted: Time
+    lastActivityTime: Time
+  where
+    signatory platform
+    observer complianceOfficer, monitoredParty
+
+    key (platform, monitorId): (Party, Text)
+    maintainer key._1
+
+    choice RecordActivity: ContractId ActivityMonitor with
+      controller platform
+      do
+        now <- getTime
+        let newCount = activityCount + 1
+        let exceeded = newCount > threshold
+        
+        create this with
+          activityCount = newCount
+          thresholdExceeded = exceeded
+          alertTriggered = exceeded
+          lastActivityTime = now
+
+    choice ResetActivityCounter: ContractId ActivityMonitor with
+        resetBy: Party
+      controller resetBy
+      do
+        now <- getTime
+        assertMsg "Only platform or compliance can reset" 
+          (resetBy == platform || resetBy == complianceOfficer)
+        
+        create this with
+          activityCount = 0
+          thresholdExceeded = False
+          alertTriggered = False
+          monitoringStarted = now
+
+
+-- DATA TYPES AND ENUMERATIONS
+-- | Financial impact of an event
+data FinancialImpact = FinancialImpact with
+    totalAmount: Decimal
+    principalAmount: Optional Decimal
+    interestAmount: Optional Decimal
+    feesAmount: Optional Decimal
+  deriving (Eq, Show)
+
+-- | Credit impact on borrower's credit score
+data CreditImpact = CreditImpact with
+    previousScore: Int
+    newScore: Int
+    scoreDelta: Int
+    impactReason: Text
+  deriving (Eq, Show)
+
+-- | Risk snapshot at time of event
+data RiskSnapshot = RiskSnapshot with
+    portfolioValue: Decimal
+    exposureAmount: Decimal
+    utilizationRate: Decimal
+    riskRating: RiskRating
+  deriving (Eq, Show)
+
+-- | Pool metrics snapshot
+data PoolMetricsSnapshot = PoolMetricsSnapshot with
+    totalLiquidity: Decimal
+    deployedLiquidity: Decimal
+    utilizationRate: Decimal
+    currentAPY: Decimal
+    participantCount: Int
+  deriving (Eq, Show)
+
+-- | Event severity levels
+data EventSeverity
+  = Info  -- Informational, routine operations
+  | Warning  -- Potential issue, requires monitoring
+  | Error  -- Error occurred, may need intervention
+  | Critical  -- Critical issue, immediate action required
+  | Audit  -- Audit-level event for compliance
+  deriving (Eq, Show, Ord)
+
+-- | Platform event types
+data PlatformEventType
+  = TreasuryMinting
+  | TreasuryWithdrawal
+  | LenderRegistration
+  | LenderFunding
+  | LenderReimbursement
+  | PlatformFeeCollection
+  | EmergencyShutdown
+  | PlatformReactivation
+  | AssetAuthorization
+  | AssetDeauthorization
+  | FeeRateUpdate
+  | LiquiditySupportProvided
+  | InsuranceClaimPaid
+  | GuaranteeInvoked
+  | ComplianceViolation
+  | SuspiciousActivityDetected
+  deriving (Eq, Show)
+
+-- | Lender event types
+data LenderEventType
+  = LenderAccountCreated
+  | LenderFundsReceived
+  | LenderFundsWithdrawn
+  | LenderBidSubmitted
+  | LenderBidAccepted
+  | LenderBidRejected
+  | LenderBidWithdrawn
+  | LenderLoanOriginated
+  | LenderLoanRepaymentReceived
+  | LenderLoanDefaulted
+  | LenderCollateralLiquidated
+  | LenderSecondaryMarketSale
+  | LenderSecondaryMarketPurchase
+  | LenderPoolParticipation
+  | LenderPoolWithdrawal
+  | LenderYieldDistributed
+  | LenderYieldClaimed
+  | LenderFeeCharged
+  | LenderLiquiditySupportReceived
+  | LenderInsuranceClaimFiled
+  | LenderRiskAssessmentPerformed
+  deriving (Eq, Show)
+
+-- | Borrower event types
+data BorrowerEventType
+  = BorrowerAccountCreated
+  | BorrowerRFQCreated
+  | BorrowerRFQCancelled
+  | BorrowerRFQExpired
+  | BorrowerBidReceived
+  | BorrowerBidReviewed
+  | BorrowerLoanAccepted
+  | BorrowerLoanActivated
+  | BorrowerPaymentMade
+  | BorrowerPaymentMissed
+  | BorrowerPaymentLate
+  | BorrowerCollateralPosted
+  | BorrowerCollateralReleased
+  | BorrowerMarginCallReceived
+  | BorrowerMarginCallSatisfied
+  | BorrowerLoanRestructured
+  | BorrowerLoanRepaidFully
+  | BorrowerLoanDefaultDeclared
+  | BorrowerCreditScoreUpdated
+  | BorrowerCreditInquiryReceived
+  | BorrowerCreditInquiryApproved
+  deriving (Eq, Show)
+
+-- | Loan event types
+data LoanEventType
+  = LoanProposalCreated
+  | LoanProposalAccepted
+  | LoanProposalRejected
+  | LoanActivated
+  | PaymentScheduled
+  | PaymentReceived
+  | PaymentLate
+  | InterestAccrued
+  | PrincipalReduced
+  | CollateralValuationUpdated
+  | MarginCallTriggered
+  | MarginCallSatisfied
+  | CovenantBreached
+  | CovenantWaived
+  | LoanRestructured
+  | LoanFullyRepaid
+  | LoanDefaulted
+  | CollateralLiquidationInitiated
+  | CollateralLiquidationCompleted
+  | LoanTransferredSecondaryMarket
+  deriving (Eq, Show)
+
+-- | Pool event types
+data PoolEventType
+  = PoolCreated
+  | PoolInitialized
+  | PoolParticipantJoined
+  | PoolParticipantWithdrew
+  | PoolLiquidityDeployed
+  | PoolLiquidityReceived
+  | PoolRepaymentReceived
+  | PoolYieldDistributed
+  | PoolYieldReinvested
+  | PoolRebalanced
+  | PoolStrategyUpdated
+  | PoolPerformanceReviewed
+  deriving (Eq, Show)
+
+-- | Compliance check types
+data ComplianceCheckType
+  = KYCVerification
+  | AMLScreening
+  | SanctionsCheck
+  | PEPScreening
+  | CreditCheck
+  | RegulatoryReporting
+  | TransactionMonitoring
+  | SuspiciousActivityReview
+  deriving (Eq, Show)
+
+-- | Compliance check result
+data ComplianceCheckResult
+  = Passed
+  | PassedWithWarnings
+  | Failed
+  | RequiresManualReview
+  | Pending
+  deriving (Eq, Show)
+
+-- | Alert types
+data AlertType
+  = AlertSuspiciousActivity
+  | AlertComplianceViolation
+  | AlertRiskThresholdExceeded
+  | AlertUnusualTransactionPattern
+  | AlertHighValueTransaction
+  | AlertRapidTransactionSequence
+  deriving (Eq, Show)
+
+-- | Alert severity levels
+data AlertLevel
+  = AlertLow
+  | AlertMedium
+  | AlertHigh
+  | AlertCritical
+  deriving (Eq, Show, Ord)
+
+-- | Activity types for monitoring
+data ActivityType
+  = LoginAttempts
+  | FailedTransactions
+  | LargeTransactions
+  | RapidTransactions
+  | UnusualPatterns
+  | MultipleRFQs
+  | FrequentBidding
+  | CollateralChanges
+  deriving (Eq, Show)
+
+
+-- HELPER FUNCTIONS FOR AUDIT LOGGING
+-- | Log platform event
+logPlatformEvent : Party -> Party -> Party -> Text -> PlatformEventType -> Text -> [Party] -> [(Text, Text)] -> [Text] -> Optional FinancialImpact -> EventSeverity -> Party -> Bool -> Update (ContractId PlatformAuditLog)
+logPlatformEvent platform emergencyOp complianceOff logId eventType desc affectedParties eventData contractIds financialImpact severity performedBy requiresReview = do
+  now <- getTime
+  create PlatformAuditLog with
+    logId
+    platform
+    emergencyOperator = emergencyOp
+    complianceOfficer = complianceOff
+    eventType
+    eventDescription = desc
+    affectedParties
+    eventData
+    contractIds
+    financialImpact
+    severity
+    timestamp = now
+    performedBy
+    requiresReview
+    reviewed = False
+    reviewNotes = None
+
+-- | Log lender event
+logLenderEvent : Party -> Party -> Party -> Text -> LenderEventType -> Text -> [Text] -> [(Text, Text)] -> Optional FinancialImpact -> Optional Party -> Optional RiskSnapshot -> Update (ContractId LenderAuditLog)
+logLenderEvent lender platform complianceOff logId eventType desc relatedContracts eventData financialImpact counterparty riskMetrics = do
+  now <- getTime
+  create LenderAuditLog with
+    logId
+    lender
+    platform
+    complianceOfficer = complianceOff
+    eventType
+    eventDescription = desc
+    relatedContracts
+    eventData
+    financialImpact
+    counterparty
+    riskMetrics
+    timestamp = now
+    acknowledged = False
+
+-- | Log borrower event
+logBorrowerEvent : Party -> Party -> Party -> Text -> BorrowerEventType -> Text -> [Text] -> [(Text, Text)] -> Optional FinancialImpact -> Optional Party -> Optional CreditImpact -> Update (ContractId BorrowerAuditLog)
+logBorrowerEvent borrower platform complianceOff logId eventType desc relatedContracts eventData financialImpact counterparty creditImpact = do
+  now <- getTime
+  create BorrowerAuditLog with
+    logId
+    borrower
+    platform
+    complianceOfficer = complianceOff
+    eventType
+    eventDescription = desc
+    relatedContracts
+    eventData
+    financialImpact
+    counterparty
+    creditImpact
+    timestamp = now
+    acknowledged = False
+
+-- | Initialize loan audit trail
+initializeLoanAuditTrail : Text -> Party -> [Party] -> Party -> Decimal -> LoanStatus -> Update (ContractId LoanAuditTrail)
+initializeLoanAuditTrail loanId borrower lenders platform loanAmount status = do
+  now <- getTime
+  let initialEvent = LoanAuditEvent with
+        eventType = LoanProposalCreated
+        eventDescription = "Loan audit trail initialized"
+        performedBy = borrower
+        eventData = [("loanId", loanId), ("loanAmount", show loanAmount)]
+        financialImpact = Some (FinancialImpact loanAmount (Some loanAmount) None None)
+        timestamp = now
+  
+  create LoanAuditTrail with
+    loanId
+    borrower
+    lenders
+    platform
+    events = [initialEvent]
+    loanAmount
+    outstandingPrincipal = loanAmount
+    totalInterestPaid = 0.0
+    totalPrincipalPaid = 0.0
+    currentStatus = status
+    createdAt = now
+    lastUpdated = now
+
+-- | Log pool event
+logPoolEvent : Party -> Text -> Party -> Party -> Text -> PoolEventType -> Text -> [(Text, Text)] -> Optional FinancialImpact -> [Party] -> Optional PoolMetricsSnapshot -> Update (ContractId PoolAuditLog)
+logPoolEvent poolManager poolId platform complianceOff logId eventType desc eventData financialImpact participantsAffected poolMetrics = do
+  now <- getTime
+  create PoolAuditLog with
+    logId
+    poolManager
+    poolId
+    platform
+    complianceOfficer = complianceOff
+    eventType
+    eventDescription = desc
+    eventData
+    financialImpact
+    participantsAffected
+    poolMetrics
+    timestamp = now
+
+-- | Log compliance check
+logComplianceCheck : Party -> Party -> Party -> Text -> ComplianceCheckType -> ComplianceCheckResult -> Text -> ComplianceRiskLevel -> Bool -> [Text] -> Time -> Update (ContractId ComplianceAuditLog)
+logComplianceCheck complianceOff platform subject logId checkType result details riskLevel actionRequired evidenceDocs nextReview = do
+  now <- getTime
+  create ComplianceAuditLog with
+    logId
+    complianceOfficer = complianceOff
+    platform
+    subject
+    complianceCheckType = checkType
+    checkResult = result
+    checkDetails = details
+    riskLevel
+    actionRequired
+    actionTaken = None
+    evidenceDocuments = evidenceDocs
+    timestamp = now
+    nextReviewDate = nextReview
+
+-- | Initialize activity monitor
+initializeActivityMonitor : Party -> Party -> Party -> Text -> ActivityType -> Int -> RelTime -> Update (ContractId ActivityMonitor)
+initializeActivityMonitor platform complianceOff monitoredParty monitorId activityType threshold timeWindow = do
+  now <- getTime
+  create ActivityMonitor with
+    monitorId
+    platform
+    complianceOfficer = complianceOff
+    monitoredParty
+    activityType
+    activityCount = 0
+    timeWindow
+    threshold
+    thresholdExceeded = False
+    alertTriggered = False
+    monitoringStarted = now
+    lastActivityTime = now

@@ -1,0 +1,113 @@
+-- | Utility functions and helpers for the RFQ system
+
+module RFQUtils where
+
+import DA.Time
+import Daml.Script
+import RFQ
+import Types
+
+-- | Helper function to create a standard RFQ with common parameters
+createStandardRFQ : Party -> [Party] -> Decimal -> [CollateralAsset] -> Int -> Script (ContractId RFQ)
+createStandardRFQ borrower preferredLenders loanAmt collateral durationDays = do
+  now <- getTime
+  let duration = days durationDays
+  let expiry = addRelTime now (days 7) -- RFQ expires in 7 days
+  
+  let lenderCriteria = LenderCriteria with
+        categories = [Tier1Bank, RegionalBank, InvestmentFund]
+        minimumRating = BBB
+        geographicRestrictions = []
+        maximumBids = 5
+        requiredCapacity = loanAmt
+        preferredLenders = preferredLenders
+  
+  let privacySettings = PrivacySettings with
+        visibilityMode = CompletelyPrivate
+        allowSecondaryMarket = True
+        dataRetentionDays = 365
+        anonymizeBorrower = False
+        restrictedDataFields = []
+  
+  let collateralReqs = CollateralRequirements with
+        minimumRatio = 1.3
+        maintenanceRatio = 1.2
+        liquidationRatio = 1.1
+        acceptedAssetTypes = [Cryptocurrency "ETH", Cryptocurrency "BTC"]
+        maximumConcentration = 0.5
+  
+  submit borrower do
+    createCmd RFQ with
+      borrower
+      rfqId = "RFQ-" <> show now
+      loanAmount = loanAmt
+      collateralAssets = collateral
+      loanDuration = duration
+      loanPurpose = "Standard loan"
+      lenderCriteria
+      privacySettings
+      collateralRequirements = collateralReqs
+      status = RFQActive
+      createdAt = now
+      expiresAt = expiry
+      currentBidCount = 0
+      acceptedBidId = None
+
+-- | Helper to submit a competitive bid with features
+submitCompetitiveBid : Party -> LenderProfile -> ContractId RFQ -> InterestRateStructure -> RepaymentSchedule -> Text -> Script (Either Text (ContractId Bid))
+submitCompetitiveBid lender profile rfqCid rateStructure schedule terms = do
+  submit lender do
+    exerciseCmd rfqCid SubmitBid with
+      lender
+      lenderProfile = profile
+      interestRateStructure = rateStructure
+      repaymentSchedule = schedule
+      proposedCovenants = []
+      additionalTerms = terms
+
+-- | Helper to create a simple fixed-rate structure
+createFixedRateStructure : Decimal -> InterestRateStructure
+createFixedRateStructure rate = InterestRateStructure with
+  rateType = Fixed
+  baseRate = None
+  margin = 0.0
+  fixedRate = Some rate
+  floorRate = None
+  capRate = None
+  resetFrequency = None
+
+-- | Helper to create a simple monthly repayment schedule
+createMonthlySchedule : Int -> RepaymentSchedule
+createMonthlySchedule numberOfPayments = RepaymentSchedule with
+  frequency = Monthly
+  numberOfPayments
+  gracePeriodDays = 5
+  lateFeeRate = 0.001
+  earlyRepaymentTerms = EarlyRepaymentTerms with
+    allowed = True
+    penaltyRate = 0.02
+    noticePeriodDays = 7
+    minimumHoldPeriod = Some (days 30)
+  amortizationType = FullyAmortizing
+
+-- | Helper to create a simple lender profile
+createLenderProfile : Party -> LenderCategory -> RiskRating -> Decimal -> LenderProfile
+createLenderProfile lender category rating capacity = LenderProfile with
+  lender
+  category
+  rating
+  totalCapacity = capacity
+  availableCapacity = capacity
+  activeLoans = 0
+  defaultRate = 0.0
+  averageInterestRate = 0.08
+  geographicFocus = ["US"]
+
+-- | Calculate total repayment amount for a loan
+calculateRepayment : Decimal -> Decimal -> Decimal
+calculateRepayment principal rate = principal * (1.0 + rate)
+
+-- | Check if a loan is overdue
+isLoanOverdue : Loan -> Time -> Bool
+isLoanOverdue loan currentTime = 
+  loan.status == LoanActive && currentTime > loan.maturityDate

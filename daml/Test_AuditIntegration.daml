@@ -1,0 +1,71 @@
+-- | Aegis RFQ - Audit Logging Integration Tests
+-- Tests that verify audit logging works correctly with actual contract operations
+
+module Test_AuditIntegration where
+
+import Daml.Script
+import DA.Time()
+import Types
+import RFQ()
+import Credit
+import qualified AuditLog
+
+-- TEST: Verify Audit Logs are Created
+testAuditLogsCreated : Script ()
+testAuditLogsCreated = script do
+  alice <- allocateParty "Alice"
+  bob <- allocateParty "Bob"
+  
+  now <- getTime
+  
+  -- Create credit profile
+  profileCid <- submit alice do
+    createCmd CreditProfileContract with
+      party = alice
+      profileId = "PROFILE-001"
+      creditScore = 700
+      riskRating = BBB
+      totalBorrowed = 0.0
+      totalRepaid = 0.0
+      currentOutstanding = 0.0
+      numberOfLoans = 0
+      numberOfDefaults = 0
+      numberOfLatePayments = 0
+      averageRepaymentTime = 0.0
+      longestDelayDays = 0
+      defaultHistory = []
+      lastUpdated = now
+      privacyLevel = PublicCredit
+  
+  debug "✓ Credit profile created"
+  
+  -- Record loan origination (creates audit log)
+  profileCid2 <- submit alice do
+    exerciseCmd profileCid RecordLoanOrigination with
+      loanId = "LOAN-001"
+      loanAmount = 50000.0
+  
+  debug "✓ Loan origination recorded (audit log created)"
+  
+  -- Verify borrower audit log was created
+  borrowerLogs <- query @AuditLog.BorrowerAuditLog alice
+  assertMsg "Borrower audit log should be created for loan origination" (length borrowerLogs > 0)
+  debug "✓ Credit audit log verified"
+  
+  -- Record repayment (creates audit log with credit score update)
+  profileCid3 <- submit alice do
+    exerciseCmd profileCid2 RecordRepayment with
+      loanId = "LOAN-001"
+      repaymentAmount = 50000.0
+      daysToRepay = 85
+      wasOnTime = True
+  
+  debug "✓ Repayment recorded (audit log with credit score update created)"
+  
+  -- Verify more audit logs were created
+  borrowerLogsAfter <- query @AuditLog.BorrowerAuditLog alice
+  assertMsg "More audit logs should be created after repayment" (length borrowerLogsAfter > length borrowerLogs)
+  debug "✓ Credit score update audit log verified"
+  
+  debug "=== Audit Logging Integration Test PASSED ==="
+  return ()

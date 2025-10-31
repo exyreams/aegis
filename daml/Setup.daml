@@ -1,0 +1,23 @@
+module Setup where
+
+import Daml.Script
+
+-- | Minimal setup - no default parties created
+-- Parties are created dynamically through the application registration
+
+data Parties = Parties
+  with
+    public : Party
+
+-- | Minimal setup that only creates a public party if needed
+setup : Script Parties
+setup = do
+  -- Only create public party for system use
+  public <- allocateParty "Public"
+  pure $ Parties with
+    public
+
+-- Alternative: Completely empty setup
+emptySetup : Script ()
+emptySetup = do
+  pure ()

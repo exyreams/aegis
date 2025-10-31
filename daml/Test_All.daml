@@ -1,0 +1,37 @@
+-- | Master test suite running all module tests
+-- Comprehensive coverage of all templates and choices
+
+module Test_All where
+
+import Daml.Script
+import Test_RFQ
+import Test_Collateral
+import Test_Credits
+import Test_Yield
+import Test_SecondaryMarket
+import Test_Syndication
+
+-- | Run all tests across all modules
+runAllTests : Script ()
+runAllTests = do
+  debug "Aegis RFQ comprehensive test suite"
+  
+  debug "\n--- RFQ Module Tests ---"
+  Test_RFQ.runAllTests
+  
+  debug "\n--- Collateral Module Tests ---"
+  Test_Collateral.runAllCollateralTests
+  
+  debug "\n--- Credit Module Tests ---"
+  Test_Credits.runAllCreditTests
+  
+  debug "\n--- Yield Module Tests ---"
+  Test_Yield.runAllYieldTests
+  
+  debug "\n--- Secondary Market Module Tests ---"
+  Test_SecondaryMarket.runAllSecondaryMarketTests
+  
+  debug "\n--- Syndication Module Tests ---"
+  Test_Syndication.runAllSyndicationTests
+  
+  debug "\n✓ All tests completed successfully"

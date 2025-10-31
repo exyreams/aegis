@@ -1,0 +1,248 @@
+-- | Aegis RFQ - Audit Logging Test Scenarios
+-- Tests for the standalone audit logging system
+
+module Test_AuditLog where
+
+import Daml.Script
+import DA.Time
+import Types
+import AuditLog
+
+
+-- TEST SETUP
+data TestParties = TestParties with
+    platform: Party
+    emergencyOp: Party
+    complianceOff: Party
+    lender1: Party
+    borrower1: Party
+  deriving (Eq, Show)
+
+setupTestParties : Script TestParties
+setupTestParties = do
+    platform <- allocateParty "AegisPlatform"
+    emergencyOp <- allocateParty "EmergencyOperator"
+    complianceOff <- allocateParty "ComplianceOfficer"
+    lender1 <- allocateParty "Lender1"
+    borrower1 <- allocateParty "Borrower1"
+    
+    return TestParties with
+        platform
+        emergencyOp
+        complianceOff
+        lender1
+        borrower1
+
+
+-- AUDIT LOG TESTS
+testPlatformAuditLog : Script ()
+testPlatformAuditLog = script do
+    parties <- setupTestParties
+    now <- getTime
+    
+    -- Create platform audit log
+    platformLogCid <- submit parties.platform do
+        createCmd PlatformAuditLog with
+            logId = "MINT-TEST-001"
+            platform = parties.platform
+            emergencyOperator = parties.emergencyOp
+            complianceOfficer = parties.complianceOff
+            eventType = TreasuryMinting
+            eventDescription = "Test treasury minting"
+            affectedParties = []
+            eventData = [("amount", "1000000.0")]
+            contractIds = []
+            financialImpact = Some (FinancialImpact 1000000.0 None None None)
+            severity = Audit
+            timestamp = now
+            performedBy = parties.platform
+            requiresReview = False
+            reviewed = False
+            reviewNotes = None
+    
+    -- Verify log exists
+    Some log <- queryContractId parties.platform platformLogCid
+    assert (log.eventType == TreasuryMinting)
+    
+    debug "✅ Platform audit log test passed!"
+    return ()
+
+testLenderAuditLog : Script ()
+testLenderAuditLog = script do
+    parties <- setupTestParties
+    now <- getTime
+    
+    -- Create lender audit log
+    lenderLogCid <- submit parties.lender1 do
+        createCmd LenderAuditLog with
+            logId = "LENDER1-BID-001"
+            lender = parties.lender1
+            platform = parties.platform
+            complianceOfficer = parties.complianceOff
+            eventType = LenderBidSubmitted
+            eventDescription = "Submitted bid for RFQ-001"
+            relatedContracts = ["RFQ-001"]
+            eventData = [("bidAmount", "500000.0")]
+            financialImpact = Some (FinancialImpact 500000.0 (Some 500000.0) None None)
+            counterparty = Some parties.borrower1
+            riskMetrics = None
+            timestamp = now
+            acknowledged = False
+    
+    -- Verify log exists
+    Some log <- queryContractId parties.lender1 lenderLogCid
+    assert (log.eventType == LenderBidSubmitted)
+    
+    debug "✅ Lender audit log test passed!"
+    return ()
+
+testBorrowerAuditLog : Script ()
+testBorrowerAuditLog = script do
+    parties <- setupTestParties
+    now <- getTime
+    
+    -- Create borrower audit log
+    borrowerLogCid <- submit parties.borrower1 do
+        createCmd BorrowerAuditLog with
+            logId = "BORROWER1-RFQ-001"
+            borrower = parties.borrower1
+            platform = parties.platform
+            complianceOfficer = parties.complianceOff
+            eventType = BorrowerRFQCreated
+            eventDescription = "Created RFQ for $500,000 loan"
+            relatedContracts = ["RFQ-001"]
+            eventData = [("amount", "500000.0")]
+            financialImpact = Some (FinancialImpact 500000.0 (Some 500000.0) None None)
+            counterparty = None
+            creditImpact = None
+            timestamp = now
+            acknowledged = False
+    
+    -- Verify log exists
+    Some log <- queryContractId parties.borrower1 borrowerLogCid
+    assert (log.eventType == BorrowerRFQCreated)
+    
+    debug "✅ Borrower audit log test passed!"
+    return ()
+
+testLoanAuditTrail : Script ()
+testLoanAuditTrail = script do
+    parties <- setupTestParties
+    now <- getTime
+    
+    -- Initialize loan audit trail
+    loanTrailCid <- submitMulti [parties.borrower1, parties.lender1] [] do
+        createCmd LoanAuditTrail with
+            loanId = "LOAN-001"
+            borrower = parties.borrower1
+            lenders = [parties.lender1]
+            platform = parties.platform
+            events = []
+            loanAmount = 500000.0
+            outstandingPrincipal = 500000.0
+            totalInterestPaid = 0.0
+            totalPrincipalPaid = 0.0
+            currentStatus = LoanActive
+            createdAt = now
+            lastUpdated = now
+    
+    -- Log payment event
+    paymentTrailCid <- submitMulti [parties.borrower1, parties.lender1] [] do
+        exerciseCmd loanTrailCid LogLoanEvent with
+            eventType = PaymentReceived
+            eventDescription = "Monthly payment received"
+            performedBy = parties.borrower1
+            eventData = [("principal", "10000.0"), ("interest", "2000.0")]
+            financialImpact = Some (FinancialImpact 12000.0 (Some 10000.0) (Some 2000.0) None)
+    
+    -- Verify trail updated
+    Some trail <- queryContractId parties.borrower1 paymentTrailCid
+    assert (trail.outstandingPrincipal == 490000.0)
+    assert (trail.totalPrincipalPaid == 10000.0)
+    assert (trail.totalInterestPaid == 2000.0)
+    
+    debug "✅ Loan audit trail test passed!"
+    return ()
+
+testComplianceAuditLog : Script ()
+testComplianceAuditLog = script do
+    parties <- setupTestParties
+    now <- getTime
+    let nextReview = addRelTime now (days 30)
+    
+    -- Create compliance audit log
+    complianceLogCid <- submit parties.complianceOff do
+        createCmd ComplianceAuditLog with
+            logId = "KYC-LENDER1-001"
+            complianceOfficer = parties.complianceOff
+            platform = parties.platform
+            subject = parties.lender1
+            complianceCheckType = KYCVerification
+            checkResult = Passed
+            checkDetails = "KYC verification completed"
+            riskLevel = LowRisk
+            actionRequired = False
+            actionTaken = None
+            evidenceDocuments = ["DOC-001"]
+            timestamp = now
+            nextReviewDate = nextReview
+    
+    -- Verify log exists
+    Some log <- queryContractId parties.complianceOff complianceLogCid
+    assert (log.checkResult == Passed)
+    
+    debug "✅ Compliance audit log test passed!"
+    return ()
+
+testActivityMonitor : Script ()
+testActivityMonitor = script do
+    parties <- setupTestParties
+    now <- getTime
+    
+    -- Initialize activity monitor
+    monitorCid <- submit parties.platform do
+        createCmd ActivityMonitor with
+            monitorId = "MONITOR-LENDER1-001"
+            platform = parties.platform
+            complianceOfficer = parties.complianceOff
+            monitoredParty = parties.lender1
+            activityType = LargeTransactions
+            activityCount = 0
+            timeWindow = hours 24
+            threshold = 5
+            thresholdExceeded = False
+            alertTriggered = False
+            monitoringStarted = now
+            lastActivityTime = now
+    
+    -- Record activities
+    monitor1 <- submit parties.platform do exerciseCmd monitorCid RecordActivity
+    monitor2 <- submit parties.platform do exerciseCmd monitor1 RecordActivity
+    monitor3 <- submit parties.platform do exerciseCmd monitor2 RecordActivity
+    monitor4 <- submit parties.platform do exerciseCmd monitor3 RecordActivity
+    monitor5 <- submit parties.platform do exerciseCmd monitor4 RecordActivity
+    monitor6 <- submit parties.platform do exerciseCmd monitor5 RecordActivity
+    
+    -- Verify threshold exceeded
+    Some finalMonitor <- queryContractId parties.platform monitor6
+    assert (finalMonitor.activityCount == 6)
+    assert (finalMonitor.thresholdExceeded == True)
+    
+    debug "✅ Activity monitor test passed!"
+    return ()
+
+
+-- RUN ALL TESTS
+runAllAuditTests : Script ()
+runAllAuditTests = script do
+    debug "Running Audit Logging Tests..."
+    
+    testPlatformAuditLog
+    testLenderAuditLog
+    testBorrowerAuditLog
+    testLoanAuditTrail
+    testComplianceAuditLog
+    testActivityMonitor
+    
+    debug "✓ All audit logging tests passed!"
+    return ()

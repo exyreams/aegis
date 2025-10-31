@@ -1,0 +1,585 @@
+-- | Aegis RFQ - Advanced Collateral Management System
+-- Production-grade collateral management with multi-asset support, dynamic valuation,
+-- automated margin calls, and liquidation mechanisms
+
+module Collateral where
+
+import Types
+import qualified Aegis
+import qualified AuditLog
+
+
+-- COLLATERAL POOL TEMPLATE
+-- | Collateral pool managing multiple assets for a loan
+-- Supports dynamic valuation, margin calls, and liquidation
+template CollateralPool with
+    poolId: Text
+    borrower: Party
+    lender: Party
+    loanId: Text
+    assets: [CollateralAsset]
+    collateralRequirements: CollateralRequirements
+    totalInitialValue: Decimal
+    totalCurrentValue: Decimal
+    loanAmount: Decimal
+    currentLTV: Decimal
+    status: CollateralStatus
+    lastValuationTime: Time
+    marginCallActive: Bool
+    marginCallDeadline: Optional Time
+  where
+    signatory borrower, lender
+
+    ensure
+      -- Validation: Must have at least one asset
+      not (null assets) &&
+      -- Validation: Current value must be positive
+      totalCurrentValue > 0.0 &&
+      -- Validation: LTV must be valid
+      currentLTV >= 0.0 &&
+      -- Validation: Loan amount must be positive
+      loanAmount > 0.0
+
+    key (borrower, lender, poolId): (Party, Party, Text)
+    maintainer key._1
+
+    
+    -- VALUATION CHOICES
+    
+
+    -- | Update collateral valuation based on market prices
+    choice UpdateValuation: ContractId CollateralPool with
+        newAssetValues: [(Text, Decimal)]  -- List of (assetId, newValue)
+        valuationSource: Text
+      controller lender
+      do
+        now <- getTime
+        
+        -- Update asset values
+        let updatedAssets = map (\asset ->
+              case lookup asset.assetId newAssetValues of
+                Some newValue -> asset with 
+                  currentValue = newValue * asset.quantity
+                  lastValuationTime = now
+                  valuationSource = valuationSource
+                None -> asset
+              ) assets
+        
+        -- Calculate new total value with haircuts
+        let newTotalValue = Types.calculateCollateralValue updatedAssets
+        
+        -- Calculate new LTV
+        let newLTV = if newTotalValue > 0.0
+              then loanAmount / newTotalValue
+              else 1.0
+        
+        -- Determine if margin call is needed
+        let needsMarginCall = newLTV > (1.0 / collateralRequirements.maintenanceRatio)
+        
+        -- Determine new status
+        let newStatus = 
+              if newLTV > (1.0 / collateralRequirements.liquidationRatio)
+                then CollateralUnderliquidation
+              else if needsMarginCall
+                then CollateralMarginCall
+              else CollateralHealthy
+        
+        create this with
+          assets = updatedAssets
+          totalCurrentValue = newTotalValue
+          currentLTV = newLTV
+          status = newStatus
+          lastValuationTime = now
+          marginCallActive = needsMarginCall
+
+    
+    -- MARGIN CALL CHOICES
+    
+
+    -- | Trigger margin call when collateral ratio falls below threshold
+    choice TriggerMarginCall: ContractId CollateralPool with
+        deadline: Time
+        requiredAmount: Decimal
+      controller lender
+      do
+        now <- getTime
+        
+        assertMsg "Collateral ratio must be below maintenance threshold" 
+          (currentLTV > (1.0 / collateralRequirements.maintenanceRatio))
+        assertMsg "Deadline must be in future" (deadline > now)
+        
+        -- Manual logging: Log margin call to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.MarginCallTriggered
+              eventDescription = "Margin call triggered: Required amount=" <> show requiredAmount <> ", Deadline=" <> show deadline
+              performedBy = lender
+              eventData = [("requiredAmount", show requiredAmount), ("deadline", show deadline), ("currentLTV", show currentLTV), ("maintenanceRatio", show collateralRequirements.maintenanceRatio)]
+              financialImpact = None
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        create this with
+          status = CollateralMarginCall
+          marginCallActive = True
+          marginCallDeadline = Some deadline
+
+    -- | Borrower responds to margin call by adding collateral
+    choice RespondToMarginCall: ContractId CollateralPool with
+        additionalAssets: [CollateralAsset]
+      controller borrower
+      do
+        now <- getTime
+        
+        -- Manual logging: Log margin call response to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.MarginCallSatisfied
+              eventDescription = "Margin call satisfied with additional collateral"
+              performedBy = borrower
+              eventData = [("additionalAssetsCount", show (length additionalAssets))]
+              financialImpact = None
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        assertMsg "Margin call must be active" marginCallActive
+        
+        -- Add new assets to pool
+        let newAssets = assets <> additionalAssets
+        
+        -- Recalculate total value
+        let newTotalValue = Types.calculateCollateralValue newAssets
+        let newLTV = if newTotalValue > 0.0
+              then loanAmount / newTotalValue
+              else 1.0
+        
+        -- Check if margin call is satisfied
+        let marginCallSatisfied = newLTV <= (1.0 / collateralRequirements.maintenanceRatio)
+        
+        let newStatus = if marginCallSatisfied
+              then CollateralHealthy
+              else CollateralMarginCall
+        
+        create this with
+          assets = newAssets
+          totalCurrentValue = newTotalValue
+          currentLTV = newLTV
+          status = newStatus
+          lastValuationTime = now
+          marginCallActive = not marginCallSatisfied
+          marginCallDeadline = if marginCallSatisfied then None else marginCallDeadline
+
+    -- | Request emergency liquidity support from Aegis platform for margin call
+    choice RequestEmergencySupport: (ContractId CollateralPool, ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance) with
+        platformCid: ContractId Aegis.AegisPlatform
+        supportAmount: Decimal
+        assetType: AssetType
+        repaymentTerms: LiquiditySupportTerms
+      controller lender
+      do
+        now <- getTime
+        
+        assertMsg "Margin call must be active" marginCallActive
+        assertMsg "Support amount must be positive" (supportAmount > 0.0)
+        
+        -- Request liquidity support from platform
+        (newPlatformCid, newBalanceCid) <- exercise platformCid Aegis.ProvideLiquiditySupport with
+          lender
+          assetType
+          supportAmount
+          supportReason = "Emergency margin call support for loan: " <> loanId
+          repaymentTerms
+        
+        -- Update pool status - margin call satisfied by platform support
+        newPoolCid <- create this with
+          status = CollateralHealthy
+          marginCallActive = False
+          marginCallDeadline = None
+        
+        return (newPoolCid, newPlatformCid, newBalanceCid)
+
+    
+    -- LIQUIDATION CHOICES
+    
+
+    -- | Initiate liquidation when collateral falls below liquidation threshold
+    choice InitiateLiquidation: ContractId CollateralLiquidation with
+        reason: Text
+      controller lender
+      do
+        now <- getTime
+        
+        -- Check if liquidation is justified
+        let liquidationJustified = 
+              currentLTV > (1.0 / collateralRequirements.liquidationRatio) ||
+              (marginCallActive && case marginCallDeadline of
+                Some deadline -> now > deadline
+                None -> False)
+        
+        -- Manual logging: Log liquidation initiation to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.CollateralLiquidationInitiated
+              eventDescription = "Collateral liquidation initiated: " <> reason
+              performedBy = lender
+              eventData = [("reason", reason), ("currentLTV", show currentLTV), ("liquidationRatio", show collateralRequirements.liquidationRatio), ("totalValue", show totalCurrentValue)]
+              financialImpact = None
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        assertMsg "Liquidation not justified" liquidationJustified
+        
+        -- Archive this pool and create liquidation contract
+        create CollateralLiquidation with
+          liquidationId = poolId <> "-LIQ"
+          borrower
+          lender
+          loanId
+          assets
+          totalValue = totalCurrentValue
+          loanAmount
+          reason
+          initiatedAt = now
+          status = LiquidationPending
+
+    
+    -- COLLATERAL MANAGEMENT CHOICES
+    
+
+    -- | Request collateral substitution (swap one asset for another)
+    choice RequestSubstitution: ContractId SubstitutionRequest with
+        assetToRemove: Text  -- Asset ID to remove
+        assetToAdd: CollateralAsset  -- New asset to add
+        reason: Text
+      controller borrower
+      do
+        now <- getTime
+        
+        assertMsg "Asset to remove must exist in pool" 
+          (any (\a -> a.assetId == assetToRemove) assets)
+        
+        create SubstitutionRequest with
+          requestId = poolId <> "-SUB-" <> show now
+          poolCid = self
+          borrower
+          lender
+          assetToRemove
+          assetToAdd
+          reason
+          requestedAt = now
+          status = SubstitutionPending
+
+    -- | Release collateral when loan is repaid
+    choice ReleaseCollateral: () with
+      controller borrower, lender
+      do
+        assertMsg "Can only release healthy collateral" 
+          (status == CollateralHealthy)
+        
+        -- Archive the pool (collateral released)
+        return ()
+
+    -- | Partial collateral release during loan term
+    choice PartialRelease: ContractId CollateralPool with
+        assetIdsToRelease: [Text]
+      controller borrower, lender
+      do
+        now <- getTime
+        
+        -- Remove specified assets
+        let remainingAssets = filter (\a -> not (a.assetId `elem` assetIdsToRelease)) assets
+        
+        assertMsg "Must keep at least one asset" (not (null remainingAssets))
+        
+        -- Recalculate values
+        let newTotalValue = Types.calculateCollateralValue remainingAssets
+        let newLTV = if newTotalValue > 0.0
+              then loanAmount / newTotalValue
+              else 1.0
+        
+        -- Ensure still meets minimum requirements
+        assertMsg "Remaining collateral must meet minimum ratio" 
+          (newLTV <= (1.0 / collateralRequirements.minimumRatio))
+        
+        create this with
+          assets = remainingAssets
+          totalCurrentValue = newTotalValue
+          currentLTV = newLTV
+          lastValuationTime = now
+
+
+-- COLLATERAL STATUS ENUMERATION
+data CollateralStatus
+  = CollateralHealthy  -- Above maintenance ratio
+  | CollateralMarginCall  -- Below maintenance, above liquidation
+  | CollateralUnderliquidation  -- Below liquidation threshold
+  | CollateralLiquidated  -- Liquidation completed
+  deriving (Eq, Show)
+
+
+-- SUBSTITUTION REQUEST TEMPLATE
+-- | Request to substitute one collateral asset for another
+template SubstitutionRequest with
+    requestId: Text
+    poolCid: ContractId CollateralPool
+    borrower: Party
+    lender: Party
+    assetToRemove: Text
+    assetToAdd: CollateralAsset
+    reason: Text
+    requestedAt: Time
+    status: SubstitutionStatus
+  where
+    signatory borrower
+    observer lender
+
+    key (borrower, lender, requestId): (Party, Party, Text)
+    maintainer key._1
+
+    -- | Lender approves substitution
+    choice ApproveSubstitution: ContractId CollateralPool with
+      controller lender
+      do
+        now <- getTime
+        
+        -- Fetch the pool
+        pool <- fetch poolCid
+        
+        -- Remove old asset and add new asset
+        let newAssets = assetToAdd :: filter (\a -> a.assetId /= assetToRemove) pool.assets
+        
+        -- Recalculate values
+        let newTotalValue = Types.calculateCollateralValue newAssets
+        let newLTV = if newTotalValue > 0.0
+              then pool.loanAmount / newTotalValue
+              else 1.0
+        
+        -- Ensure substitution maintains adequate collateral
+        assertMsg "Substitution must maintain minimum collateral ratio"
+          (newLTV <= (1.0 / pool.collateralRequirements.minimumRatio))
+        
+        -- Archive old pool and request
+        archive poolCid
+        
+        -- Create new pool with substituted assets
+        create pool with
+          assets = newAssets
+          totalCurrentValue = newTotalValue
+          currentLTV = newLTV
+          lastValuationTime = now
+
+    -- | Lender rejects substitution
+    choice RejectSubstitution: () with
+        rejectionReason: Text
+      controller lender
+      do
+        return ()
+
+data SubstitutionStatus
+  = SubstitutionPending
+  | SubstitutionApproved
+  | SubstitutionRejected
+  deriving (Eq, Show)
+
+
+-- COLLATERAL LIQUIDATION TEMPLATE
+-- | Liquidation process for collateral
+template CollateralLiquidation with
+    liquidationId: Text
+    borrower: Party
+    lender: Party
+    loanId: Text
+    assets: [CollateralAsset]
+    totalValue: Decimal
+    loanAmount: Decimal
+    reason: Text
+    initiatedAt: Time
+    status: LiquidationStatus
+  where
+    signatory lender
+    observer borrower
+
+    key (lender, liquidationId): (Party, Text)
+    maintainer key._1
+
+    -- | Execute liquidation and settle loan (with Aegis platform integration)
+    choice ExecuteLiquidation: (ContractId LiquidationSettlement, Optional (ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance)) with
+        liquidationProceeds: Decimal
+        liquidationCosts: Decimal
+        platformCid: Optional (ContractId Aegis.AegisPlatform)  -- Optional platform for shortfall coverage
+        assetType: AssetType  -- Asset type for reimbursement
+      controller lender
+      do
+        now <- getTime
+        
+        assertMsg "Liquidation proceeds must be positive" (liquidationProceeds > 0.0)
+        
+        let netProceeds = liquidationProceeds - liquidationCosts
+        let surplus = if netProceeds > loanAmount
+              then netProceeds - loanAmount
+              else 0.0
+        let shortfall = if netProceeds < loanAmount
+              then loanAmount - netProceeds
+              else 0.0
+        
+        -- Create settlement
+        settlementCid <- create LiquidationSettlement with
+          settlementId = liquidationId <> "-SETTLED"
+          borrower
+          lender
+          loanId
+          liquidationProceeds
+          liquidationCosts
+          netProceeds
+          loanAmount
+          surplus
+          shortfall
+          settledAt = now
+        
+        -- Manual logging: Log liquidation to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.CollateralLiquidationCompleted
+              eventDescription = "Collateral liquidation completed: Proceeds=" <> show liquidationProceeds <> ", Costs=" <> show liquidationCosts <> ", Shortfall=" <> show shortfall <> ", Surplus=" <> show surplus
+              performedBy = lender
+              eventData = [("liquidationProceeds", show liquidationProceeds), ("liquidationCosts", show liquidationCosts), ("netProceeds", show netProceeds), ("shortfall", show shortfall), ("surplus", show surplus), ("loanAmount", show loanAmount)]
+              financialImpact = Some AuditLog.FinancialImpact with
+                totalAmount = liquidationProceeds
+                principalAmount = Some netProceeds
+                interestAmount = None
+                feesAmount = Some liquidationCosts
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        -- If there's a shortfall and platform is available, request reimbursement
+        reimbursementResult <- case (platformCid, shortfall > 0.0) of
+          (Some platCid, True) -> do
+            platform <- fetch platCid
+            -- Platform reimburses lender for the shortfall
+            (newPlatformCid, newBalanceCid) <- exercise platCid Aegis.ReimburseLender with
+              lender
+              assetType
+              amount = shortfall
+              reimbursementReason = "Collateral liquidation shortfall for loan: " <> loanId
+              approvedBy = platform.emergencyOperator
+            return (Some (newPlatformCid, newBalanceCid))
+          _ -> return None
+        
+        return (settlementCid, reimbursementResult)
+
+    -- | Cancel liquidation (e.g., if borrower cures default)
+    choice CancelLiquidation: () with
+        cancellationReason: Text
+      controller lender, borrower
+      do
+        return ()
+
+data LiquidationStatus
+  = LiquidationPending
+  | LiquidationInProgress
+  | LiquidationCompleted
+  | LiquidationCancelled
+  deriving (Eq, Show)
+
+
+-- LIQUIDATION SETTLEMENT TEMPLATE
+-- | Final settlement after liquidation
+template LiquidationSettlement with
+    settlementId: Text
+    borrower: Party
+    lender: Party
+    loanId: Text
+    liquidationProceeds: Decimal
+    liquidationCosts: Decimal
+    netProceeds: Decimal
+    loanAmount: Decimal
+    surplus: Decimal  -- Amount returned to borrower if any
+    shortfall: Decimal  -- Amount still owed if liquidation insufficient
+    settledAt: Time
+  where
+    signatory lender
+    observer borrower
+
+    ensure
+      netProceeds == liquidationProceeds - liquidationCosts &&
+      (surplus > 0.0 || shortfall > 0.0 || netProceeds == loanAmount)
+
+    key (lender, settlementId): (Party, Text)
+    maintainer key._1
+
+    -- | Borrower acknowledges settlement
+    choice AcknowledgeSettlement: () with
+      controller borrower
+      do
+        return ()
+
+
+-- HELPER FUNCTIONS
+-- Helper functions are imported from Types module and used with qualified names
+-- to avoid ambiguity
+
+
+-- AEGIS INTEGRATION WORKFLOWS
+-- | Create collateral pool with platform monitoring
+createCollateralPoolWithPlatform : Party -> Party -> Text -> Text -> [CollateralAsset] -> CollateralRequirements -> Decimal -> Time -> Update (ContractId CollateralPool)
+createCollateralPoolWithPlatform borrower lender poolId loanId assets requirements loanAmount now = do
+  let totalValue = Types.calculateCollateralValue assets
+  let ltv = if totalValue > 0.0 then loanAmount / totalValue else 1.0
+  
+  create CollateralPool with
+    poolId
+    borrower
+    lender
+    loanId
+    assets
+    collateralRequirements = requirements
+    totalInitialValue = totalValue
+    totalCurrentValue = totalValue
+    loanAmount
+    currentLTV = ltv
+    status = CollateralHealthy
+    lastValuationTime = now
+    marginCallActive = False
+    marginCallDeadline = None
+
+-- | Handle liquidation with automatic platform reimbursement
+liquidateWithPlatformSupport : ContractId CollateralLiquidation -> ContractId Aegis.AegisPlatform -> Decimal -> Decimal -> AssetType -> Update (ContractId LiquidationSettlement, ContractId Aegis.AegisPlatform, Optional (ContractId Aegis.AssetBalance))
+liquidateWithPlatformSupport liquidationCid platformCid proceeds costs assetType = do
+  liquidation <- fetch liquidationCid
+  
+  -- Execute liquidation with platform integration
+  (settlementCid, reimbursementResult) <- exercise liquidationCid ExecuteLiquidation with
+    liquidationProceeds = proceeds
+    liquidationCosts = costs
+    platformCid = Some platformCid
+    assetType
+  
+  case reimbursementResult of
+    Some (newPlatformCid, balanceCid) -> 
+      return (settlementCid, newPlatformCid, Some balanceCid)
+    None -> 
+      return (settlementCid, platformCid, None)
+
+-- | Monitor collateral health and trigger margin calls automatically
+monitorCollateralHealth : ContractId CollateralPool -> [(Text, Decimal)] -> Text -> Update (ContractId CollateralPool, Bool)
+monitorCollateralHealth poolCid newValues valuationSource = do
+  pool <- fetch poolCid
+  
+  -- Update valuation
+  newPoolCid <- exercise poolCid UpdateValuation with
+    newAssetValues = newValues
+    valuationSource
+  
+  -- Check if margin call was triggered
+  newPool <- fetch newPoolCid
+  let marginCallTriggered = newPool.marginCallActive && not pool.marginCallActive
+  
+  return (newPoolCid, marginCallTriggered)

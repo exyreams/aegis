@@ -1,0 +1,597 @@
+-- | Aegis RFQ - Production-Grade Type Definitions
+-- Comprehensive data structures for institutional lending, borrowing, and yield
+-- Designed for real-world financial applications with proper validation and constraints
+
+module Types where
+
+import DA.Time
+import DA.Optional (fromOptional)
+
+-- CORE FINANCIAL TYPES
+-- | Interest rate structure supporting both fixed and floating rates
+data InterestRateStructure = InterestRateStructure with
+    rateType: RateType
+    baseRate: Optional Text  -- Reference rate for floating (e.g., "SOFR", "LIBOR")
+    margin: Decimal  -- Spread over base rate (in decimal, e.g., 0.025 = 2.5%)
+    fixedRate: Optional Decimal  -- Used for fixed rate loans
+    floorRate: Optional Decimal  -- Minimum rate (interest rate floor)
+    capRate: Optional Decimal  -- Maximum rate (interest rate cap)
+    resetFrequency: Optional PaymentFrequency  -- How often floating rate resets
+  deriving (Eq, Show)
+
+-- | Rate type enumeration
+data RateType 
+  = Fixed  -- Fixed interest rate for entire loan term
+  | Floating  -- Variable rate tied to benchmark
+  | Hybrid  -- Fixed for initial period, then floating
+  deriving (Eq, Show)
+
+-- | Payment frequency for interest and principal
+data PaymentFrequency
+  = Monthly
+  | Quarterly  
+  | SemiAnnual
+  | Annual
+  | Bullet  -- Single payment at maturity
+  | Custom Int  -- Custom number of days
+  deriving (Eq, Show)
+
+-- | Comprehensive repayment schedule
+data RepaymentSchedule = RepaymentSchedule with
+    frequency: PaymentFrequency
+    numberOfPayments: Int
+    gracePeriodDays: Int  -- Days after due date before default
+    lateFeeRate: Decimal  -- Daily late fee as percentage
+    earlyRepaymentTerms: EarlyRepaymentTerms
+    amortizationType: AmortizationType
+  deriving (Eq, Show)
+
+-- | Early repayment terms and penalties
+data EarlyRepaymentTerms = EarlyRepaymentTerms with
+    allowed: Bool
+    penaltyRate: Decimal  -- Percentage penalty on remaining principal
+    noticePeriodDays: Int  -- Required notice before early repayment
+    minimumHoldPeriod: Optional RelTime  -- Minimum time before early repayment allowed
+  deriving (Eq, Show)
+
+-- | Loan amortization type
+data AmortizationType
+  = FullyAmortizing  -- Equal payments of principal and interest
+  | InterestOnly  -- Interest payments only, principal at maturity
+  | BalloonPayment  -- Small payments with large final payment
+  | CustomSchedule  -- Custom payment amounts
+  deriving (Eq, Show)
+
+
+-- COLLATERAL TYPES
+-- | Multi-asset collateral support
+data CollateralAsset = CollateralAsset with
+    assetId: Text  -- Unique identifier for the asset
+    assetType: AssetType
+    quantity: Decimal
+    currentValue: Decimal  -- Current market value
+    initialValue: Decimal  -- Value at loan origination
+    volatilityScore: Decimal  -- Historical volatility (0-1 scale)
+    liquidityRating: LiquidityRating
+    lastValuationTime: Time
+    valuationSource: Text  -- Price feed or oracle source
+    haircut: Decimal  -- Discount applied for risk (e.g., 0.20 = 20% haircut)
+  deriving (Eq, Show)
+
+-- | Asset type classification
+data AssetType
+  = Cryptocurrency Text  -- e.g., "BTC", "ETH"
+  | GovernmentBond Text  -- e.g., "US_TREASURY"
+  | CorporateBond Text  -- e.g., "CORP_BOND_AAA"
+  | Equity Text  -- e.g., "STOCK_AAPL"
+  | RealEstateToken Text  -- e.g., "RE_TOKEN_NYC"
+  | Commodity Text  -- e.g., "GOLD", "OIL"
+  | Stablecoin Text  -- e.g., "USDC", "USDT" (blockchain-based stablecoins)
+  | FiatCurrency Text  -- e.g., "USD", "EUR", "GBP", "JPY", "CAD", "NPR" (traditional fiat)
+  deriving (Eq, Show)
+
+-- | Liquidity rating for assets
+data LiquidityRating
+  = HighlyLiquid  -- Can be sold quickly with minimal price impact
+  | ModeratelyLiquid  -- May take time to sell at fair value
+  | IlliquidAsset  -- Difficult to sell quickly
+  deriving (Eq, Show, Ord)
+
+-- | Collateral requirements and ratios
+data CollateralRequirements = CollateralRequirements with
+    minimumRatio: Decimal  -- Minimum collateral/loan ratio (e.g., 1.5 = 150%)
+    maintenanceRatio: Decimal  -- Ratio that triggers margin call
+    liquidationRatio: Decimal  -- Ratio that triggers liquidation
+    acceptedAssetTypes: [AssetType]
+    maximumConcentration: Decimal  -- Max % of single asset type
+  deriving (Eq, Show)
+
+
+-- CREDIT AND RISK TYPES
+-- | Comprehensive credit profile
+data CreditProfile = CreditProfile with
+    party: Party
+    creditScore: Int  -- 300-850 scale (FICO-like)
+    riskRating: RiskRating
+    totalBorrowed: Decimal
+    totalRepaid: Decimal
+    currentOutstanding: Decimal
+    numberOfLoans: Int
+    numberOfDefaults: Int
+    averageRepaymentTime: Decimal  -- In days
+    longestDelayDays: Int
+    lastUpdated: Time
+  deriving (Eq, Show)
+
+-- | Risk rating classification (S&P style)
+data RiskRating
+  = AAA  -- Highest quality, minimal risk
+  | AA
+  | A
+  | BBB  -- Medium grade, adequate capacity
+  | BB
+  | B
+  | CCC  -- Currently vulnerable
+  | CC
+  | C
+  | D  -- In default
+  deriving (Eq, Show, Ord)
+
+-- | Default event record
+data DefaultEvent = DefaultEvent with
+    loanId: Text
+    defaultDate: Time
+    amountInDefault: Decimal
+    resolutionDate: Optional Time
+    recoveryAmount: Optional Decimal
+  deriving (Eq, Show)
+
+-- | Risk metrics for portfolio management
+data RiskMetrics = RiskMetrics with
+    valueAtRisk: Decimal  -- VaR at 95% confidence
+    expectedShortfall: Decimal  -- Conditional VaR
+    concentrationRisk: Decimal  -- Herfindahl index
+    creditRisk: Decimal  -- Probability of default
+    marketRisk: Decimal  -- Interest rate and price risk
+    liquidityRisk: Decimal  -- Ability to exit positions
+  deriving (Eq, Show)
+
+
+-- LENDER MANAGEMENT TYPES
+-- | Lender criteria for RFQ targeting
+data LenderCriteria = LenderCriteria with
+    categories: [LenderCategory]
+    minimumRating: RiskRating
+    geographicRestrictions: [Text]  -- ISO country codes
+    maximumBids: Int
+    requiredCapacity: Decimal  -- Minimum lending capacity
+    preferredLenders: [Party]  -- Priority lenders
+  deriving (Eq, Show)
+
+-- | Lender category classification
+data LenderCategory
+  = Tier1Bank  -- Major international banks
+  | RegionalBank  -- Regional and community banks
+  | InvestmentFund  -- Hedge funds and investment vehicles
+  | PrivateEquity  -- PE firms and private lenders
+  | InsuranceCompany  -- Insurance companies
+  | PensionFund  -- Pension and retirement funds
+  | SpecialtyLender  -- Niche or specialty lenders
+  deriving (Eq, Show)
+
+-- | Lender profile and capabilities
+data LenderProfile = LenderProfile with
+    lender: Party
+    category: LenderCategory
+    rating: RiskRating
+    totalCapacity: Decimal
+    availableCapacity: Decimal
+    activeLoans: Int
+    defaultRate: Decimal
+    averageInterestRate: Decimal
+    geographicFocus: [Text]
+  deriving (Eq, Show)
+
+
+-- PRIVACY AND VISIBILITY TYPES
+-- | Privacy settings for RFQs and contracts
+data PrivacySettings = PrivacySettings with
+    visibilityMode: VisibilityMode
+    allowSecondaryMarket: Bool  -- Can loan be traded
+    dataRetentionDays: Int  -- How long to keep historical data
+    anonymizeBorrower: Bool  -- Hide borrower identity in secondary market
+    restrictedDataFields: [Text]  -- Fields that require special permission
+  deriving (Eq, Show)
+
+-- | Visibility mode for RFQs
+data VisibilityMode
+  = CompletelyPrivate  -- Only approved lenders can see
+  | SemiPublic  -- Lenders can see anonymized version
+  | PublicWithPrivateTerms  -- Public existence, private terms
+  deriving (Eq, Show)
+
+
+-- YIELD AND POOL TYPES
+-- | Yield strategy configuration
+data YieldStrategy = YieldStrategy with
+    strategyType: YieldStrategyType
+    riskTolerance: RiskTolerance
+    targetYield: Decimal
+    maximumDrawdown: Decimal  -- Maximum acceptable loss
+    rebalanceThreshold: Decimal  -- Trigger for rebalancing
+    compoundingEnabled: Bool
+    liquidityReserve: Decimal  -- % kept liquid for withdrawals
+  deriving (Eq, Show)
+
+-- | Yield strategy types
+data YieldStrategyType
+  = DirectLending  -- Lend directly to borrowers
+  | PoolParticipation  -- Join diversified lending pools
+  | HybridStrategy  -- Combination of direct and pool
+  | ArbitrageStrategy  -- Exploit rate differentials
+  deriving (Eq, Show)
+
+-- | Risk tolerance levels
+data RiskTolerance
+  = Conservative  -- Low risk, stable returns
+  | Moderate  -- Balanced risk/return
+  | Aggressive  -- Higher risk for higher returns
+  deriving (Eq, Show)
+
+-- | Pool participant record
+data PoolParticipant = PoolParticipant with
+    participant: Party
+    contribution: Decimal
+    lpTokens: Decimal  -- Liquidity provider tokens
+    joinedAt: Time
+    lastRewardClaim: Time
+    accumulatedYield: Decimal
+  deriving (Eq, Show)
+
+
+-- LOAN COVENANT TYPES
+-- | Loan covenants and restrictions
+data LoanCovenant = LoanCovenant with
+    covenantType: CovenantType
+    threshold: Decimal
+    measurementFrequency: PaymentFrequency
+    breachConsequence: BreachConsequence
+  deriving (Eq, Show)
+
+-- | Types of loan covenants
+data CovenantType
+  = DebtToEquityRatio  -- Maximum debt/equity ratio
+  | InterestCoverageRatio  -- Minimum EBITDA/interest
+  | MinimumLiquidity  -- Minimum cash reserves
+  | MaximumCapex  -- Maximum capital expenditure
+  | DividendRestriction  -- Limits on dividend payments
+  | AssetSaleRestriction  -- Restrictions on asset sales
+  deriving (Eq, Show)
+
+-- | Consequences of covenant breach
+data BreachConsequence
+  = WarningOnly  -- Notification but no action
+  | InterestRateIncrease Decimal  -- Increase rate by specified amount
+  | AcceleratedMaturity  -- Loan becomes immediately due
+  | AdditionalCollateralRequired Decimal  -- Must post more collateral
+  | DefaultTrigger  -- Triggers default event
+  deriving (Eq, Show)
+
+
+-- SYNDICATION TYPES
+-- | Syndicated loan participant
+data SyndicateParticipant = SyndicateParticipant with
+    lender: Party
+    lenderProfile: LenderProfile
+    commitment: Decimal  -- Amount committed to loan
+    role: SyndicateRole
+    votingPower: Decimal  -- Voting weight (usually proportional to commitment)
+  deriving (Eq, Show)
+
+-- | Role in syndicated loan
+data SyndicateRole
+  = LeadArranger  -- Structures and manages the loan
+  | CoArranger  -- Assists in structuring
+  | Participant  -- Provides funding only
+  deriving (Eq, Show)
+
+-- | Syndicate decision requiring vote
+data SyndicateDecision = SyndicateDecision with
+    decisionType: DecisionType
+    proposedBy: Party
+    votesFor: [Party]
+    votesAgainst: [Party]
+    requiredMajority: Decimal  -- E.g., 0.66 for 2/3 majority
+    deadline: Time
+  deriving (Eq, Show)
+
+-- | Types of syndicate decisions
+data DecisionType
+  = WaiverRequest  -- Waive covenant breach
+  | AmendmentProposal  -- Modify loan terms
+  | AccelerationVote  -- Accelerate loan maturity
+  | LiquidationDecision  -- Liquidate collateral
+  deriving (Eq, Show)
+
+
+-- PAYMENT AND TRANSACTION TYPES
+-- | Payment record for loan tracking
+data PaymentRecord = PaymentRecord with
+    paymentDate: Time
+    dueDate: Time
+    principalAmount: Decimal
+    interestAmount: Decimal
+    feesAmount: Decimal
+    totalAmount: Decimal
+    status: PaymentStatus
+  deriving (Eq, Show)
+
+-- | Payment status
+data PaymentStatus
+  = Scheduled  -- Future payment
+  | Paid  -- Completed on time
+  | LatePaid  -- Paid after due date
+  | Missed  -- Not paid
+  | Waived  -- Forgiven or waived
+  deriving (Eq, Show)
+
+-- | Transaction record for audit trail
+data TransactionRecord = TransactionRecord with
+    transactionId: Text
+    transactionType: TransactionType
+    parties: [Party]
+    amount: Decimal
+    timestamp: Time
+    metadata: [(Text, Text)]  -- Key-value pairs for additional data
+  deriving (Eq, Show)
+
+-- | Transaction types for categorization
+data TransactionType
+  = LoanOrigination
+  | BidSubmission
+  | BidAcceptance
+  | PrincipalPayment
+  | InterestPayment
+  | CollateralPosting
+  | CollateralRelease
+  | MarginCall
+  | Liquidation
+  | LoanTransfer
+  | FundsReceived
+  | FundsLocked
+  | FundsUnlocked
+  | FundsEscrowed
+  | FundsReleased
+  | FundsSent
+  deriving (Eq, Show)
+
+
+-- STATUS ENUMERATIONS
+-- | RFQ lifecycle status
+data RFQStatus
+  = RFQDraft  -- Being created
+  | RFQActive  -- Open for bidding
+  | RFQUnderReview  -- Borrower reviewing bids
+  | RFQAccepted  -- Bid accepted, loan being created
+  | RFQExpired  -- Expired without acceptance
+  | RFQCancelled  -- Cancelled by borrower
+  deriving (Eq, Show)
+
+-- | Bid status
+data BidStatus
+  = BidSubmitted  -- Submitted and active
+  | BidUnderReview  -- Borrower reviewing
+  | BidAccepted  -- Accepted by borrower
+  | BidRejected  -- Rejected by borrower
+  | BidWithdrawn  -- Withdrawn by lender
+  | BidExpired  -- RFQ expired
+  deriving (Eq, Show)
+
+-- | Loan lifecycle status
+data LoanStatus
+  = LoanProposed  -- Loan terms proposed, awaiting acceptance
+  | LoanActive  -- Active and current
+  | LoanCurrent  -- Active with no issues
+  | LoanDelinquent  -- Past due but within grace period
+  | LoanDefault  -- In default
+  | LoanRestructured  -- Terms modified due to issues
+  | LoanRepaid  -- Fully repaid
+  | LoanChargedOff  -- Written off as loss
+  deriving (Eq, Show)
+
+
+-- COMPLIANCE AND REGULATORY TYPES
+-- | KYC/AML verification status
+data ComplianceStatus = ComplianceStatus with
+    kycVerified: Bool
+    kycVerificationDate: Optional Time
+    amlCheckPassed: Bool
+    amlCheckDate: Optional Time
+    sanctionsCheckPassed: Bool
+    riskLevel: ComplianceRiskLevel
+    nextReviewDate: Time
+  deriving (Eq, Show)
+
+-- | Compliance risk level
+data ComplianceRiskLevel
+  = LowRisk
+  | MediumRisk
+  | HighRisk
+  | ProhibitedRisk  -- Cannot transact
+  deriving (Eq, Show, Ord)
+
+-- | Regulatory reporting requirement
+data ReportingRequirement = ReportingRequirement with
+    reportType: Text  -- E.g., "QUARTERLY_LENDING", "ANNUAL_RISK"
+    jurisdiction: Text  -- ISO country code
+    frequency: PaymentFrequency
+    nextDueDate: Time
+    responsible: Party
+  deriving (Eq, Show)
+
+
+-- UTILITY FUNCTIONS
+-- | Calculate current interest rate for floating rate loans
+calculateCurrentRate : InterestRateStructure -> Decimal -> Decimal
+calculateCurrentRate rateStructure benchmarkRate =
+  let baseRateValue = case rateStructure.rateType of
+        Fixed -> fromOptional 0.0 rateStructure.fixedRate
+        Floating -> benchmarkRate + rateStructure.margin
+        Hybrid -> benchmarkRate + rateStructure.margin
+      
+      -- Apply floor and cap if specified
+      withFloor = case rateStructure.floorRate of
+        Some floor -> max baseRateValue floor
+        None -> baseRateValue
+        
+      withCap = case rateStructure.capRate of
+        Some cap -> min withFloor cap
+        None -> withFloor
+  in withCap
+
+-- | Calculate total collateral value with haircuts applied
+calculateCollateralValue : [CollateralAsset] -> Decimal
+calculateCollateralValue assets =
+  foldl (\acc asset -> acc + (asset.currentValue * (1.0 - asset.haircut))) 0.0 assets
+
+-- | Calculate loan-to-value ratio
+calculateLTV : Decimal -> [CollateralAsset] -> Decimal
+calculateLTV loanAmount collateral =
+  let totalCollateralValue = calculateCollateralValue collateral
+  in if totalCollateralValue > 0.0
+     then loanAmount / totalCollateralValue
+     else 1.0  -- Return 1.0 (100% LTV) if no collateral
+
+-- | Check if collateral meets requirements
+meetsCollateralRequirements : [CollateralAsset] -> CollateralRequirements -> Decimal -> Bool
+meetsCollateralRequirements assets requirements loanAmount =
+  let totalValue = calculateCollateralValue assets
+      ltv = calculateLTV loanAmount assets
+      collateralRatio = if ltv > 0.0 then 1.0 / ltv else 0.0
+  in collateralRatio >= requirements.minimumRatio
+
+-- | Calculate credit score from profile metrics
+calculateCreditScore : CreditProfile -> Int
+calculateCreditScore profile =
+  let baseScore = 300
+      
+      -- Payment history (35% of score, max 245 points)
+      paymentScore = if profile.numberOfLoans > 0
+        then round $ 245.0 * (1.0 - (intToDecimal profile.numberOfDefaults / intToDecimal profile.numberOfLoans))
+        else 0
+      
+      -- Amount owed (30% of score, max 210 points)
+      utilizationRatio = if profile.totalBorrowed > 0.0
+        then profile.currentOutstanding / profile.totalBorrowed
+        else 0.0
+      amountScore = round $ 210.0 * (1.0 - utilizationRatio)
+      
+      -- Length of history (15% of score, max 105 points)
+      historyScore = min 105 (profile.numberOfLoans * 10)
+      
+      -- Total score capped at 850
+      totalScore = baseScore + paymentScore + amountScore + historyScore
+  in min 850 totalScore
+
+-- | Convert credit score to risk rating
+scoreToRating : Int -> RiskRating
+scoreToRating score
+  | score >= 800 = AAA
+  | score >= 740 = AA
+  | score >= 670 = A
+  | score >= 580 = BBB
+  | score >= 500 = BB
+  | score >= 420 = B
+  | score >= 350 = CCC
+  | score >= 320 = CC
+  | score >= 300 = C
+  | otherwise = D
+
+-- | Calculate days between two times
+daysBetween : Time -> Time -> Int
+daysBetween start end =
+  let diff = subTime end start
+      microseconds = convertRelTimeToMicroseconds diff
+      days = intToDecimal microseconds / (24.0 * 60.0 * 60.0 * 1000000.0)
+  in truncate days
+
+-- | Check if payment is late
+isPaymentLate : Time -> Time -> Int -> Bool
+isPaymentLate dueDate currentDate gracePeriodDays =
+  let daysPastDue = daysBetween dueDate currentDate
+  in daysPastDue > gracePeriodDays
+
+-- | Calculate late fee
+calculateLateFee : Decimal -> Decimal -> Int -> Decimal
+calculateLateFee principal dailyRate daysLate =
+  principal * dailyRate * intToDecimal daysLate
+
+
+-- VALIDATION FUNCTIONS
+-- | Validate interest rate is within reasonable bounds
+isValidInterestRate : Decimal -> Bool
+isValidInterestRate rate = rate >= 0.0 && rate <= 1.0  -- 0% to 100%
+
+-- | Validate collateral ratio is sufficient
+isValidCollateralRatio : Decimal -> Bool
+isValidCollateralRatio ratio = ratio >= 1.0  -- At least 100% collateralization
+
+-- | Validate loan amount is positive
+isValidLoanAmount : Decimal -> Bool
+isValidLoanAmount amount = amount > 0.0
+
+-- | Validate payment frequency is reasonable
+isValidPaymentFrequency : PaymentFrequency -> Int -> Bool
+isValidPaymentFrequency frequency numberOfPayments =
+  numberOfPayments > 0 && case frequency of
+    Bullet -> numberOfPayments == 1
+    Monthly -> numberOfPayments <= 360  -- Max 30 years
+    Quarterly -> numberOfPayments <= 120  -- Max 30 years
+    SemiAnnual -> numberOfPayments <= 60  -- Max 30 years
+    Annual -> numberOfPayments <= 30  -- Max 30 years
+    Custom days -> days > 0 && days <= 365
+
+-- | Validate credit score is in valid range
+isValidCreditScore : Int -> Bool
+isValidCreditScore score = score >= 300 && score <= 850
+
+
+-- AEGIS PLATFORM TYPES
+-- | Platform operational status
+data PlatformStatus
+  = PlatformActive
+  | PlatformMaintenance
+  | PlatformEmergencyShutdown
+  deriving (Eq, Show)
+
+-- | Platform treasury with multi-asset support
+data AegisTreasury = AegisTreasury with
+    treasuryBalances: [(AssetType, Decimal)]
+    reserveRatio: Decimal
+    lastAuditDate: Time
+  deriving (Eq, Show)
+
+-- | Balance transaction record
+data BalanceTransaction = BalanceTransaction with
+    transactionId: Text
+    transactionType: TransactionType
+    amount: Decimal
+    counterparty: Optional Party
+    timestamp: Time
+    purpose: Text
+  deriving (Eq, Show)
+
+-- | Liquidity support terms
+data LiquiditySupportTerms = LiquiditySupportTerms with
+    interestRate: Decimal
+    repaymentDeadline: Time
+    collateralRequired: Bool
+  deriving (Eq, Show)
+
+-- | Support status
+data SupportStatus
+  = SupportActive
+  | SupportPartiallyRepaid
+  | SupportRepaid
+  | SupportDefaulted
+  deriving (Eq, Show)

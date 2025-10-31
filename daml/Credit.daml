@@ -1,0 +1,743 @@
+-- | Aegis RFQ - Credit Scoring and Risk Management System
+-- Privacy-preserving credit profiles, risk assessment, and pricing recommendations
+-- for institutional lending decisions
+
+module Credit where
+
+import DA.Time
+import Types
+import qualified Aegis
+import qualified AuditLog
+
+
+-- CREDIT PROFILE TEMPLATE
+-- | On-chain credit profile with privacy-preserving calculations
+-- Tracks borrowing history and calculates credit scores
+template CreditProfileContract with
+    party: Party
+    profileId: Text
+    creditScore: Int  -- 300-850 scale
+    riskRating: RiskRating
+    totalBorrowed: Decimal
+    totalRepaid: Decimal
+    currentOutstanding: Decimal
+    numberOfLoans: Int
+    numberOfDefaults: Int
+    numberOfLatePayments: Int
+    averageRepaymentTime: Decimal  -- In days
+    longestDelayDays: Int
+    defaultHistory: [DefaultEvent]
+    lastUpdated: Time
+    privacyLevel: CreditPrivacyLevel
+  where
+    signatory party
+
+    ensure
+      -- Validation: Credit score in valid range
+      isValidCreditScore creditScore &&
+      -- Validation: Financial metrics are non-negative
+      totalBorrowed >= 0.0 &&
+      totalRepaid >= 0.0 &&
+      currentOutstanding >= 0.0 &&
+      -- Validation: Counts are non-negative
+      numberOfLoans >= 0 &&
+      numberOfDefaults >= 0 &&
+      numberOfLatePayments >= 0 &&
+      -- Validation: Defaults cannot exceed loans
+      numberOfDefaults <= numberOfLoans
+
+    key (party, profileId): (Party, Text)
+    maintainer key._1
+
+    
+    -- CREDIT UPDATE CHOICES
+    
+
+    -- | Record a new loan origination
+    choice RecordLoanOrigination: ContractId CreditProfileContract with
+        loanId: Text
+        loanAmount: Decimal
+      controller party
+      do
+        now <- getTime
+        
+        -- Manual logging: Create borrower audit log for loan origination
+        AuditLog.logBorrowerEvent party party party ("CREDIT-LOAN-ORIG-" <> loanId <> "-" <> show now)
+          AuditLog.BorrowerLoanAccepted
+          ("Loan originated: " <> loanId <> " for amount " <> show loanAmount)
+          [loanId, profileId]
+          [("loanAmount", show loanAmount), ("totalBorrowed", show (totalBorrowed + loanAmount)), ("numberOfLoans", show (numberOfLoans + 1))]
+          (Some AuditLog.FinancialImpact with
+            totalAmount = loanAmount
+            principalAmount = Some loanAmount
+            interestAmount = None
+            feesAmount = None)
+          None
+          None
+        
+        create this with
+          totalBorrowed = totalBorrowed + loanAmount
+          currentOutstanding = currentOutstanding + loanAmount
+          numberOfLoans = numberOfLoans + 1
+          lastUpdated = now
+
+    -- | Record a successful loan repayment
+    choice RecordRepayment: ContractId CreditProfileContract with
+        loanId: Text
+        repaymentAmount: Decimal
+        daysToRepay: Int
+        wasOnTime: Bool
+      controller party
+      do
+        now <- getTime
+        
+        -- Update repayment metrics
+        let newTotalRepaid = totalRepaid + repaymentAmount
+        let newOutstanding = currentOutstanding - repaymentAmount
+        let newAvgRepaymentTime = 
+              ((averageRepaymentTime * intToDecimal numberOfLoans) + intToDecimal daysToRepay) 
+              / intToDecimal (numberOfLoans + 1)
+        let newLatePayments = if wasOnTime then numberOfLatePayments else numberOfLatePayments + 1
+        
+        -- Recalculate credit score
+        let updatedProfile = this with
+              totalRepaid = newTotalRepaid
+              currentOutstanding = newOutstanding
+              averageRepaymentTime = newAvgRepaymentTime
+              numberOfLatePayments = newLatePayments
+              lastUpdated = now
+        
+        let newScore = Types.calculateCreditScore (toCreditProfile updatedProfile)
+        let newRating = Types.scoreToRating newScore
+        
+        -- Manual logging: Create borrower audit log for credit score update
+        -- This creates a standalone log since credit profiles don't have trails
+        AuditLog.logBorrowerEvent party party party ("CREDIT-UPDATE-" <> profileId <> "-" <> show now)
+          AuditLog.BorrowerCreditScoreUpdated
+          ("Credit score updated: " <> show creditScore <> " -> " <> show newScore)
+          [profileId, loanId]
+          [("newScore", show newScore), ("oldScore", show creditScore), ("wasOnTime", show wasOnTime), ("repaymentAmount", show repaymentAmount)]
+          (Some AuditLog.FinancialImpact with
+            totalAmount = repaymentAmount
+            principalAmount = Some repaymentAmount
+            interestAmount = None
+            feesAmount = None)
+          None
+          (Some AuditLog.CreditImpact with
+            previousScore = creditScore
+            newScore = newScore
+            scoreDelta = newScore - creditScore
+            impactReason = if wasOnTime then "On-time repayment" else "Late repayment")
+        
+        create updatedProfile with
+          creditScore = newScore
+          riskRating = newRating
+
+    -- | Record a loan default (with optional platform reimbursement)
+    -- Note: Lender must be a controller to exercise platform reimbursement
+    choice RecordDefault: (ContractId CreditProfileContract, Optional (ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance)) with
+        loanId: Text
+        defaultAmount: Decimal
+        defaultDate: Time
+        lender: Party
+        platformCid: Optional (ContractId Aegis.AegisPlatform)
+        assetType: AssetType
+      controller party, lender
+      do
+        now <- getTime
+        
+        let defaultEvent = DefaultEvent with
+              loanId
+              defaultDate
+              amountInDefault = defaultAmount
+              resolutionDate = None
+              recoveryAmount = None
+        
+        -- Update default metrics
+        let updatedProfile = this with
+              numberOfDefaults = numberOfDefaults + 1
+              defaultHistory = defaultEvent :: defaultHistory
+              lastUpdated = now
+        
+        -- Recalculate credit score (will be significantly lower)
+        let newScore = Types.calculateCreditScore (toCreditProfile updatedProfile)
+        let newRating = Types.scoreToRating newScore
+        
+        updatedProfileCid <- create updatedProfile with
+          creditScore = newScore
+          riskRating = newRating
+        
+        -- Manual logging: Create borrower audit log for credit default
+        -- This creates a standalone log since credit profiles don't have trails
+        AuditLog.logBorrowerEvent party party party ("CREDIT-DEFAULT-" <> loanId <> "-" <> show now)
+          AuditLog.BorrowerLoanDefaultDeclared
+          ("Credit default recorded: Score dropped from " <> show creditScore <> " to " <> show newScore)
+          [loanId, profileId]
+          [("defaultAmount", show defaultAmount), ("newCreditScore", show newScore), ("oldCreditScore", show creditScore), ("numberOfDefaults", show (numberOfDefaults + 1))]
+          (Some AuditLog.FinancialImpact with
+            totalAmount = defaultAmount
+            principalAmount = Some defaultAmount
+            interestAmount = None
+            feesAmount = None)
+          (Some lender)
+          (Some AuditLog.CreditImpact with
+            previousScore = creditScore
+            newScore = newScore
+            scoreDelta = newScore - creditScore
+            impactReason = "Loan default recorded")
+        
+        -- If platform is available, reimburse lender for default
+        reimbursementResult <- case platformCid of
+          Some platCid -> do
+            platform <- fetch platCid
+            (newPlatformCid, balanceCid) <- exercise platCid Aegis.ReimburseLender with
+              lender
+              assetType
+              amount = defaultAmount
+              reimbursementReason = "Credit default reimbursement for loan: " <> loanId
+              approvedBy = platform.emergencyOperator
+            return (Some (newPlatformCid, balanceCid))
+          None -> return None
+        
+        return (updatedProfileCid, reimbursementResult)
+
+    -- | Record resolution of a default
+    choice RecordDefaultResolution: ContractId CreditProfileContract with
+        loanId: Text
+        resolutionDate: Time
+        recoveryAmount: Decimal
+      controller party
+      do
+        now <- getTime
+        
+        -- Update the default event in history
+        let updatedHistory = map (\event ->
+              if event.loanId == loanId
+                then event with 
+                  resolutionDate = Some resolutionDate
+                  recoveryAmount = Some recoveryAmount
+                else event
+              ) defaultHistory
+        
+        create this with
+          defaultHistory = updatedHistory
+          lastUpdated = now
+
+    -- | Update privacy level
+    choice UpdatePrivacyLevel: ContractId CreditProfileContract with
+        newPrivacyLevel: CreditPrivacyLevel
+      controller party
+      do
+        now <- getTime
+        create this with
+          privacyLevel = newPrivacyLevel
+          lastUpdated = now
+
+
+-- CREDIT PRIVACY LEVELS
+data CreditPrivacyLevel
+  = PublicCredit  -- Full credit info visible to all lenders
+  | RestrictedCredit  -- Only score and rating visible
+  | PrivateCredit  -- Only available to approved lenders
+  deriving (Eq, Show)
+
+
+-- RISK ASSESSMENT TEMPLATE
+-- | Risk assessment for a specific lending opportunity
+-- Provides risk-based pricing recommendations
+template RiskAssessment with
+    assessmentId: Text
+    borrower: Party
+    lender: Party
+    loanAmount: Decimal
+    loanDuration: RelTime
+    collateralAssets: [CollateralAsset]
+    borrowerCreditProfile: CreditProfile
+    assessmentDate: Time
+    riskMetrics: RiskMetrics
+    recommendedRate: Decimal
+    riskAdjustedRate: Decimal
+    approvalRecommendation: ApprovalRecommendation
+  where
+    signatory lender
+    observer borrower
+
+    ensure
+      loanAmount > 0.0 &&
+      recommendedRate >= 0.0 &&
+      riskAdjustedRate >= 0.0
+
+    key (lender, assessmentId): (Party, Text)
+    maintainer key._1
+
+    -- | Lender accepts the risk assessment and proceeds
+    choice AcceptAssessment: () with
+      controller lender
+      do
+        return ()
+
+    -- | Lender rejects based on risk assessment
+    choice RejectAssessment: () with
+        rejectionReason: Text
+      controller lender
+      do
+        return ()
+
+
+-- APPROVAL RECOMMENDATION
+data ApprovalRecommendation
+  = StronglyApprove  -- Low risk, excellent credit
+  | Approve  -- Acceptable risk
+  | ApproveWithConditions Text  -- Approve with specific conditions
+  | ReviewRequired  -- Manual review needed
+  | Decline  -- High risk, not recommended
+  deriving (Eq, Show)
+
+
+-- PORTFOLIO RISK TEMPLATE
+-- | Portfolio-level risk assessment for lenders
+-- Tracks concentration risk and overall portfolio health
+template PortfolioRisk with
+    portfolioId: Text
+    lender: Party
+    activeLoans: Int
+    totalExposure: Decimal
+    averageLTV: Decimal
+    concentrationByBorrower: [(Party, Decimal)]  -- (borrower, exposure)
+    concentrationByAssetType: [(AssetType, Decimal)]  -- (asset type, exposure)
+    portfolioRiskMetrics: RiskMetrics
+    lastAssessmentDate: Time
+  where
+    signatory lender
+
+    ensure
+      activeLoans >= 0 &&
+      totalExposure >= 0.0 &&
+      averageLTV >= 0.0
+
+    key (lender, portfolioId): (Party, Text)
+    maintainer key._1
+
+    -- | Update portfolio risk metrics
+    choice UpdatePortfolioRisk: ContractId PortfolioRisk with
+        newActiveLoans: Int
+        newTotalExposure: Decimal
+        newAverageLTV: Decimal
+        newConcentrationByBorrower: [(Party, Decimal)]
+        newConcentrationByAssetType: [(AssetType, Decimal)]
+        newRiskMetrics: RiskMetrics
+      controller lender
+      do
+        now <- getTime
+        
+        create this with
+          activeLoans = newActiveLoans
+          totalExposure = newTotalExposure
+          averageLTV = newAverageLTV
+          concentrationByBorrower = newConcentrationByBorrower
+          concentrationByAssetType = newConcentrationByAssetType
+          portfolioRiskMetrics = newRiskMetrics
+          lastAssessmentDate = now
+
+    -- | Check if concentration limits are breached
+    choice CheckConcentrationLimits: ConcentrationCheckResult with
+        maxBorrowerConcentration: Decimal  -- Max % to single borrower
+        maxAssetTypeConcentration: Decimal  -- Max % in single asset type
+      controller lender
+      do
+        -- Check borrower concentration
+        let borrowerBreaches = filter (\(_, exposure) -> 
+              (exposure / totalExposure) > maxBorrowerConcentration
+              ) concentrationByBorrower
+        
+        -- Check asset type concentration
+        let assetBreaches = filter (\(_, exposure) -> 
+              (exposure / totalExposure) > maxAssetTypeConcentration
+              ) concentrationByAssetType
+        
+        return ConcentrationCheckResult with
+          borrowerConcentrationBreaches = map fst borrowerBreaches
+          assetTypeConcentrationBreaches = map fst assetBreaches
+          isCompliant = null borrowerBreaches && null assetBreaches
+
+data ConcentrationCheckResult = ConcentrationCheckResult with
+    borrowerConcentrationBreaches: [Party]
+    assetTypeConcentrationBreaches: [AssetType]
+    isCompliant: Bool
+  deriving (Eq, Show)
+
+
+-- CREDIT INSURANCE TEMPLATE (AEGIS PLATFORM BACKED)
+-- | Credit insurance policy backed by Aegis platform treasury
+-- Protects lenders against borrower defaults
+template CreditInsurance with
+    policyId: Text
+    lender: Party
+    borrower: Party
+    loanId: Text
+    insuredAmount: Decimal
+    coveragePercentage: Decimal  -- e.g., 0.8 for 80% coverage
+    premiumRate: Decimal  -- Annual premium as percentage of insured amount
+    policyStartDate: Time
+    policyEndDate: Time
+    platformCid: ContractId Aegis.AegisPlatform
+    assetType: AssetType
+    status: InsuranceStatus
+  where
+    signatory lender
+    observer borrower
+
+    ensure
+      insuredAmount > 0.0 &&
+      coveragePercentage > 0.0 &&
+      coveragePercentage <= 1.0 &&
+      premiumRate >= 0.0 &&
+      policyEndDate > policyStartDate
+
+    key (lender, policyId): (Party, Text)
+    maintainer key._1
+
+    -- | File insurance claim for default
+    choice FileInsuranceClaim: (ContractId CreditInsurance, ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance) with
+        defaultAmount: Decimal
+        claimDate: Time
+        claimEvidence: Text
+      controller lender
+      do
+        now <- getTime
+        
+        assertMsg "Policy must be active" (status == InsuranceActive)
+        assertMsg "Claim date must be within policy period" 
+          (claimDate >= policyStartDate && claimDate <= policyEndDate)
+        assertMsg "Default amount cannot exceed insured amount" 
+          (defaultAmount <= insuredAmount)
+        
+        -- Calculate coverage amount
+        let coverageAmount = defaultAmount * coveragePercentage
+        
+        -- Claim from platform
+        platform <- fetch platformCid
+        (newPlatformCid, balanceCid) <- exercise platformCid Aegis.ReimburseLender with
+          lender
+          assetType
+          amount = coverageAmount
+          reimbursementReason = "Credit insurance claim for loan: " <> loanId <> " - " <> claimEvidence
+          approvedBy = platform.complianceOfficer
+        
+        -- Update policy status
+        newPolicyCid <- create this with
+          status = InsuranceClaimed
+        
+        return (newPolicyCid, newPlatformCid, balanceCid)
+
+    -- | Cancel insurance policy
+    choice CancelInsurance: () with
+        cancellationReason: Text
+      controller lender
+      do
+        assertMsg "Can only cancel active policies" (status == InsuranceActive)
+        return ()
+
+data InsuranceStatus
+  = InsuranceActive
+  | InsuranceClaimed
+  | InsuranceExpired
+  | InsuranceCancelled
+  deriving (Eq, Show)
+
+
+-- CREDIT GUARANTEE TEMPLATE (AEGIS PLATFORM BACKED)
+-- | Credit guarantee from Aegis platform for enhanced borrower creditworthiness
+-- Platform guarantees repayment up to a certain amount
+template CreditGuarantee with
+    guaranteeId: Text
+    borrower: Party
+    lender: Party
+    guaranteedAmount: Decimal
+    guaranteePercentage: Decimal  -- e.g., 0.5 for 50% guarantee
+    guaranteeFee: Decimal
+    validFrom: Time
+    validUntil: Time
+    platformCid: ContractId Aegis.AegisPlatform
+    assetType: AssetType
+    status: GuaranteeStatus
+  where
+    signatory borrower, lender
+    
+    ensure
+      guaranteedAmount > 0.0 &&
+      guaranteePercentage > 0.0 &&
+      guaranteePercentage <= 1.0 &&
+      validUntil > validFrom
+
+    key (borrower, lender, guaranteeId): (Party, Party, Text)
+    maintainer key._1
+
+    -- | Invoke guarantee on default
+    choice InvokeGuarantee: (ContractId CreditGuarantee, ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance) with
+        loanId: Text
+        defaultAmount: Decimal
+        invokeDate: Time
+      controller lender
+      do
+        now <- getTime
+        
+        assertMsg "Guarantee must be active" (status == GuaranteeActive)
+        assertMsg "Invoke date must be within validity period"
+          (invokeDate >= validFrom && invokeDate <= validUntil)
+        assertMsg "Default amount cannot exceed guaranteed amount"
+          (defaultAmount <= guaranteedAmount)
+        
+        -- Calculate guarantee payout
+        let payoutAmount = defaultAmount * guaranteePercentage
+        
+        -- Get payout from platform
+        platform <- fetch platformCid
+        (newPlatformCid, balanceCid) <- exercise platformCid Aegis.ReimburseLender with
+          lender
+          assetType
+          amount = payoutAmount
+          reimbursementReason = "Credit guarantee invoked for loan: " <> loanId
+          approvedBy = platform.complianceOfficer
+        
+        -- Update guarantee status
+        newGuaranteeCid <- create this with
+          status = GuaranteeInvoked
+        
+        return (newGuaranteeCid, newPlatformCid, balanceCid)
+
+data GuaranteeStatus
+  = GuaranteeActive
+  | GuaranteeInvoked
+  | GuaranteeExpired
+  deriving (Eq, Show)
+
+
+-- CREDIT INQUIRY TEMPLATE
+-- | Credit inquiry request from lender to borrower
+-- Privacy-preserving credit information sharing
+template CreditInquiry with
+    inquiryId: Text
+    borrower: Party
+    lender: Party
+    purpose: Text
+    requestedAt: Time
+    status: InquiryStatus
+    sharedInformation: Optional CreditProfile
+  where
+    signatory lender
+    observer borrower
+
+    key (lender, borrower, inquiryId): (Party, Party, Text)
+    maintainer key._1
+
+    -- | Borrower approves credit inquiry and shares information
+    choice ApproveInquiry: ContractId CreditInquiry with
+        creditProfile: CreditProfile
+      controller borrower
+      do
+        now <- getTime
+        
+        -- Manual logging: Create borrower audit log for inquiry approval
+        AuditLog.logBorrowerEvent borrower borrower borrower ("CREDIT-INQ-APPROVE-" <> inquiryId <> "-" <> show now)
+          AuditLog.BorrowerCreditInquiryApproved
+          ("Credit inquiry approved for lender " <> show lender)
+          [inquiryId]
+          [("lender", show lender), ("creditScore", show creditProfile.creditScore)]
+          None
+          (Some lender)
+          None
+        
+        create this with
+          status = InquiryApproved
+          sharedInformation = Some creditProfile
+
+    -- | Borrower declines credit inquiry
+    choice DeclineInquiry: () with
+        reason: Text
+      controller borrower
+      do
+        now <- getTime
+        
+        -- Manual logging: Create borrower audit log for inquiry decline
+        AuditLog.logBorrowerEvent borrower borrower borrower ("CREDIT-INQ-DECLINE-" <> inquiryId <> "-" <> show now)
+          AuditLog.BorrowerCreditInquiryReceived
+          ("Credit inquiry declined: " <> reason)
+          [inquiryId]
+          [("reason", reason), ("lender", show lender)]
+          None
+          (Some lender)
+          None
+        
+        return ()
+
+data InquiryStatus
+  = InquiryPending
+  | InquiryApproved
+  | InquiryDeclined
+  deriving (Eq, Show)
+
+
+-- HELPER FUNCTIONS
+-- | Convert CreditProfileContract to CreditProfile data type
+toCreditProfile : CreditProfileContract -> CreditProfile
+toCreditProfile contract = CreditProfile with
+  party = contract.party
+  creditScore = contract.creditScore
+  riskRating = contract.riskRating
+  totalBorrowed = contract.totalBorrowed
+  totalRepaid = contract.totalRepaid
+  currentOutstanding = contract.currentOutstanding
+  numberOfLoans = contract.numberOfLoans
+  numberOfDefaults = contract.numberOfDefaults
+  averageRepaymentTime = contract.averageRepaymentTime
+  longestDelayDays = contract.longestDelayDays
+  lastUpdated = contract.lastUpdated
+
+-- | Calculate risk-adjusted interest rate
+calculateRiskAdjustedRate : CreditProfile -> Decimal -> Decimal -> Decimal
+calculateRiskAdjustedRate profile baseRate loanAmount =
+  let -- Base rate adjustment based on credit score
+      scoreAdjustment = case profile.riskRating of
+        AAA -> -0.01  -- 1% discount for excellent credit
+        AA -> -0.005
+        A -> 0.0
+        BBB -> 0.01
+        BB -> 0.025
+        B -> 0.04
+        CCC -> 0.06
+        CC -> 0.08
+        C -> 0.10
+        D -> 0.15  -- 15% premium for poor credit
+      
+      -- Adjustment based on default history
+      defaultAdjustment = if profile.numberOfDefaults > 0
+        then 0.02 * intToDecimal profile.numberOfDefaults
+        else 0.0
+      
+      -- Adjustment based on current utilization
+      utilizationRatio = if profile.totalBorrowed > 0.0
+        then profile.currentOutstanding / profile.totalBorrowed
+        else 0.0
+      utilizationAdjustment = if utilizationRatio > 0.8
+        then 0.015  -- 1.5% premium for high utilization
+        else 0.0
+      
+      -- Calculate final rate
+      adjustedRate = baseRate + scoreAdjustment + defaultAdjustment + utilizationAdjustment
+  in max 0.01 adjustedRate  -- Minimum 1% rate
+
+-- | Generate approval recommendation based on credit profile and risk metrics
+generateApprovalRecommendation : CreditProfile -> RiskMetrics -> Decimal -> ApprovalRecommendation
+generateApprovalRecommendation profile metrics loanAmount =
+  let creditScore = profile.creditScore
+      defaultRate = if profile.numberOfLoans > 0
+        then intToDecimal profile.numberOfDefaults / intToDecimal profile.numberOfLoans
+        else 0.0
+  in
+    if creditScore >= 750 && defaultRate == 0.0 && metrics.creditRisk < 0.05
+      then StronglyApprove
+    else if creditScore >= 670 && defaultRate < 0.1 && metrics.creditRisk < 0.15
+      then Approve
+    else if creditScore >= 580 && defaultRate < 0.2
+      then ApproveWithConditions "Require additional collateral or guarantor"
+    else if creditScore >= 500
+      then ReviewRequired
+    else Decline
+
+-- | Calculate portfolio concentration risk (Herfindahl index)
+calculateConcentrationRisk : [(Party, Decimal)] -> Decimal -> Decimal
+calculateConcentrationRisk exposures totalExposure =
+  if totalExposure > 0.0
+    then
+      let shares = map (\(_, exposure) -> exposure / totalExposure) exposures
+          squaredShares = map (\share -> share * share) shares
+      in foldl (+) 0.0 squaredShares
+    else 0.0
+
+-- | Assess if borrower meets minimum credit requirements
+meetsMinimumCreditRequirements : CreditProfile -> Int -> RiskRating -> Bool
+meetsMinimumCreditRequirements profile minScore minRating =
+  profile.creditScore >= minScore &&
+  profile.riskRating >= minRating &&
+  profile.numberOfDefaults == 0
+
+
+
+-- AEGIS INTEGRATION WORKFLOWS
+-- | Create credit insurance policy backed by Aegis platform
+createCreditInsurance : Party -> Party -> Text -> Decimal -> Decimal -> Decimal -> Time -> Time -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId CreditInsurance)
+createCreditInsurance lender borrower loanId insuredAmount coveragePercentage premiumRate startDate endDate platformCid assetType = do
+  let policyId = "INS-" <> loanId
+  
+  create CreditInsurance with
+    policyId
+    lender
+    borrower
+    loanId
+    insuredAmount
+    coveragePercentage
+    premiumRate
+    policyStartDate = startDate
+    policyEndDate = endDate
+    platformCid
+    assetType
+    status = InsuranceActive
+
+-- | Create credit guarantee backed by Aegis platform
+createCreditGuarantee : Party -> Party -> Decimal -> Decimal -> Decimal -> Time -> Time -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId CreditGuarantee)
+createCreditGuarantee borrower lender guaranteedAmount guaranteePercentage guaranteeFee validFrom validUntil platformCid assetType = do
+  now <- getTime
+  let guaranteeId = show borrower <> "-GUARANTEE-" <> show now
+  
+  create CreditGuarantee with
+    guaranteeId
+    borrower
+    lender
+    guaranteedAmount
+    guaranteePercentage
+    guaranteeFee
+    validFrom
+    validUntil
+    platformCid
+    assetType
+    status = GuaranteeActive
+
+-- | Calculate insurance premium based on credit risk
+calculateInsurancePremium : CreditProfile -> Decimal -> Decimal -> Decimal
+calculateInsurancePremium profile insuredAmount coveragePercentage =
+  let -- Base premium rate based on credit rating
+      basePremiumRate = case profile.riskRating of
+        AAA -> 0.01  -- 1%
+        AA -> 0.015  -- 1.5%
+        A -> 0.02    -- 2%
+        BBB -> 0.03  -- 3%
+        BB -> 0.05   -- 5%
+        B -> 0.08    -- 8%
+        CCC -> 0.12  -- 12%
+        CC -> 0.15   -- 15%
+        C -> 0.20    -- 20%
+        D -> 0.25    -- 25%
+      
+      -- Adjust for default history
+      defaultAdjustment = if profile.numberOfDefaults > 0
+        then 1.0 + (intToDecimal profile.numberOfDefaults * 0.25)
+        else 1.0
+      
+      -- Adjust for coverage percentage
+      coverageAdjustment = coveragePercentage
+      
+      -- Calculate annual premium
+      annualPremium = insuredAmount * basePremiumRate * defaultAdjustment * coverageAdjustment
+  
+  in annualPremium
+
+-- | Determine if borrower qualifies for platform-backed credit enhancement
+qualifiesForCreditEnhancement : CreditProfile -> Decimal -> Bool
+qualifiesForCreditEnhancement profile loanAmount =
+  -- Minimum credit score of 600
+  profile.creditScore >= 600 &&
+  -- No recent defaults
+  profile.numberOfDefaults == 0 &&
+  -- Reasonable loan amount relative to history
+  (profile.totalBorrowed == 0.0 || loanAmount <= profile.totalBorrowed * 2.0)

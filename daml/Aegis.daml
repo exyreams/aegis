@@ -1,0 +1,908 @@
+-- | Aegis RFQ - Platform Treasury and Central Management
+-- Main platform contract that manages treasury, reimburses lenders, and controls system-wide operations
+
+module Aegis where
+
+import DA.Time
+import DA.Action (foldlA)
+import Types
+import qualified AuditLog
+
+--  AEGIS PLATFORM TEMPLATE
+-- | Central Aegis platform with treasury management and lender reimbursement
+template AegisPlatform with
+    platform: Party
+    treasury: AegisTreasury
+    authorizedAssets: [AssetType]
+    platformFeeRate: Decimal  -- Platform fee percentage (e.g., 0.005 = 0.5%)
+    emergencyOperator: Party
+    complianceOfficer: Party
+    totalLoansOriginated: Decimal
+    totalFeesCollected: Decimal
+    activeLenders: [Party]
+    platformStatus: PlatformStatus
+  where
+    signatory platform, emergencyOperator, complianceOfficer
+    observer activeLenders  -- Lenders can see platform for transparency and to file claims/requests
+
+    ensure
+      platformFeeRate >= 0.0 &&
+      platformFeeRate <= 0.1 &&  -- Max 10% fee
+      totalLoansOriginated >= 0.0 &&
+      totalFeesCollected >= 0.0
+
+    key platform: Party
+    maintainer key
+
+    -- TREASURY MINTING AND MANAGEMENT CHOICES
+    -- | Mint new funds to treasury (Aegis can create money for the platform)
+    choice MintToTreasury: ContractId AegisPlatform with
+        assetType: AssetType
+        mintAmount: Decimal
+        mintReason: Text
+        authorizedBy: Party  -- Must be platform owner
+      controller platform
+      do
+        now <- getTime
+        
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Mint amount must be positive" (mintAmount > 0.0)
+        assertMsg "Asset type must be authorized" (assetType `elem` authorizedAssets)
+        assertMsg "Only platform can authorize minting" (authorizedBy == platform)
+        
+        -- Add minted funds to treasury (unlimited minting for platform)
+        let newTreasury = addToTreasury treasury assetType mintAmount
+        
+        create this with
+          treasury = newTreasury
+
+    -- | Emergency mint (for crisis situations)
+    choice EmergencyMint: ContractId AegisPlatform with
+        assetType: AssetType
+        emergencyAmount: Decimal
+        emergencyReason: Text
+      controller emergencyOperator
+      do
+        assertMsg "Emergency mint amount must be positive" (emergencyAmount > 0.0)
+        assertMsg "Asset type must be authorized" (assetType `elem` authorizedAssets)
+        
+        -- Emergency minting bypasses normal controls
+        let newTreasury = addToTreasury treasury assetType emergencyAmount
+        
+        create this with
+          treasury = newTreasury
+
+    -- | Bulk mint multiple assets (for platform initialization)
+    choice BulkMintToTreasury: ContractId AegisPlatform with
+        mintingPlan: [(AssetType, Decimal)]  -- List of (asset, amount) to mint
+        bulkReason: Text
+      controller platform
+      do
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Minting plan cannot be empty" (not (null mintingPlan))
+        
+        -- Validate all assets are authorized and amounts positive
+        let validAssets = all (\(asset, amount) -> 
+              asset `elem` authorizedAssets && amount > 0.0) mintingPlan
+        assertMsg "All assets must be authorized with positive amounts" validAssets
+        
+        -- Add all minted funds to treasury
+        let newTreasury = foldl (\treas (asset, amount) -> 
+              addToTreasury treas asset amount) treasury mintingPlan
+        
+        create this with
+          treasury = newTreasury
+
+    -- ASSET AUTHORIZATION CHOICES
+    -- | Add new authorized asset types to the platform
+    choice AuthorizeNewAssets: ContractId AegisPlatform with
+        newAssets: [AssetType]
+        authorizationReason: Text
+      controller platform, complianceOfficer
+      do
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Must provide at least one asset to authorize" (not (null newAssets))
+        
+        -- Add new assets to authorized list (avoiding duplicates)
+        let updatedAssets = authorizedAssets <> filter (\a -> not (a `elem` authorizedAssets)) newAssets
+        
+        create this with
+          authorizedAssets = updatedAssets
+
+    -- | Remove asset types from authorization (only if no treasury balance exists)
+    choice DeauthorizeAssets: ContractId AegisPlatform with
+        assetsToRemove: [AssetType]
+        deauthorizationReason: Text
+      controller platform, complianceOfficer
+      do
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Must provide at least one asset to deauthorize" (not (null assetsToRemove))
+        
+        -- Check that assets to remove have zero treasury balance
+        let hasBalance = any (\asset -> getTreasuryBalance treasury asset > 0.0) assetsToRemove
+        assertMsg "Cannot deauthorize assets with non-zero treasury balance" (not hasBalance)
+        
+        -- Remove assets from authorized list
+        let updatedAssets = filter (\a -> not (a `elem` assetsToRemove)) authorizedAssets
+        
+        assertMsg "Must keep at least one authorized asset" (not (null updatedAssets))
+        
+        create this with
+          authorizedAssets = updatedAssets
+
+    -- | Update platform fee rate
+    choice UpdatePlatformFeeRate: ContractId AegisPlatform with
+        newFeeRate: Decimal
+        updateReason: Text
+      controller platform, complianceOfficer
+      do
+        assertMsg "Fee rate must be between 0% and 10%" (newFeeRate >= 0.0 && newFeeRate <= 0.1)
+        
+        create this with
+          platformFeeRate = newFeeRate
+
+    -- TREASURY MANAGEMENT CHOICES
+    -- | Reimburse lender from platform treasury
+    choice ReimburseLender: (ContractId AegisPlatform, ContractId AssetBalance) with
+        lender: Party
+        assetType: AssetType
+        amount: Decimal
+        reimbursementReason: Text
+        approvedBy: Party
+      controller platform, lender
+      do
+        now <- getTime
+        
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Reimbursement amount must be positive" (amount > 0.0)
+        assertMsg "Asset type must be authorized" (assetType `elem` authorizedAssets)
+        assertMsg "Approver must be emergency operator or compliance officer" 
+          (approvedBy == emergencyOperator || approvedBy == complianceOfficer)
+        
+        -- Check treasury has sufficient funds
+        let treasuryBalance = getTreasuryBalance treasury assetType
+        assertMsg "Insufficient treasury funds" (treasuryBalance >= amount)
+        
+        -- Update treasury
+        let newTreasury = deductFromTreasury treasury assetType amount
+        
+        -- Create or update lender balance
+        lenderBalanceKey <- lookupByKey @AssetBalance (lender, assetType)
+        newLenderBalance <- case lenderBalanceKey of
+          Some balanceCid -> do
+            exercise balanceCid ReceiveFunds with
+              amount = amount
+              sender = platform
+              receiptReason = "Platform reimbursement: " <> reimbursementReason
+          None -> do
+            create AssetBalance with
+              owner = lender
+              assetType
+              totalBalance = amount
+              availableBalance = amount
+              lockedBalance = 0.0
+              escrowedBalance = 0.0
+              lastUpdated = now
+              balanceHistory = [BalanceTransaction with
+                  transactionId = show lender <> "-REIMBURSE-" <> show now
+                  transactionType = FundsReceived
+                  amount = amount
+                  counterparty = Some platform
+                  timestamp = now
+                  purpose = "Platform reimbursement: " <> reimbursementReason
+                ]
+        
+        -- Manual logging: Create lender audit log for reimbursement
+        -- This creates a standalone log since platform operations don't have trails
+        AuditLog.logLenderEvent lender platform complianceOfficer ("REIMBURSE-" <> show lender <> "-" <> show now)
+          AuditLog.LenderFundsReceived
+          ("Platform reimbursement: " <> reimbursementReason)
+          []
+          [("amount", show amount), ("assetType", show assetType), ("approvedBy", show approvedBy), ("reason", reimbursementReason)]
+          (Some AuditLog.FinancialImpact with
+            totalAmount = amount
+            principalAmount = Some amount
+            interestAmount = None
+            feesAmount = None)
+          (Some platform)
+          None
+        
+        -- Update platform record
+        newPlatform <- create this with
+          treasury = newTreasury
+          activeLenders = if lender `elem` activeLenders then activeLenders else lender :: activeLenders
+        
+        return (newPlatform, newLenderBalance)
+
+    -- | Register new lender with zero balance (admin must fund separately)
+    choice RegisterNewLender: (ContractId AegisPlatform, ContractId AssetBalance) with
+        newLender: Party
+        assetType: AssetType  -- Primary asset type (USDC or USD)
+      controller platform
+      do
+        now <- getTime
+        
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Asset type must be authorized" (assetType `elem` authorizedAssets)
+        assertMsg "Lender must not already be active" (not (newLender `elem` activeLenders))
+        
+        -- Create zero balance for new lender
+        newLenderBalance <- create AssetBalance with
+          owner = newLender
+          assetType
+          totalBalance = 0.0
+          availableBalance = 0.0
+          lockedBalance = 0.0
+          escrowedBalance = 0.0
+          lastUpdated = now
+          balanceHistory = [BalanceTransaction with
+              transactionId = show newLender <> "-REGISTER-" <> show now
+              transactionType = FundsReceived
+              amount = 0.0
+              counterparty = Some platform
+              timestamp = now
+              purpose = "Lender registration - zero balance"
+            ]
+        
+        -- Update platform record
+        newPlatform <- create this with
+          activeLenders = newLender :: activeLenders
+        
+        return (newPlatform, newLenderBalance)
+
+    -- | Admin funds lender balance (ONLY admin can do this)
+    choice AdminFundLender: (ContractId AegisPlatform, ContractId AssetBalance) with
+        lender: Party
+        assetType: AssetType
+        fundingAmount: Decimal
+        fundingReason: Text
+        adminApproval: Party  -- Must be emergencyOperator or complianceOfficer
+      controller platform
+      do
+        now <- getTime
+        
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Funding amount must be positive" (fundingAmount > 0.0)
+        assertMsg "Asset type must be authorized" (assetType `elem` authorizedAssets)
+        assertMsg "Lender must be registered" (lender `elem` activeLenders)
+        assertMsg "Only admin can approve funding" 
+          (adminApproval == emergencyOperator || adminApproval == complianceOfficer)
+        
+        -- Check treasury has sufficient funds
+        let treasuryBalance = getTreasuryBalance treasury assetType
+        assertMsg "Insufficient treasury funds" (treasuryBalance >= fundingAmount)
+        
+        -- Update treasury
+        let newTreasury = deductFromTreasury treasury assetType fundingAmount
+        
+        -- Add funds to lender balance
+        lenderBalanceKey <- lookupByKey @AssetBalance (lender, assetType)
+        newLenderBalance <- case lenderBalanceKey of
+          Some balanceCid -> do
+            exercise balanceCid ReceiveFunds with
+              amount = fundingAmount
+              sender = platform
+              receiptReason = "Admin funding: " <> fundingReason
+          None -> do
+            -- Create balance if doesn't exist
+            create AssetBalance with
+              owner = lender
+              assetType
+              totalBalance = fundingAmount
+              availableBalance = fundingAmount
+              lockedBalance = 0.0
+              escrowedBalance = 0.0
+              lastUpdated = now
+              balanceHistory = [BalanceTransaction with
+                  transactionId = show lender <> "-ADMIN-FUND-" <> show now
+                  transactionType = FundsReceived
+                  amount = fundingAmount
+                  counterparty = Some platform
+                  timestamp = now
+                  purpose = "Admin funding: " <> fundingReason
+                ]
+        
+        -- Update platform record
+        newPlatform <- create this with
+          treasury = newTreasury
+        
+        return (newPlatform, newLenderBalance)
+
+    -- | Collect platform fees from loan
+    choice CollectPlatformFee: ContractId AegisPlatform with
+        loanId: Text
+        loanAmount: Decimal
+        lender: Party
+        assetType: AssetType
+      controller platform
+      do
+        let feeAmount = loanAmount * platformFeeRate
+        
+        -- Deduct fee from lender balance
+        lenderBalanceKey <- lookupByKey @AssetBalance (lender, assetType)
+        case lenderBalanceKey of
+          Some balanceCid -> do
+            lenderBalance <- fetch balanceCid
+            if lenderBalance.availableBalance >= feeAmount
+              then do
+                -- Deduct fee from lender
+                _ <- exercise balanceCid LockFunds with
+                  amount = feeAmount
+                  purpose = "Platform fee for loan: " <> loanId
+                  lockDuration = days 1
+                
+                -- Add to treasury
+                let newTreasury = addToTreasury treasury assetType feeAmount
+                
+                create this with
+                  treasury = newTreasury
+                  totalFeesCollected = totalFeesCollected + feeAmount
+              else do
+                -- Waive fee if lender has insufficient funds
+                return self
+          None -> return self
+
+    -- | Collect platform fees from secondary market transfer
+    choice CollectSecondaryMarketFee: ContractId AegisPlatform with
+        transferId: Text
+        transferAmount: Decimal
+        seller: Party
+        buyer: Party
+        assetType: AssetType
+      controller platform
+      do
+        let feeAmount = transferAmount * platformFeeRate
+        
+        -- Deduct fee from buyer balance (buyer pays the fee)
+        buyerBalanceKey <- lookupByKey @AssetBalance (buyer, assetType)
+        case buyerBalanceKey of
+          Some balanceCid -> do
+            buyerBalance <- fetch balanceCid
+            if buyerBalance.availableBalance >= feeAmount
+              then do
+                -- Deduct fee from buyer
+                _ <- exercise balanceCid LockFunds with
+                  amount = feeAmount
+                  purpose = "Secondary market fee for transfer: " <> transferId
+                  lockDuration = days 1
+                
+                -- Add to treasury
+                let newTreasury = addToTreasury treasury assetType feeAmount
+                
+                create this with
+                  treasury = newTreasury
+                  totalFeesCollected = totalFeesCollected + feeAmount
+              else do
+                -- Waive fee if buyer has insufficient funds
+                return self
+          None -> return self
+
+    -- | Collect platform fees from syndicated loan origination
+    choice CollectSyndicationFee: ContractId AegisPlatform with
+        loanId: Text
+        loanAmount: Decimal
+        leadLender: Party
+        participantCount: Int
+        assetType: AssetType
+      controller platform
+      do
+        let feeAmount = loanAmount * platformFeeRate
+        
+        -- Deduct fee from lead lender balance (lead arranger pays the fee)
+        leadBalanceKey <- lookupByKey @AssetBalance (leadLender, assetType)
+        case leadBalanceKey of
+          Some balanceCid -> do
+            leadBalance <- fetch balanceCid
+            if leadBalance.availableBalance >= feeAmount
+              then do
+                -- Deduct fee from lead lender
+                _ <- exercise balanceCid LockFunds with
+                  amount = feeAmount
+                  purpose = "Syndication fee for loan: " <> loanId
+                  lockDuration = days 1
+                
+                -- Add to treasury
+                let newTreasury = addToTreasury treasury assetType feeAmount
+                
+                create this with
+                  treasury = newTreasury
+                  totalFeesCollected = totalFeesCollected + feeAmount
+                  totalLoansOriginated = totalLoansOriginated + loanAmount
+              else do
+                -- Waive fee if lead lender has insufficient funds
+                create this with
+                  totalLoansOriginated = totalLoansOriginated + loanAmount
+          None -> 
+            create this with
+              totalLoansOriginated = totalLoansOriginated + loanAmount
+
+    -- | Register liquidity pool with platform
+    choice RegisterLiquidityPool: ContractId AegisPlatform with
+        poolId: Text
+        poolManager: Party
+        initialLiquidity: Decimal
+        assetType: AssetType
+      controller platform
+      do
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        assertMsg "Asset type must be authorized" (assetType `elem` authorizedAssets)
+        
+        -- No fee for registration, just tracking
+        return self
+
+    -- | Collect pool management fee
+    choice CollectPoolManagementFee: ContractId AegisPlatform with
+        poolId: Text
+        poolManager: Party
+        managementFee: Decimal
+        totalLiquidity: Decimal
+        assetType: AssetType
+      controller platform
+      do
+        assertMsg "Management fee must be non-negative" (managementFee >= 0.0)
+        
+        -- Add fee to treasury
+        let newTreasury = addToTreasury treasury assetType managementFee
+        
+        create this with
+          treasury = newTreasury
+          totalFeesCollected = totalFeesCollected + managementFee
+
+    -- | Provide performance bonus to high-performing pool
+    choice ProvidePoolPerformanceBonus: ContractId AegisPlatform with
+        poolId: Text
+        poolManager: Party
+        bonusAmount: Decimal
+        performanceMetric: Decimal
+        assetType: AssetType
+      controller platform
+      do
+        assertMsg "Bonus amount must be positive" (bonusAmount > 0.0)
+        assertMsg "Platform must be active" (platformStatus == PlatformActive)
+        
+        -- Check treasury has sufficient funds
+        let treasuryBalance = getTreasuryBalance treasury assetType
+        assertMsg "Insufficient treasury funds for bonus" (treasuryBalance >= bonusAmount)
+        
+        -- Deduct bonus from treasury
+        let newTreasury = deductFromTreasury treasury assetType bonusAmount
+        
+        create this with
+          treasury = newTreasury
+
+    -- | Emergency fund injection to treasury
+    choice InjectTreasuryFunds: ContractId AegisPlatform with
+        assetType: AssetType
+        amount: Decimal
+        injectionReason: Text
+      controller emergencyOperator
+      do
+        assertMsg "Injection amount must be positive" (amount > 0.0)
+        
+        let newTreasury = addToTreasury treasury assetType amount
+        
+        create this with
+          treasury = newTreasury
+
+    -- | Emergency platform shutdown
+    choice EmergencyShutdown: ContractId AegisPlatform with
+        shutdownReason: Text
+      controller emergencyOperator
+      do
+        create this with
+          platformStatus = PlatformEmergencyShutdown
+
+    -- | Reactivate platform after emergency
+    choice ReactivatePlatform: ContractId AegisPlatform with
+        reactivationReason: Text
+      controller platform, emergencyOperator
+      do
+        assertMsg "Platform must be in emergency shutdown" 
+          (platformStatus == PlatformEmergencyShutdown)
+        
+        create this with
+          platformStatus = PlatformActive
+
+    -- LENDER SUPPORT CHOICES
+    -- | Provide liquidity support to lender during market stress
+    choice ProvideLiquiditySupport: (ContractId AegisPlatform, ContractId AssetBalance) with
+        lender: Party
+        assetType: AssetType
+        supportAmount: Decimal
+        supportReason: Text
+        repaymentTerms: LiquiditySupportTerms
+      controller platform
+      do
+        now <- getTime
+        
+        assertMsg "Lender must be active" (lender `elem` activeLenders)
+        assertMsg "Support amount must be positive" (supportAmount > 0.0)
+        
+        -- Check treasury has sufficient funds
+        let treasuryBalance = getTreasuryBalance treasury assetType
+        assertMsg "Insufficient treasury funds for liquidity support" 
+          (treasuryBalance >= supportAmount)
+        
+        -- Create liquidity support record
+        supportCid <- create LiquiditySupport with
+          supportId = show lender <> "-SUPPORT-" <> show now
+          platform
+          lender
+          assetType
+          supportAmount
+          repaymentTerms
+          providedAt = now
+          status = SupportActive
+        
+        -- Update treasury
+        let newTreasury = deductFromTreasury treasury assetType supportAmount
+        
+        -- Add funds to lender balance
+        lenderBalanceKey <- lookupByKey @AssetBalance (lender, assetType)
+        newLenderBalance <- case lenderBalanceKey of
+          Some balanceCid -> do
+            exercise balanceCid ReceiveFunds with
+              amount = supportAmount
+              sender = platform
+              receiptReason = "Liquidity support: " <> supportReason
+          None -> abort "Lender must have existing balance for liquidity support"
+        
+        newPlatform <- create this with
+          treasury = newTreasury
+        
+        return (newPlatform, newLenderBalance)
+
+
+-- ASSET BALANCE TEMPLATE
+-- | Asset balance tracking with comprehensive controls
+template AssetBalance with
+    owner: Party
+    assetType: AssetType
+    totalBalance: Decimal
+    availableBalance: Decimal
+    lockedBalance: Decimal
+    escrowedBalance: Decimal
+    lastUpdated: Time
+    balanceHistory: [BalanceTransaction]
+  where
+    signatory owner
+
+    ensure
+      totalBalance >= 0.0 &&
+      availableBalance >= 0.0 &&
+      lockedBalance >= 0.0 &&
+      escrowedBalance >= 0.0 &&
+      totalBalance == availableBalance + lockedBalance + escrowedBalance
+
+    key (owner, assetType): (Party, AssetType)
+    maintainer key._1
+
+    -- | Receive funds (loan repayment or deposit)
+    choice ReceiveFunds: ContractId AssetBalance with
+        amount: Decimal
+        sender: Party
+        receiptReason: Text
+      controller owner
+      do
+        now <- getTime
+        
+        assertMsg "Receive amount must be positive" (amount > 0.0)
+        
+        let transaction = BalanceTransaction with
+              transactionId = show owner <> "-RECEIVE-" <> show now
+              transactionType = FundsReceived
+              amount = amount
+              counterparty = Some sender
+              timestamp = now
+              purpose = receiptReason
+        
+        create this with
+          availableBalance = availableBalance + amount
+          totalBalance = totalBalance + amount
+          lastUpdated = now
+          balanceHistory = transaction :: balanceHistory
+
+    -- | Lock funds for loan commitment
+    choice LockFunds: ContractId AssetBalance with
+        amount: Decimal
+        purpose: Text
+        lockDuration: RelTime
+      controller owner
+      do
+        now <- getTime
+        
+        assertMsg "Insufficient available balance" (availableBalance >= amount)
+        assertMsg "Lock amount must be positive" (amount > 0.0)
+        
+        let transaction = BalanceTransaction with
+              transactionId = show owner <> "-LOCK-" <> show now
+              transactionType = FundsLocked
+              amount = amount
+              counterparty = None
+              timestamp = now
+              purpose = purpose
+        
+        create this with
+          availableBalance = availableBalance - amount
+          lockedBalance = lockedBalance + amount
+          lastUpdated = now
+          balanceHistory = transaction :: balanceHistory
+
+
+-- LIQUIDITY SUPPORT TEMPLATE
+-- | Liquidity support provided to lenders
+template LiquiditySupport with
+    supportId: Text
+    platform: Party
+    lender: Party
+    assetType: AssetType
+    supportAmount: Decimal
+    repaymentTerms: LiquiditySupportTerms
+    providedAt: Time
+    status: SupportStatus
+  where
+    signatory platform
+    observer lender
+
+    key (platform, supportId): (Party, Text)
+    maintainer key._1
+
+    -- | Repay liquidity support
+    choice RepaySupport: ContractId LiquiditySupport with
+        repaymentAmount: Decimal
+      controller lender
+      do
+        assertMsg "Support must be active" (status == SupportActive)
+        assertMsg "Repayment amount must be positive" (repaymentAmount > 0.0)
+        
+        -- Update lender balance (deduct repayment)
+        lenderBalanceKey <- lookupByKey @AssetBalance (lender, assetType)
+        case lenderBalanceKey of
+          Some balanceCid -> do
+            _ <- exercise balanceCid LockFunds with
+              amount = repaymentAmount
+              purpose = "Liquidity support repayment: " <> supportId
+              lockDuration = days 1
+            
+            let newStatus = if repaymentAmount >= supportAmount
+                  then SupportRepaid
+                  else SupportPartiallyRepaid
+            
+            create this with
+              status = newStatus
+          None -> abort "Lender balance not found"
+
+
+-- TREASURY HELPER FUNCTION
+-- | Get treasury balance for specific asset
+getTreasuryBalance : AegisTreasury -> AssetType -> Decimal
+getTreasuryBalance treasury assetType =
+  case lookup assetType treasury.treasuryBalances of
+    Some balance -> balance
+    None -> 0.0
+
+-- | Add funds to treasury
+addToTreasury : AegisTreasury -> AssetType -> Decimal -> AegisTreasury
+addToTreasury treasury assetType amount =
+  let currentBalance = getTreasuryBalance treasury assetType
+      newBalance = currentBalance + amount
+      updatedBalances = updateTreasuryBalance treasury.treasuryBalances assetType newBalance
+  in treasury with treasuryBalances = updatedBalances
+
+-- | Deduct funds from treasury
+deductFromTreasury : AegisTreasury -> AssetType -> Decimal -> AegisTreasury
+deductFromTreasury treasury assetType amount =
+  let currentBalance = getTreasuryBalance treasury assetType
+      newBalance = currentBalance - amount
+      updatedBalances = updateTreasuryBalance treasury.treasuryBalances assetType newBalance
+  in treasury with treasuryBalances = updatedBalances
+
+-- | Update treasury balance for specific asset
+updateTreasuryBalance : [(AssetType, Decimal)] -> AssetType -> Decimal -> [(AssetType, Decimal)]
+updateTreasuryBalance balances assetType newBalance =
+  case lookup assetType balances of
+    Some _ -> map (\(asset, balance) -> 
+      if asset == assetType then (asset, newBalance) else (asset, balance)
+      ) balances
+    None -> (assetType, newBalance) :: balances
+
+-- PLATFORM INITIALIZATIO
+-- | Initialize Aegis platform with empty treasury (mint funds as needed)
+initializeAegisPlatform : Party -> Party -> Party -> Decimal -> Update (ContractId AegisPlatform)
+initializeAegisPlatform platform emergencyOp complianceOff feeRate = do
+  now <- getTime
+  
+  -- Focus on USD-based assets (USDC stablecoin primary, USD fiat secondary)
+  let authorizedAssets = [Stablecoin "USDC", FiatCurrency "USD"]
+  
+  -- Start with empty treasury - mint funds as needed
+  let initialTreasury = AegisTreasury with
+        treasuryBalances = []  -- Empty treasury initially
+        reserveRatio = 0.15  -- 15% reserve requirement for stability
+        lastAuditDate = now
+  
+  create AegisPlatform with
+    platform
+    treasury = initialTreasury
+    authorizedAssets
+    platformFeeRate = feeRate
+    emergencyOperator = emergencyOp
+    complianceOfficer = complianceOff
+    totalLoansOriginated = 0.0
+    totalFeesCollected = 0.0
+    activeLenders = []
+    platformStatus = PlatformActive
+
+-- | Initialize platform with initial treasury minting
+initializePlatformWithFunds : Party -> Party -> Party -> Decimal -> Decimal -> Decimal -> Update (ContractId AegisPlatform)
+initializePlatformWithFunds platform emergencyOp complianceOff feeRate usdcAmount usdAmount = do
+  -- Create platform with empty treasury
+  platformCid <- initializeAegisPlatform platform emergencyOp complianceOff feeRate
+  
+  -- Mint initial treasury funds
+  exercise platformCid BulkMintToTreasury with
+    mintingPlan = [
+        (Stablecoin "USDC", usdcAmount),
+        (Stablecoin "USD", usdAmount)
+      ]
+    bulkReason = "Initial platform treasury funding"
+
+-- | Admin-only function to add treasury funds
+addTreasuryFunds : ContractId AegisPlatform -> AssetType -> Decimal -> Text -> Update (ContractId AegisPlatform)
+addTreasuryFunds platformCid assetType amount reason = do
+  platform <- fetch platformCid
+  
+  exercise platformCid InjectTreasuryFunds with
+    assetType
+    amount
+    injectionReason = reason
+
+-- | Create lender workflow (2-step process)
+createLenderWorkflow : ContractId AegisPlatform -> Party -> AssetType -> Update (ContractId AegisPlatform, ContractId AssetBalance)
+createLenderWorkflow platformCid newLender primaryAsset = do
+  -- Step 1: Register lender with zero balance
+  (newPlatformCid, zeroBalanceCid) <- exercise platformCid RegisterNewLender with
+    newLender
+    assetType = primaryAsset
+  
+  return (newPlatformCid, zeroBalanceCid)
+
+-- | Admin funding workflow (separate from registration)
+adminFundingWorkflow : ContractId AegisPlatform -> Party -> Party -> AssetType -> Decimal -> Text -> Update (ContractId AegisPlatform, ContractId AssetBalance)
+adminFundingWorkflow platformCid admin lender assetType amount reason = do
+  platform <- fetch platformCid
+  
+  -- Verify admin is authorized
+  assertMsg "Admin must be emergency operator or compliance officer"
+    (admin == platform.emergencyOperator || admin == platform.complianceOfficer)
+  
+  exercise platformCid AdminFundLender with
+    lender
+    assetType
+    fundingAmount = amount
+    fundingReason = reason
+    adminApproval = admin
+
+-- TREASURY FUNDING WORKFLOW
+-- | Mint funds for specific business need
+mintForBusinessNeed : ContractId AegisPlatform -> AssetType -> Decimal -> Text -> Update (ContractId AegisPlatform)
+mintForBusinessNeed platformCid assetType amount reason = do
+  platform <- fetch platformCid
+  exercise platformCid MintToTreasury with
+    assetType
+    mintAmount = amount
+    mintReason = reason
+    authorizedBy = platform.platform
+
+-- | Mint funds to cover lender funding needs
+mintForLenderFunding : ContractId AegisPlatform -> [(Party, AssetType, Decimal)] -> Text -> Update (ContractId AegisPlatform)
+mintForLenderFunding platformCid lenderFundingNeeds reason = do
+  platform <- fetch platformCid
+  
+  -- Calculate total needed per asset type
+  let totalNeeded = calculateTotalNeeded lenderFundingNeeds
+  
+  -- Mint required funds
+  exercise platformCid BulkMintToTreasury with
+    mintingPlan = totalNeeded
+    bulkReason = reason
+
+-- | Calculate total funding needed per asset type
+calculateTotalNeeded : [(Party, AssetType, Decimal)] -> [(AssetType, Decimal)]
+calculateTotalNeeded fundingNeeds =
+  let groupedByAsset = groupByAssetType fundingNeeds
+  in map (\(asset, amounts) -> (asset, sum amounts)) groupedByAsset
+
+-- | Group funding needs by asset type
+groupByAssetType : [(Party, AssetType, Decimal)] -> [(AssetType, [Decimal])]
+groupByAssetType [] = []
+groupByAssetType ((_, asset, amount) :: rest) =
+  let (sameAsset, otherAssets) = partition (\(_, a, _) -> a == asset) rest
+      amounts = amount :: map (\(_, _, amt) -> amt) sameAsset
+  in (asset, amounts) :: groupByAssetType otherAssets
+
+-- PLATFORM FUNDING SCENARIO
+-- | Scenario 1: Fund multiple new lenders at once
+fundMultipleLenders : ContractId AegisPlatform -> [(Party, AssetType, Decimal, Text)] -> Update (ContractId AegisPlatform)
+fundMultipleLenders platformCid lenderRequests = do
+  platform <- fetch platformCid
+  
+  -- Calculate total minting needed
+  let mintingNeeds = map (\(_, asset, amount, _) -> (asset, amount)) lenderRequests
+  let totalMinting = calculateTotalNeeded (map (\(p, a, amt, _) -> (p, a, amt)) lenderRequests)
+  
+  -- Mint required funds
+  platformCid2 <- exercise platformCid BulkMintToTreasury with
+    mintingPlan = totalMinting
+    bulkReason = "Bulk lender funding - " <> show (length lenderRequests) <> " lenders"
+  
+  -- Fund each lender
+  foldlA (\platCid (lender, asset, amount, reason) -> do
+    (newPlatCid, _) <- exercise platCid AdminFundLender with
+        lender
+        assetType = asset
+        fundingAmount = amount
+        fundingReason = reason
+        adminApproval = platform.emergencyOperator
+    return newPlatCid
+    ) platformCid2 lenderRequests
+
+-- | Scenario 2: Emergency liquidity injection
+emergencyLiquidityInjection : ContractId AegisPlatform -> AssetType -> Decimal -> Text -> Update (ContractId AegisPlatform)
+emergencyLiquidityInjection platformCid assetType amount reason =
+  -- Emergency mint (bypasses normal controls)
+  exercise platformCid EmergencyMint with
+    assetType
+    emergencyAmount = amount
+    emergencyReason = "EMERGENCY: " <> reason
+
+-- | Scenario 3: Seasonal funding (e.g., end of year lending surge)
+seasonalFundingBoost : ContractId AegisPlatform -> Decimal -> Text -> Update (ContractId AegisPlatform)
+seasonalFundingBoost platformCid multiplier season = do
+  platform <- fetch platformCid
+  
+  -- Calculate current treasury size
+  let currentUSDC = getTreasuryBalance platform.treasury (Stablecoin "USDC")
+  let currentUSD = getTreasuryBalance platform.treasury (Stablecoin "USD")
+  
+  -- Mint additional funds based on multiplier
+  let additionalUSDC = currentUSDC * multiplier
+  let additionalUSD = currentUSD * multiplier
+  
+  exercise platformCid BulkMintToTreasury with
+    mintingPlan = [
+        (Stablecoin "USDC", additionalUSDC),
+        (Stablecoin "USD", additionalUSD)
+      ]
+    bulkReason = "Seasonal funding boost for " <> season <> " (" <> show (multiplier * 100.0) <> "% increase)"
+-- TREASURY MONITORIN
+
+-- | Check if treasury needs replenishment
+checkTreasuryHealth : AegisTreasury -> [(AssetType, Bool)]  -- (asset, needsReplenishment)
+checkTreasuryHealth treasury =
+  map (\(asset, balance) -> 
+    let minimumRequired = 1000000.0  -- 1M minimum per asset
+    in (asset, balance < minimumRequired)
+  ) treasury.treasuryBalances
+
+-- | Auto-replenish treasury if below minimum
+autoReplenishTreasury : ContractId AegisPlatform -> Update (ContractId AegisPlatform)
+autoReplenishTreasury platformCid = do
+  platform <- fetch platformCid
+  
+  let healthCheck = checkTreasuryHealth platform.treasury
+  let needsReplenishment = filter snd healthCheck
+  
+  if null needsReplenishment
+    then return platformCid
+    else do
+      let replenishmentPlan = map (\(asset, _) -> 
+            let currentBalance = getTreasuryBalance platform.treasury asset
+                targetBalance = 5000000.0  -- 5M target
+                mintAmount = targetBalance - currentBalance
+            in (asset, mintAmount)
+            ) needsReplenishment
+      
+      exercise platformCid BulkMintToTreasury with
+        mintingPlan = replenishmentPlan
+        bulkReason = "Auto-replenishment - treasury below minimum thresholds"

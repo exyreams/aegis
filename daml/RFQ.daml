@@ -1,0 +1,839 @@
+-- | Aegis RFQ - Request for Quote Lending Platform
+-- Production-grade RFQ with sophisticated lender management, privacy controls,
+-- and institutional-grade features for confidential lending
+
+module RFQ where
+
+import DA.Time
+import DA.Optional (fromOptional)
+import DA.List (head)
+import Types
+import qualified Aegis
+import qualified AuditLog
+
+
+-- RFQ TEMPLATE
+-- | RFQ with sophisticated lender criteria and privacy settings
+-- Supports institutional-grade features including lender filtering,
+-- bid limits, and flexible privacy modes
+template RFQ with
+    borrower: Party
+    rfqId: Text  -- Unique identifier for this RFQ
+    loanAmount: Decimal
+    collateralAssets: [CollateralAsset]
+    loanDuration: RelTime
+    loanPurpose: Text
+    lenderCriteria: LenderCriteria
+    privacySettings: PrivacySettings
+    collateralRequirements: CollateralRequirements
+    status: RFQStatus
+    createdAt: Time
+    expiresAt: Time
+    currentBidCount: Int
+    acceptedBidId: Optional Text
+  where
+    signatory borrower
+    
+    -- Observer pattern for selective visibility based on privacy mode
+    observer case privacySettings.visibilityMode of
+      CompletelyPrivate -> lenderCriteria.preferredLenders
+      SemiPublic -> lenderCriteria.preferredLenders
+      PublicWithPrivateTerms -> lenderCriteria.preferredLenders
+
+    ensure
+      -- Validation: Loan amount must be positive
+      loanAmount > 0.0 &&
+      -- Validation: Must have at least one collateral asset
+      not (null collateralAssets) &&
+      -- Validation: Expiration must be in the future
+      expiresAt > createdAt &&
+      -- Validation: Maximum bids must be positive
+      lenderCriteria.maximumBids > 0 &&
+      -- Validation: Collateral must meet minimum requirements
+      meetsCollateralRequirements collateralAssets collateralRequirements loanAmount
+
+    key (borrower, rfqId): (Party, Text)
+    maintainer key._1
+
+    
+    -- LENDER BIDDING CHOICES
+    
+
+    -- | Submit a bid with complex terms
+    -- Only approved lenders matching criteria can bid
+    nonconsuming choice SubmitBid: Either Text (ContractId Bid) with
+        lender: Party
+        lenderProfile: LenderProfile
+        interestRateStructure: InterestRateStructure
+        repaymentSchedule: RepaymentSchedule
+        proposedCovenants: [LoanCovenant]
+        additionalTerms: Text
+      controller lender
+      do
+        now <- getTime
+        
+        -- Validation: Check RFQ is still active
+        if status /= RFQActive
+          then return $ Left "RFQ is not active"
+        else if now > expiresAt
+          then return $ Left "RFQ has expired"
+        else if currentBidCount >= lenderCriteria.maximumBids
+          then return $ Left "Maximum number of bids reached"
+        else if not (lenderMeetsCriteria lenderProfile lenderCriteria)
+          then return $ Left "Lender does not meet RFQ criteria"
+        else if not (isValidInterestRate (getEffectiveRate interestRateStructure))
+          then return $ Left "Invalid interest rate"
+        else if not (isValidPaymentFrequency repaymentSchedule.frequency repaymentSchedule.numberOfPayments)
+          then return $ Left "Invalid payment frequency"
+        else do
+          -- Manual logging: Create lender audit log for bid submission
+          AuditLog.logLenderEvent lender borrower borrower ("BID-SUBMIT-" <> rfqId <> "-" <> show now)
+            AuditLog.LenderBidSubmitted
+            ("Bid submitted for RFQ " <> rfqId <> " with interest rate " <> show (getEffectiveRate interestRateStructure))
+            [rfqId]
+            [("loanAmount", show loanAmount), ("interestRate", show (getEffectiveRate interestRateStructure)), ("numberOfPayments", show repaymentSchedule.numberOfPayments)]
+            (Some AuditLog.FinancialImpact with
+              totalAmount = loanAmount
+              principalAmount = Some loanAmount
+              interestAmount = None
+              feesAmount = None)
+            (Some borrower)
+            None
+          
+          -- Create the bid
+          bidCid <- create Bid with
+            rfqId = (borrower, rfqId)
+            bidId = rfqId <> "-BID-" <> show currentBidCount
+            lender
+            lenderProfile
+            borrower
+            loanAmount
+            collateralAssets
+            loanDuration
+            interestRateStructure
+            repaymentSchedule
+            proposedCovenants
+            additionalTerms
+            status = BidSubmitted
+            submittedAt = now
+          
+          return $ Right bidCid
+
+    -- | Increment bid count (internal choice for tracking)
+    choice IncrementBidCount: ContractId RFQ with
+      controller borrower
+      do
+        create this with currentBidCount = currentBidCount + 1
+
+    
+    -- BORROWER MANAGEMENT CHOICES
+    
+
+    -- | Accept a specific bid and create loan proposal
+    choice AcceptBid: Either Text (ContractId LoanProposal) with
+        bidCid: ContractId Bid
+      controller borrower
+      do
+        now <- getTime
+        
+        -- Fetch and validate the bid
+        bid <- fetch bidCid
+        
+        if status /= RFQActive && status /= RFQUnderReview
+          then return $ Left "RFQ is not in a state to accept bids"
+        else if bid.rfqId /= (borrower, rfqId)
+          then return $ Left "Bid does not belong to this RFQ"
+        else if bid.status /= BidSubmitted && bid.status /= BidUnderReview
+          then return $ Left "Bid is not in a valid state"
+        else do
+          -- Archive the bid and create loan proposal
+          archive bidCid
+          
+          -- Update RFQ status
+          self <- create this with 
+            status = RFQAccepted
+            acceptedBidId = Some bid.bidId
+          
+          -- Manual logging: Create borrower audit log for bid acceptance
+          AuditLog.logBorrowerEvent borrower borrower borrower ("BID-ACCEPT-" <> rfqId <> "-" <> show now)
+            AuditLog.BorrowerBidReceived
+            ("Accepted bid from " <> show bid.lender <> " for RFQ " <> rfqId)
+            [rfqId, bid.bidId]
+            [("lender", show bid.lender), ("loanAmount", show loanAmount), ("interestRate", show (getEffectiveRate bid.interestRateStructure))]
+            (Some AuditLog.FinancialImpact with
+              totalAmount = loanAmount
+              principalAmount = Some loanAmount
+              interestAmount = None
+              feesAmount = None)
+            (Some bid.lender)
+            None
+          
+          -- Create loan proposal
+          proposalCid <- create LoanProposal with
+            borrower
+            lender = bid.lender
+            lenderProfile = bid.lenderProfile
+            principal = loanAmount
+            collateralAssets
+            loanDuration
+            interestRateStructure = bid.interestRateStructure
+            repaymentSchedule = bid.repaymentSchedule
+            covenants = bid.proposedCovenants
+            additionalTerms = bid.additionalTerms
+            privacySettings
+            proposedAt = now
+            status = LoanProposed
+          
+          return $ Right proposalCid
+
+    -- | Update RFQ status to under review
+    choice StartReview: ContractId RFQ with
+      controller borrower
+      do
+        now <- getTime
+        assertMsg "RFQ must be active" (status == RFQActive)
+        
+        -- Manual logging: Create borrower audit log for RFQ review
+        AuditLog.logBorrowerEvent borrower borrower borrower ("RFQ-REVIEW-" <> rfqId <> "-" <> show now)
+          AuditLog.BorrowerBidReviewed
+          ("RFQ moved to under review: " <> rfqId)
+          [rfqId]
+          [("loanAmount", show loanAmount), ("bidCount", show currentBidCount)]
+          None
+          None
+          None
+        
+        create this with status = RFQUnderReview
+
+    -- | Cancel the RFQ
+    choice CancelRFQ: () with
+        reason: Text
+      controller borrower
+      do
+        now <- getTime
+        assertMsg "Cannot cancel accepted RFQ" (status /= RFQAccepted)
+        
+        -- Manual logging: Create borrower audit log for RFQ cancellation
+        AuditLog.logBorrowerEvent borrower borrower borrower ("RFQ-CANCEL-" <> rfqId <> "-" <> show now)
+          AuditLog.BorrowerRFQCancelled
+          ("RFQ cancelled: " <> reason)
+          [rfqId]
+          [("reason", reason), ("loanAmount", show loanAmount), ("bidCount", show currentBidCount)]
+          None
+          None
+          None
+        
+        -- Archive this contract
+        return ()
+
+    -- | Extend RFQ expiration
+    choice ExtendExpiration: ContractId RFQ with
+        newExpiresAt: Time
+      controller borrower
+      do
+        now <- getTime
+        assertMsg "New expiration must be in the future" (newExpiresAt > now)
+        assertMsg "New expiration must be after current expiration" (newExpiresAt > expiresAt)
+        assertMsg "RFQ must be active" (status == RFQActive)
+        
+        -- Manual logging: Create borrower audit log for RFQ extension
+        AuditLog.logBorrowerEvent borrower borrower borrower ("RFQ-EXTEND-" <> rfqId <> "-" <> show now)
+          AuditLog.BorrowerRFQCreated
+          ("RFQ expiration extended from " <> show expiresAt <> " to " <> show newExpiresAt)
+          [rfqId]
+          [("oldExpiration", show expiresAt), ("newExpiration", show newExpiresAt)]
+          None
+          None
+          None
+        
+        create this with expiresAt = newExpiresAt
+
+    -- | Mark RFQ as expired (can be called by anyone after expiration)
+    choice MarkExpired: ContractId RFQ with
+      controller borrower
+      do
+        now <- getTime
+        assertMsg "RFQ has not expired yet" (now > expiresAt)
+        assertMsg "RFQ must be active or under review" 
+          (status == RFQActive || status == RFQUnderReview)
+        
+        -- Manual logging: Create borrower audit log for RFQ expiration
+        AuditLog.logBorrowerEvent borrower borrower borrower ("RFQ-EXPIRED-" <> rfqId <> "-" <> show now)
+          AuditLog.BorrowerRFQExpired
+          ("RFQ expired: " <> rfqId)
+          [rfqId]
+          [("expiresAt", show expiresAt), ("bidCount", show currentBidCount)]
+          None
+          None
+          None
+        
+        create this with status = RFQExpired
+
+
+-- BID TEMPLATE
+-- | Bid with sophisticated interest rate structures and repayment terms
+template Bid with
+    rfqId: (Party, Text)  -- Reference to RFQ
+    bidId: Text  -- Unique bid identifier
+    lender: Party
+    lenderProfile: LenderProfile
+    borrower: Party
+    loanAmount: Decimal
+    collateralAssets: [CollateralAsset]
+    loanDuration: RelTime
+    interestRateStructure: InterestRateStructure
+    repaymentSchedule: RepaymentSchedule
+    proposedCovenants: [LoanCovenant]
+    additionalTerms: Text
+    status: BidStatus
+    submittedAt: Time
+  where
+    signatory lender
+    observer borrower
+
+    ensure
+      -- Validation: Interest rate must be valid
+      isValidInterestRate (getEffectiveRate interestRateStructure) &&
+      -- Validation: Payment schedule must be valid
+      isValidPaymentFrequency repaymentSchedule.frequency repaymentSchedule.numberOfPayments
+
+    key (lender, rfqId, bidId): (Party, (Party, Text), Text)
+    maintainer key._1
+
+    -- | Lender withdraws their bid
+    choice WithdrawBid: () with
+      controller lender
+      do
+        now <- getTime
+        assertMsg "Bid must be submitted or under review" 
+          (status == BidSubmitted || status == BidUnderReview)
+        
+        -- Manual logging: Create lender audit log for bid withdrawal
+        AuditLog.logLenderEvent lender borrower borrower ("BID-WITHDRAW-" <> bidId <> "-" <> show now)
+          AuditLog.LenderBidWithdrawn
+          ("Bid withdrawn: " <> bidId)
+          [bidId]
+          [("loanAmount", show loanAmount), ("borrower", show borrower)]
+          None
+          (Some borrower)
+          None
+        
+        return ()
+
+    -- | Lender modifies their bid (creates new bid, archives old)
+    choice ModifyBid: ContractId Bid with
+        newInterestRateStructure: InterestRateStructure
+        newRepaymentSchedule: RepaymentSchedule
+        newProposedCovenants: [LoanCovenant]
+        newAdditionalTerms: Text
+      controller lender
+      do
+        assertMsg "Bid must be submitted" (status == BidSubmitted)
+        now <- getTime
+        
+        create this with
+          interestRateStructure = newInterestRateStructure
+          repaymentSchedule = newRepaymentSchedule
+          proposedCovenants = newProposedCovenants
+          additionalTerms = newAdditionalTerms
+          submittedAt = now
+
+    -- | Mark bid as under review (called by borrower)
+    choice MarkUnderReview: ContractId Bid with
+      controller borrower
+      do
+        assertMsg "Bid must be submitted" (status == BidSubmitted)
+        create this with status = BidUnderReview
+
+    -- | Reject the bid
+    choice RejectBid: () with
+        reason: Text
+      controller borrower
+      do
+        now <- getTime
+        assertMsg "Bid must be submitted or under review" 
+          (status == BidSubmitted || status == BidUnderReview)
+        
+        -- Manual logging: Create lender audit log for bid rejection
+        AuditLog.logLenderEvent lender borrower borrower ("BID-REJECT-" <> bidId <> "-" <> show now)
+          AuditLog.LenderBidRejected
+          ("Bid rejected by borrower: " <> reason)
+          [bidId]
+          [("reason", reason), ("loanAmount", show loanAmount)]
+          None
+          (Some borrower)
+          None
+        
+        return ()
+
+
+-- LOAN PROPOSAL TEMPLATE
+-- | Loan proposal with institutional-grade terms awaiting lender acceptance
+template LoanProposal with
+    borrower: Party
+    lender: Party
+    lenderProfile: LenderProfile
+    principal: Decimal
+    collateralAssets: [CollateralAsset]
+    loanDuration: RelTime
+    interestRateStructure: InterestRateStructure
+    repaymentSchedule: RepaymentSchedule
+    covenants: [LoanCovenant]
+    additionalTerms: Text
+    privacySettings: PrivacySettings
+    proposedAt: Time
+    status: LoanStatus
+  where
+    signatory borrower
+    observer lender
+
+    ensure
+      principal > 0.0 &&
+      not (null collateralAssets) &&
+      isValidInterestRate (getEffectiveRate interestRateStructure)
+
+    key (borrower, lender, proposedAt): (Party, Party, Time)
+    maintainer key._1
+
+    -- | Lender accepts the loan proposal and creates active loan
+    choice AcceptLoan: ContractId Loan with
+      controller lender
+      do
+        now <- getTime
+        
+        let loanId = show borrower <> "-" <> show lender <> "-" <> show now
+        
+        -- Manual logging: Create lender audit log for loan origination
+        AuditLog.logLenderEvent lender borrower borrower ("LOAN-ORIG-" <> loanId <> "-" <> show now)
+          AuditLog.LenderLoanOriginated
+          ("Loan originated: " <> loanId <> " for borrower " <> show borrower)
+          [loanId]
+          [("principal", show principal), ("maturityDate", show (addRelTime now loanDuration)), ("interestRate", show (getEffectiveRate interestRateStructure))]
+          (Some AuditLog.FinancialImpact with
+            totalAmount = principal
+            principalAmount = Some principal
+            interestAmount = None
+            feesAmount = None)
+          (Some borrower)
+          None
+        
+        -- Manual logging: Create borrower audit log for loan activation
+        AuditLog.logBorrowerEvent borrower borrower borrower ("LOAN-ACT-" <> loanId <> "-" <> show now)
+          AuditLog.BorrowerLoanActivated
+          ("Loan activated: " <> loanId <> " with lender " <> show lender)
+          [loanId]
+          [("principal", show principal), ("lender", show lender), ("maturityDate", show (addRelTime now loanDuration))]
+          (Some AuditLog.FinancialImpact with
+            totalAmount = principal
+            principalAmount = Some principal
+            interestAmount = None
+            feesAmount = None)
+          (Some lender)
+          None
+        
+        -- Create the loan
+        loanCid <- create Loan with
+          loanId
+          borrower
+          lenders = [lender]  -- Single lender for now, syndication later
+          lenderProfiles = [lenderProfile]
+          principal
+          outstandingPrincipal = principal
+          collateralAssets
+          interestRateStructure
+          repaymentSchedule
+          covenants
+          additionalTerms
+          privacySettings
+          startDate = now
+          maturityDate = addRelTime now loanDuration
+          status = LoanActive
+          paymentHistory = []
+          lastPaymentDate = None
+          totalInterestPaid = 0.0
+          totalPrincipalPaid = 0.0
+        
+        -- Initialize loan audit trail for compliance tracking
+        -- Note: Requires platform party - initialize manually or pass platform reference
+        -- auditTrailCid <- AuditLog.initializeLoanAuditTrail loanId borrower [lender] platform principal LoanActive
+        
+        return loanCid
+
+    -- | Lender rejects the loan proposal
+    choice RejectLoan: () with
+        reason: Text
+      controller lender
+      do
+        now <- getTime
+        
+        -- Manual logging: Create borrower audit log for loan rejection
+        AuditLog.logBorrowerEvent borrower borrower borrower ("LOAN-REJECT-" <> show borrower <> "-" <> show now)
+          AuditLog.BorrowerLoanAccepted
+          ("Loan proposal rejected by lender: " <> reason)
+          []
+          [("reason", reason), ("principal", show principal), ("lender", show lender)]
+          None
+          (Some lender)
+          None
+        
+        return ()
+
+
+-- LOAN TEMPLATE
+-- | Active loan with comprehensive tracking and management
+template Loan with
+    loanId: Text
+    borrower: Party
+    lenders: [Party]  -- Support for syndicated loans
+    lenderProfiles: [LenderProfile]
+    principal: Decimal
+    outstandingPrincipal: Decimal
+    collateralAssets: [CollateralAsset]
+    interestRateStructure: InterestRateStructure
+    repaymentSchedule: RepaymentSchedule
+    covenants: [LoanCovenant]
+    additionalTerms: Text
+    privacySettings: PrivacySettings
+    startDate: Time
+    maturityDate: Time
+    status: LoanStatus
+    paymentHistory: [PaymentRecord]
+    lastPaymentDate: Optional Time
+    totalInterestPaid: Decimal
+    totalPrincipalPaid: Decimal
+  where
+    signatory borrower :: lenders
+
+    ensure
+      principal > 0.0 &&
+      outstandingPrincipal >= 0.0 &&
+      outstandingPrincipal <= principal &&
+      not (null collateralAssets) &&
+      not (null lenders) &&
+      length lenders == length lenderProfiles
+
+    key (borrower, loanId): (Party, Text)
+    maintainer key._1
+
+    
+    -- PAYMENT CHOICES
+    
+
+    -- | Make a scheduled payment (principal and/or interest)
+    choice MakePayment: ContractId Loan with
+        paymentAmount: Decimal
+        principalPortion: Decimal
+        interestPortion: Decimal
+      controller borrower
+      do
+        now <- getTime
+        
+        assertMsg "Loan must be active or delinquent" 
+          (status == LoanActive || status == LoanDelinquent)
+        assertMsg "Payment amount must match portions" 
+          (paymentAmount == principalPortion + interestPortion)
+        assertMsg "Payment amount must be positive" (paymentAmount > 0.0)
+        assertMsg "Principal portion cannot exceed outstanding" 
+          (principalPortion <= outstandingPrincipal)
+        
+        let newOutstanding = outstandingPrincipal - principalPortion
+        let newTotalInterest = totalInterestPaid + interestPortion
+        let newTotalPrincipal = totalPrincipalPaid + principalPortion
+        
+        -- Create payment record
+        let paymentRecord = PaymentRecord with
+              paymentDate = now
+              dueDate = now  -- Should be calculated from schedule
+              principalAmount = principalPortion
+              interestAmount = interestPortion
+              feesAmount = 0.0
+              totalAmount = paymentAmount
+              status = Paid
+        
+        -- Determine new status
+        let newStatus = if newOutstanding == 0.0
+              then LoanRepaid
+              else LoanCurrent
+        
+        -- Manual logging: Log payment to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.PaymentReceived
+              eventDescription = "Payment made: Principal=" <> show principalPortion <> " Interest=" <> show interestPortion
+              performedBy = borrower
+              eventData = [("principalPortion", show principalPortion), ("interestPortion", show interestPortion), ("totalPayment", show paymentAmount), ("newOutstanding", show newOutstanding)]
+              financialImpact = Some AuditLog.FinancialImpact with
+                totalAmount = paymentAmount
+                principalAmount = Some principalPortion
+                interestAmount = Some interestPortion
+                feesAmount = Some 0.0
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        create this with
+          outstandingPrincipal = newOutstanding
+          status = newStatus
+          paymentHistory = paymentRecord :: paymentHistory
+          lastPaymentDate = Some now
+          totalInterestPaid = newTotalInterest
+          totalPrincipalPaid = newTotalPrincipal
+
+    -- | Make early repayment of the loan
+    choice MakeEarlyRepayment: Either Text (ContractId Loan) with
+        repaymentAmount: Decimal
+      controller borrower
+      do
+        now <- getTime
+        
+        if not repaymentSchedule.earlyRepaymentTerms.allowed
+          then return $ Left "Early repayment not allowed"
+        else if status /= LoanActive && status /= LoanCurrent
+          then return $ Left "Loan must be active for early repayment"
+        else do
+          -- Check minimum hold period and calculate penalty
+          let penaltyRate = repaymentSchedule.earlyRepaymentTerms.penaltyRate
+          let penalty = outstandingPrincipal * penaltyRate
+          let totalRequired = outstandingPrincipal + penalty
+          
+          -- Validate minimum hold period if specified
+          holdPeriodCheck <- case repaymentSchedule.earlyRepaymentTerms.minimumHoldPeriod of
+            Some minPeriod -> do
+              let minDate = addRelTime startDate minPeriod
+              return $ now >= minDate
+            None -> return True
+          
+          if not holdPeriodCheck
+            then return $ Left "Minimum hold period not met"
+          else if repaymentAmount < totalRequired
+            then return $ Left $ "Insufficient amount. Required: " <> show totalRequired
+          else do
+            -- Create payment record
+            let paymentRecord = PaymentRecord with
+                  paymentDate = now
+                  dueDate = maturityDate
+                  principalAmount = outstandingPrincipal
+                  interestAmount = 0.0
+                  feesAmount = penalty
+                  totalAmount = repaymentAmount
+                  status = Paid
+            
+            -- Manual logging: Log early repayment to loan audit trail (if exists)
+            auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+            case auditCid of
+              Some cid -> do
+                exercise cid AuditLog.LogLoanEvent with
+                  eventType = AuditLog.LoanFullyRepaid
+                  eventDescription = "Early repayment completed with penalty: " <> show penalty
+                  performedBy = borrower
+                  eventData = [("repaymentAmount", show repaymentAmount), ("penalty", show penalty), ("outstandingPrincipal", show outstandingPrincipal), ("status", "LoanRepaid")]
+                  financialImpact = Some AuditLog.FinancialImpact with
+                    totalAmount = repaymentAmount
+                    principalAmount = Some outstandingPrincipal
+                    interestAmount = None
+                    feesAmount = Some penalty
+                return ()
+              None -> return ()  -- No audit trail, skip logging
+            
+            loanCid <- create this with
+              outstandingPrincipal = 0.0
+              status = LoanRepaid
+              paymentHistory = paymentRecord :: paymentHistory
+              lastPaymentDate = Some now
+              totalPrincipalPaid = totalPrincipalPaid + outstandingPrincipal
+            
+            return $ Right loanCid
+
+    -- | Mark loan as delinquent (late payment)
+    choice MarkDelinquent: ContractId Loan with
+      controller lenders
+      do
+        now <- getTime
+        assertMsg "Loan must be active or current" 
+          (status == LoanActive || status == LoanCurrent)
+        
+        -- Manual logging: Log delinquency to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.PaymentLate
+              eventDescription = "Loan marked as delinquent - payment overdue"
+              performedBy = head lenders
+              eventData = [("status", "LoanDelinquent"), ("outstandingPrincipal", show outstandingPrincipal)]
+              financialImpact = None
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        create this with status = LoanDelinquent
+
+    -- | Mark loan as defaulted (with optional Aegis platform reimbursement)
+    choice MarkDefault: (ContractId Loan, Optional (ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance)) with
+        reason: Text
+        platformCid: Optional (ContractId Aegis.AegisPlatform)
+        assetType: AssetType
+      controller lenders
+      do
+        now <- getTime
+        assertMsg "Loan must be delinquent or past maturity" 
+          (status == LoanDelinquent || now > maturityDate)
+        
+        -- Manual logging: Log default to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.LoanDefaulted
+              eventDescription = "Loan defaulted: " <> reason
+              performedBy = head lenders
+              eventData = [("defaultReason", reason), ("outstandingPrincipal", show outstandingPrincipal), ("status", "LoanDefault")]
+              financialImpact = Some AuditLog.FinancialImpact with
+                totalAmount = outstandingPrincipal
+                principalAmount = Some outstandingPrincipal
+                interestAmount = None
+                feesAmount = None
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        loanCid <- create this with status = LoanDefault
+        
+        -- If platform is available, reimburse lenders for outstanding amount
+        reimbursementResult <- case platformCid of
+          Some platCid -> do
+            platform <- fetch platCid
+            -- Reimburse primary lender (first in list)
+            let primaryLender = head lenders
+            (newPlatformCid, balanceCid) <- exercise platCid Aegis.ReimburseLender with
+              lender = primaryLender
+              assetType
+              amount = outstandingPrincipal
+              reimbursementReason = "Loan default reimbursement for loan: " <> loanId <> " - " <> reason
+              approvedBy = platform.emergencyOperator
+            return (Some (newPlatformCid, balanceCid))
+          None -> return None
+        
+        return (loanCid, reimbursementResult)
+
+    -- | Restructure loan terms (requires both parties)
+    choice RestructureLoan: ContractId Loan with
+        newInterestRateStructure: InterestRateStructure
+        newRepaymentSchedule: RepaymentSchedule
+        newMaturityDate: Time
+      controller borrower, lenders
+      do
+        now <- getTime
+        assertMsg "New maturity must be in future" (newMaturityDate > now)
+        
+        -- Manual logging: Log restructuring to loan audit trail (if exists)
+        auditCid <- lookupByKey @AuditLog.LoanAuditTrail (borrower, loanId)
+        case auditCid of
+          Some cid -> do
+            exercise cid AuditLog.LogLoanEvent with
+              eventType = AuditLog.LoanRestructured
+              eventDescription = "Loan restructured with new terms"
+              performedBy = borrower
+              eventData = [("oldMaturity", show maturityDate), ("newMaturity", show newMaturityDate), ("newInterestRate", show (getEffectiveRate newInterestRateStructure))]
+              financialImpact = None
+            return ()
+          None -> return ()  -- No audit trail, skip logging
+        
+        create this with
+          interestRateStructure = newInterestRateStructure
+          repaymentSchedule = newRepaymentSchedule
+          maturityDate = newMaturityDate
+          status = LoanRestructured
+
+
+-- HELPER FUNCTIONS
+-- | Check if lender meets the RFQ criteria
+lenderMeetsCriteria : LenderProfile -> LenderCriteria -> Bool
+lenderMeetsCriteria profile criteria =
+  -- Check category match
+  (profile.category `elem` criteria.categories) &&
+  -- Check rating meets minimum
+  (profile.rating >= criteria.minimumRating) &&
+  -- Check capacity requirement
+  (profile.availableCapacity >= criteria.requiredCapacity)
+
+-- | Get effective interest rate from structure
+getEffectiveRate : InterestRateStructure -> Decimal
+getEffectiveRate structure =
+  case structure.rateType of
+    Fixed -> fromOptional 0.0 structure.fixedRate
+    Floating -> structure.margin  -- Base rate would be added at runtime
+    Hybrid -> fromOptional 0.0 structure.fixedRate
+
+
+
+-- AEGIS PLATFORM INTEGRATION
+-- | Collect platform fee on loan origination
+collectPlatformFee : ContractId Aegis.AegisPlatform -> Text -> Decimal -> Party -> AssetType -> Update (ContractId Aegis.AegisPlatform)
+collectPlatformFee platformCid loanId loanAmount lender assetType = do
+  exercise platformCid Aegis.CollectPlatformFee with
+    loanId
+    loanAmount
+    lender
+    assetType
+
+-- | Create loan with platform fee collection
+createLoanWithPlatformFee : Party -> [Party] -> [LenderProfile] -> Text -> Decimal -> [CollateralAsset] -> InterestRateStructure -> RepaymentSchedule -> [LoanCovenant] -> Text -> PrivacySettings -> Time -> Time -> Optional (ContractId Aegis.AegisPlatform) -> AssetType -> Update (ContractId Loan, Optional (ContractId Aegis.AegisPlatform))
+createLoanWithPlatformFee borrower lenders lenderProfiles loanId principal collateral interestRate repaymentSched covenants terms privacy startDate maturityDate platformCid assetType = do
+  -- Create the loan
+  loanCid <- create Loan with
+    loanId
+    borrower
+    lenders
+    lenderProfiles
+    principal
+    outstandingPrincipal = principal
+    collateralAssets = collateral
+    interestRateStructure = interestRate
+    repaymentSchedule = repaymentSched
+    covenants = covenants
+    additionalTerms = terms
+    privacySettings = privacy
+    startDate
+    maturityDate
+    status = LoanActive
+    paymentHistory = []
+    lastPaymentDate = None
+    totalInterestPaid = 0.0
+    totalPrincipalPaid = 0.0
+  
+  -- Collect platform fee if platform is available
+  newPlatformCid <- case platformCid of
+    Some platCid -> do
+      let primaryLender = head lenders
+      newPlatCid <- collectPlatformFee platCid loanId principal primaryLender assetType
+      return (Some newPlatCid)
+    None -> return None
+  
+  return (loanCid, newPlatformCid)
+
+-- | Handle loan default with automatic platform reimbursement
+handleLoanDefault : ContractId Loan -> Text -> ContractId Aegis.AegisPlatform -> AssetType -> Update (ContractId Loan, ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance)
+handleLoanDefault loanCid reason platformCid assetType = do
+  loan <- fetch loanCid
+  
+  -- Mark as default with platform reimbursement
+  (newLoanCid, reimbursementResult) <- exercise loanCid MarkDefault with
+    reason
+    platformCid = Some platformCid
+    assetType
+  
+  case reimbursementResult of
+    Some (newPlatformCid, balanceCid) ->
+      return (newLoanCid, newPlatformCid, balanceCid)
+    None ->
+      abort "Platform reimbursement failed"
+
+-- | Request emergency liquidity from platform for lender
+requestEmergencyLiquidity : Party -> ContractId Aegis.AegisPlatform -> Decimal -> AssetType -> LiquiditySupportTerms -> Update (ContractId Aegis.AegisPlatform, ContractId Aegis.AssetBalance)
+requestEmergencyLiquidity lender platformCid amount assetType repaymentTerms = do
+  exercise platformCid Aegis.ProvideLiquiditySupport with
+    lender
+    assetType
+    supportAmount = amount
+    supportReason = "Emergency liquidity for RFQ lending operations"
+    repaymentTerms

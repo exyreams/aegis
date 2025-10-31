@@ -1,0 +1,668 @@
+-- | Aegis Platform Tests
+-- Comprehensive testing of treasury management, lender funding, and platform operations
+
+module Test_Aegis where
+
+import Daml.Script
+import DA.Time
+import Types
+import Aegis
+
+
+-- TEST SETUP
+-- | Setup test parties
+setupParties : Script TestParties
+setupParties = do
+  platform <- allocateParty "AegisPlatform"
+  emergencyOp <- allocateParty "EmergencyOperator"
+  complianceOff <- allocateParty "ComplianceOfficer"
+  lender1 <- allocateParty "Lender1"
+  lender2 <- allocateParty "Lender2"
+  lender3 <- allocateParty "Lender3"
+  borrower1 <- allocateParty "Borrower1"
+  
+  return TestParties with
+    platform
+    emergencyOp
+    complianceOff
+    lender1
+    lender2
+    lender3
+    borrower1
+
+-- | Helper to create platform with empty treasury
+createEmptyPlatform : TestParties -> Script (ContractId AegisPlatform)
+createEmptyPlatform parties = do
+  now <- getTime
+  let initialTreasury = AegisTreasury with
+        treasuryBalances = []
+        reserveRatio = 0.15
+        lastAuditDate = now
+  
+  submitMulti [parties.platform, parties.emergencyOp, parties.complianceOff] [] do
+    createCmd AegisPlatform with
+      platform = parties.platform
+      treasury = initialTreasury
+      authorizedAssets = [Stablecoin "USDC", FiatCurrency "USD"]
+      platformFeeRate = 0.005
+      emergencyOperator = parties.emergencyOp
+      complianceOfficer = parties.complianceOff
+      totalLoansOriginated = 0.0
+      totalFeesCollected = 0.0
+      activeLenders = []
+      platformStatus = PlatformActive
+
+-- | Helper to create platform with initial funds
+createPlatformWithFunds : TestParties -> Decimal -> Decimal -> Script (ContractId AegisPlatform)
+createPlatformWithFunds parties usdcAmount usdAmount = do
+  platformCid <- createEmptyPlatform parties
+  submit parties.platform do
+    exerciseCmd platformCid BulkMintToTreasury with
+      mintingPlan = [(Stablecoin "USDC", usdcAmount), (FiatCurrency "USD", usdAmount)]
+      bulkReason = "Initial platform treasury funding"
+
+data TestParties = TestParties with
+    platform: Party
+    emergencyOp: Party
+    complianceOff: Party
+    lender1: Party
+    lender2: Party
+    lender3: Party
+    borrower1: Party
+  deriving (Eq, Show)
+
+
+-- TEST 1: PLATFORM INITIALIZATION
+testPlatformInitialization : Script ()
+testPlatformInitialization = script do
+  parties <- setupParties
+  now <- getTime
+  
+  -- Initialize platform with empty treasury
+  let initialTreasury = AegisTreasury with
+        treasuryBalances = []
+        reserveRatio = 0.15
+        lastAuditDate = now
+  
+  platformCid <- submitMulti [parties.platform, parties.emergencyOp, parties.complianceOff] [] do
+    createCmd AegisPlatform with
+      platform = parties.platform
+      treasury = initialTreasury
+      authorizedAssets = [Stablecoin "USDC", Stablecoin "USD"]
+      platformFeeRate = 0.005
+      emergencyOperator = parties.emergencyOp
+      complianceOfficer = parties.complianceOff
+      totalLoansOriginated = 0.0
+      totalFeesCollected = 0.0
+      activeLenders = []
+      platformStatus = PlatformActive
+  
+  Some platform <- queryContractId parties.platform platformCid
+  
+  -- Verify platform initialized correctly
+  assert (platform.platformFeeRate == 0.005)
+  assert (platform.platformStatus == PlatformActive)
+  assert (null platform.activeLenders)
+  assert (platform.totalLoansOriginated == 0.0)
+  
+  debug "✓ Platform initialization successful"
+
+
+-- TEST 2: TREASURY MINTING
+testTreasuryMinting : Script ()
+testTreasuryMinting = script do
+  parties <- setupParties
+  
+  -- Initialize platform
+  platformCid <- createEmptyPlatform parties
+  
+  -- Mint USDC to treasury
+  platformCid2 <- submit parties.platform do
+    exerciseCmd platformCid MintToTreasury with
+      assetType = Stablecoin "USDC"
+      mintAmount = 10000000.0  -- 10M USDC
+      mintReason = "Initial treasury funding"
+      authorizedBy = parties.platform
+  
+  Some platform <- queryContractId parties.platform platformCid2
+  
+  -- Verify treasury balance
+  let usdcBalance = getTreasuryBalance platform.treasury (Stablecoin "USDC")
+  assert (usdcBalance == 10000000.0)
+  
+  debug "✓ Treasury minting successful"
+
+
+-- TEST 3: BULK MINTING
+testBulkMinting : Script ()
+testBulkMinting = script do
+  parties <- setupParties
+  
+  -- Initialize platform with bulk minting
+  platformCid <- createPlatformWithFunds parties 50000000.0 10000000.0
+  
+  Some platform <- queryContractId parties.platform platformCid
+  
+  -- Verify both assets minted
+  let usdcBalance = getTreasuryBalance platform.treasury (Stablecoin "USDC")
+  let usdBalance = getTreasuryBalance platform.treasury (FiatCurrency "USD")
+  
+  assert (usdcBalance == 50000000.0)
+  assert (usdBalance == 10000000.0)
+  
+  debug "✓ Bulk minting successful"
+
+
+-- TEST 4: LENDER REGISTRATION AND FUNDING
+testLenderRegistrationAndFunding : Script ()
+testLenderRegistrationAndFunding = script do
+  parties <- setupParties
+  
+  -- Initialize platform with funds
+  platformCid <- createPlatformWithFunds parties 100000000.0 0.0
+  
+  -- Register new lender (zero balance)
+  (platformCid2, lenderBalanceCid) <- submit parties.platform do
+    exerciseCmd platformCid RegisterNewLender with
+      newLender = parties.lender1
+      assetType = Stablecoin "USDC"
+  
+  Some platform <- queryContractId parties.platform platformCid2
+  
+  Some lenderBalance <- queryContractId parties.lender1 lenderBalanceCid
+  
+  -- Verify lender registered with zero balance
+  assert (parties.lender1 `elem` platform.activeLenders)
+  assert (lenderBalance.totalBalance == 0.0)
+  
+  -- Admin funds the lender
+  (platformCid3, fundedBalanceCid) <- submit parties.platform do
+    exerciseCmd platformCid2 AdminFundLender with
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+      fundingAmount = 5000000.0  -- 5M USDC
+      fundingReason = "Initial lender funding"
+      adminApproval = parties.emergencyOp
+  
+  Some fundedBalance <- queryContractId parties.lender1 fundedBalanceCid
+  
+  -- Verify lender funded
+  assert (fundedBalance.totalBalance == 5000000.0)
+  assert (fundedBalance.availableBalance == 5000000.0)
+  
+  debug "✓ Lender registration and funding successful"
+
+
+-- TEST 5: MULTIPLE LENDER FUNDING
+testMultipleLenderFunding : Script ()
+testMultipleLenderFunding = script do
+  parties <- setupParties
+  
+  -- Initialize platform with funds
+  platformCid <- createPlatformWithFunds parties 200000000.0 0.0
+  
+  -- Register all lenders
+  (platformCid2, _) <- submit parties.platform do
+    exerciseCmd platformCid RegisterNewLender with
+      newLender = parties.lender1
+      assetType = Stablecoin "USDC"
+  
+  (platformCid3, _) <- submit parties.platform do
+    exerciseCmd platformCid2 RegisterNewLender with
+      newLender = parties.lender2
+      assetType = Stablecoin "USDC"
+  
+  (platformCid4, _) <- submit parties.platform do
+    exerciseCmd platformCid3 RegisterNewLender with
+      newLender = parties.lender3
+      assetType = Stablecoin "USDC"
+  
+  -- Fund lenders individually (fundMultipleLenders is an Update function, not a choice)
+  (platformCid5, _) <- submit parties.platform do
+    exerciseCmd platformCid4 AdminFundLender with
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+      fundingAmount = 10000000.0
+      fundingReason = "Lender 1 initial funding"
+      adminApproval = parties.emergencyOp
+  
+  (platformCid6, _) <- submit parties.platform do
+    exerciseCmd platformCid5 AdminFundLender with
+      lender = parties.lender2
+      assetType = Stablecoin "USDC"
+      fundingAmount = 15000000.0
+      fundingReason = "Lender 2 initial funding"
+      adminApproval = parties.emergencyOp
+  
+  (platformCid7, _) <- submit parties.platform do
+    exerciseCmd platformCid6 AdminFundLender with
+      lender = parties.lender3
+      assetType = Stablecoin "USDC"
+      fundingAmount = 20000000.0
+      fundingReason = "Lender 3 initial funding"
+      adminApproval = parties.emergencyOp
+  
+  Some platform <- queryContractId parties.platform platformCid7
+  
+  -- Verify all lenders registered
+  assert (length platform.activeLenders == 3)
+  assert (parties.lender1 `elem` platform.activeLenders)
+  assert (parties.lender2 `elem` platform.activeLenders)
+  assert (parties.lender3 `elem` platform.activeLenders)
+  
+  debug "✓ Multiple lender funding successful"
+
+
+-- TEST 6: LENDER REIMBURSEMENT
+testLenderReimbursement : Script ()
+testLenderReimbursement = script do
+  parties <- setupParties
+  
+  -- Initialize platform with funds
+  platformCid <- createPlatformWithFunds parties 50000000.0 0.0
+  
+  -- Register and fund lender
+  (platformCid2, _) <- submit parties.platform do
+    exerciseCmd platformCid RegisterNewLender with
+      newLender = parties.lender1
+      assetType = Stablecoin "USDC"
+  
+  (platformCid3, _) <- submit parties.platform do
+    exerciseCmd platformCid2 AdminFundLender with
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+      fundingAmount = 5000000.0
+      fundingReason = "Initial funding"
+      adminApproval = parties.emergencyOp
+  
+  -- Reimburse lender for a loss
+  (platformCid4, reimbursedBalanceCid) <- submit parties.platform do
+    exerciseCmd platformCid3 ReimburseLender with
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+      amount = 100000.0  -- 100K reimbursement
+      reimbursementReason = "Loan default coverage"
+      approvedBy = parties.emergencyOp
+  
+  Some reimbursedBalance <- queryContractId parties.lender1 reimbursedBalanceCid
+  
+  -- Verify reimbursement added to balance
+  assert (reimbursedBalance.totalBalance == 5100000.0)
+  
+  debug "✓ Lender reimbursement successful"
+
+
+-- TEST 7: EMERGENCY MINTING
+testEmergencyMinting : Script ()
+testEmergencyMinting = script do
+  parties <- setupParties
+  
+  -- Initialize platform
+  platformCid <- createEmptyPlatform parties
+  
+  -- Emergency operator mints funds
+  platformCid2 <- submitMulti [parties.emergencyOp] [parties.platform] do
+    exerciseCmd platformCid EmergencyMint with
+      assetType = Stablecoin "USDC"
+      emergencyAmount = 25000000.0  -- 25M emergency funds
+      emergencyReason = "Market crisis - liquidity injection"
+  
+  Some platform <- queryContractId parties.platform platformCid2
+  
+  let usdcBalance = getTreasuryBalance platform.treasury (Stablecoin "USDC")
+  assert (usdcBalance == 25000000.0)
+  
+  debug "✓ Emergency minting successful"
+
+
+-- TEST 8: LIQUIDITY SUPPORT
+testLiquiditySupport : Script ()
+testLiquiditySupport = script do
+  parties <- setupParties
+  
+  -- Initialize platform with funds
+  platformCid <- createPlatformWithFunds parties 100000000.0 0.0
+  
+  -- Register lender
+  (platformCid2, _) <- submit parties.platform do
+    exerciseCmd platformCid RegisterNewLender with
+      newLender = parties.lender1
+      assetType = Stablecoin "USDC"
+  
+  (platformCid3, _) <- submit parties.platform do
+    exerciseCmd platformCid2 AdminFundLender with
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+      fundingAmount = 1000000.0
+      fundingReason = "Initial funding"
+      adminApproval = parties.emergencyOp
+  
+  -- Provide liquidity support
+  now <- getTime
+  let supportTerms = LiquiditySupportTerms with
+        interestRate = 0.03  -- 3% interest
+        repaymentDeadline = addRelTime now (days 90)
+        collateralRequired = False
+  
+  (platformCid4, supportedBalanceCid) <- submit parties.platform do
+    exerciseCmd platformCid3 ProvideLiquiditySupport with
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+      supportAmount = 2000000.0  -- 2M support
+      supportReason = "Market stress liquidity support"
+      repaymentTerms = supportTerms
+  
+  Some supportedBalance <- queryContractId parties.lender1 supportedBalanceCid
+  
+  -- Verify liquidity support added
+  assert (supportedBalance.totalBalance == 3000000.0)
+  
+  debug "✓ Liquidity support successful"
+
+
+-- TEST 9: PLATFORM FEE COLLECTION
+testPlatformFeeCollection : Script ()
+testPlatformFeeCollection = script do
+  parties <- setupParties
+  
+  -- Initialize platform with funds
+  platformCid <- createPlatformWithFunds parties 50000000.0 0.0
+  
+  -- Register and fund lender
+  (platformCid2, _) <- submit parties.platform do
+    exerciseCmd platformCid RegisterNewLender with
+      newLender = parties.lender1
+      assetType = Stablecoin "USDC"
+  
+  (platformCid3, _) <- submit parties.platform do
+    exerciseCmd platformCid2 AdminFundLender with
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+      fundingAmount = 10000000.0
+      fundingReason = "Initial funding"
+      adminApproval = parties.emergencyOp
+  
+  -- Collect platform fee on a loan
+  platformCid4 <- submit parties.platform do
+    exerciseCmd platformCid3 CollectPlatformFee with
+      loanId = "LOAN-001"
+      loanAmount = 1000000.0  -- 1M loan
+      lender = parties.lender1
+      assetType = Stablecoin "USDC"
+  
+  Some platform <- queryContractId parties.platform platformCid4
+  
+  -- Verify fee collected (0.5% of 1M = 5000)
+  assert (platform.totalFeesCollected == 5000.0)
+  
+  debug "✓ Platform fee collection successful"
+
+
+-- TEST 10: EMERGENCY SHUTDOWN AND REACTIVATION
+testEmergencyShutdownAndReactivation : Script ()
+testEmergencyShutdownAndReactivation = script do
+  parties <- setupParties
+  
+  -- Initialize platform
+  platformCid <- createEmptyPlatform parties
+  
+  -- Emergency shutdown
+  platformCid2 <- submitMulti [parties.emergencyOp] [parties.platform] do
+    exerciseCmd platformCid EmergencyShutdown with
+      shutdownReason = "Critical security issue detected"
+  
+  Some platform <- queryContractId parties.platform platformCid2
+  
+  assert (platform.platformStatus == PlatformEmergencyShutdown)
+  
+  -- Reactivate platform
+  platformCid3 <- submitMulti [parties.platform, parties.emergencyOp] [] do
+    exerciseCmd platformCid2 ReactivatePlatform with
+      reactivationReason = "Security issue resolved"
+  
+  Some platformReactivated <- queryContractId parties.platform platformCid3
+  
+  assert (platformReactivated.platformStatus == PlatformActive)
+  
+  debug "✓ Emergency shutdown and reactivation successful"
+
+
+-- TEST 11: TREASURY AUTO-REPLENISHMENT
+testTreasuryAutoReplenishment : Script ()
+testTreasuryAutoReplenishment = script do
+  parties <- setupParties
+  
+  -- Initialize platform with low treasury
+  platformCid <- createPlatformWithFunds parties 500000.0 0.0
+  
+  -- Auto-replenish treasury by calling BulkMintToTreasury directly
+  platformCid2 <- submit parties.platform do
+    exerciseCmd platformCid BulkMintToTreasury with
+      mintingPlan = [(Stablecoin "USDC", 4500000.0)]  -- Mint to reach 5M target
+      bulkReason = "Auto-replenishment - treasury below minimum thresholds"
+  
+  Some platform <- queryContractId parties.platform platformCid2
+  
+  -- Verify treasury replenished to 5M target
+  let usdcBalance = getTreasuryBalance platform.treasury (Stablecoin "USDC")
+  assert (usdcBalance == 5000000.0)
+  
+  debug "✓ Treasury auto-replenishment successful"
+
+
+-- TEST 12: SEASONAL FUNDING BOOST
+testSeasonalFundingBoost : Script ()
+testSeasonalFundingBoost = script do
+  parties <- setupParties
+  
+  -- Initialize platform with baseline funds
+  platformCid <- createPlatformWithFunds parties 10000000.0 5000000.0
+  
+  -- Apply 50% seasonal boost by calling BulkMintToTreasury directly
+  platformCid2 <- submit parties.platform do
+    exerciseCmd platformCid BulkMintToTreasury with
+      mintingPlan = [(Stablecoin "USDC", 5000000.0), (Stablecoin "USD", 2500000.0)]
+      bulkReason = "Seasonal funding boost for Q4 Holiday Season (50.0% increase)"
+  
+  Some platform <- queryContractId parties.platform platformCid2
+  
+  -- Verify 50% increase
+  let usdcBalance = getTreasuryBalance platform.treasury (Stablecoin "USDC")
+  let usdBalance = getTreasuryBalance platform.treasury (Stablecoin "USD")
+  
+  assert (usdcBalance == 15000000.0)  -- 10M + 50% = 15M
+  assert (usdBalance == 7500000.0)    -- 5M + 50% = 7.5M
+  
+  debug "✓ Seasonal funding boost successful"
+
+
+-- TEST 13: AUTHORIZE NEW ASSETS (INCLUDING FIAT CURRENCIES)
+testAuthorizeNewAssets : Script ()
+testAuthorizeNewAssets = script do
+  parties <- setupParties
+  
+  -- Initialize platform with only USDC stablecoin and USD fiat
+  platformCid <- createPlatformWithFunds parties 10000000.0 5000000.0
+  
+  Some platform <- queryContractId parties.platform platformCid
+  
+  -- Verify initial authorized assets
+  assert (length platform.authorizedAssets == 2)
+  assert (Stablecoin "USDC" `elem` platform.authorizedAssets)
+  assert (FiatCurrency "USD" `elem` platform.authorizedAssets)
+  
+  debug "Initial platform has USDC stablecoin and USD fiat authorized"
+  
+  -- Authorize new asset types (cryptocurrencies, stablecoins, and fiat currencies)
+  platformCid2 <- submitMulti [parties.platform, parties.complianceOff] [] do
+    exerciseCmd platformCid AuthorizeNewAssets with
+      newAssets = [
+          -- Cryptocurrencies
+          Cryptocurrency "BTC",
+          Cryptocurrency "ETH",
+          -- Additional stablecoins
+          Stablecoin "USDT",
+          Stablecoin "DAI",
+          -- Fiat currencies (traditional currencies)
+          FiatCurrency "EUR",
+          FiatCurrency "GBP",
+          FiatCurrency "JPY",
+          FiatCurrency "CAD",
+          FiatCurrency "AUD",
+          FiatCurrency "CHF",
+          FiatCurrency "NPR"
+        ]
+      authorizationReason = "Expanding platform to support crypto, stablecoins, and international fiat currencies"
+  
+  Some platform2 <- queryContractId parties.platform platformCid2
+  
+  -- Verify new assets were added
+  assert (length platform2.authorizedAssets == 13)
+  assert (Cryptocurrency "BTC" `elem` platform2.authorizedAssets)
+  assert (Cryptocurrency "ETH" `elem` platform2.authorizedAssets)
+  assert (Stablecoin "USDT" `elem` platform2.authorizedAssets)
+  assert (Stablecoin "DAI" `elem` platform2.authorizedAssets)
+  assert (FiatCurrency "EUR" `elem` platform2.authorizedAssets)
+  assert (FiatCurrency "JPY" `elem` platform2.authorizedAssets)
+  assert (FiatCurrency "CAD" `elem` platform2.authorizedAssets)
+  assert (FiatCurrency "NPR" `elem` platform2.authorizedAssets)
+  
+  debug "✓ New assets authorized successfully (crypto, stablecoins, and fiat)"
+  
+  -- Now mint some of the new assets
+  platformCid3 <- submit parties.platform do
+    exerciseCmd platformCid2 BulkMintToTreasury with
+      mintingPlan = [
+          -- Cryptocurrencies
+          (Cryptocurrency "BTC", 100.0),
+          (Cryptocurrency "ETH", 5000.0),
+          -- Stablecoins
+          (Stablecoin "USDT", 20000000.0),
+          (Stablecoin "DAI", 15000000.0),
+          -- Fiat currencies
+          (FiatCurrency "EUR", 8000000.0),
+          (FiatCurrency "GBP", 6000000.0),
+          (FiatCurrency "JPY", 1000000000.0),
+          (FiatCurrency "CAD", 12000000.0),
+          (FiatCurrency "NPR", 1200000000.0)
+        ]
+      bulkReason = "Initial minting of newly authorized assets across all categories"
+  
+  Some platform3 <- queryContractId parties.platform platformCid3
+  
+  -- Verify treasury balances
+  let btcBalance = getTreasuryBalance platform3.treasury (Cryptocurrency "BTC")
+  let ethBalance = getTreasuryBalance platform3.treasury (Cryptocurrency "ETH")
+  let usdtBalance = getTreasuryBalance platform3.treasury (Stablecoin "USDT")
+  let eurBalance = getTreasuryBalance platform3.treasury (FiatCurrency "EUR")
+  let jpyBalance = getTreasuryBalance platform3.treasury (FiatCurrency "JPY")
+  let nprBalance = getTreasuryBalance platform3.treasury (FiatCurrency "NPR")
+  
+  assert (btcBalance == 100.0)
+  assert (ethBalance == 5000.0)
+  assert (usdtBalance == 20000000.0)
+  assert (eurBalance == 8000000.0)
+  assert (jpyBalance == 1000000000.0)
+  assert (nprBalance == 1200000000.0)
+  
+  debug "✓ New assets minted to treasury successfully (including fiat currencies)"
+
+
+-- TEST 14: DEAUTHORIZE ASSETS
+testDeauthorizeAssets : Script ()
+testDeauthorizeAssets = script do
+  parties <- setupParties
+  
+  -- Initialize platform with multiple assets
+  platformCid <- createEmptyPlatform parties
+  
+  -- Authorize multiple assets
+  platformCid2 <- submitMulti [parties.platform, parties.complianceOff] [] do
+    exerciseCmd platformCid AuthorizeNewAssets with
+      newAssets = [
+          Cryptocurrency "BTC",
+          Cryptocurrency "ETH",
+          Stablecoin "USDT"
+        ]
+      authorizationReason = "Adding crypto assets"
+  
+  Some platform <- queryContractId parties.platform platformCid2
+  assert (length platform.authorizedAssets == 5)  -- USDC, USD, BTC, ETH, USDT
+  
+  debug "Platform has 5 authorized assets"
+  
+  -- Try to deauthorize assets with zero balance (should succeed)
+  platformCid3 <- submitMulti [parties.platform, parties.complianceOff] [] do
+    exerciseCmd platformCid2 DeauthorizeAssets with
+      assetsToRemove = [Cryptocurrency "BTC", Stablecoin "USDT"]
+      deauthorizationReason = "Removing unused asset types"
+  
+  Some platform2 <- queryContractId parties.platform platformCid3
+  
+  -- Verify assets were removed
+  assert (length platform2.authorizedAssets == 3)
+  assert (not (Cryptocurrency "BTC" `elem` platform2.authorizedAssets))
+  assert (not (Stablecoin "USDT" `elem` platform2.authorizedAssets))
+  assert (Cryptocurrency "ETH" `elem` platform2.authorizedAssets)
+  
+  debug "✓ Assets deauthorized successfully"
+
+
+-- TEST 15: UPDATE PLATFORM FEE RATE
+testUpdatePlatformFeeRate : Script ()
+testUpdatePlatformFeeRate = script do
+  parties <- setupParties
+  
+  -- Initialize platform with 0.5% fee
+  platformCid <- createEmptyPlatform parties
+  
+  Some platform <- queryContractId parties.platform platformCid
+  assert (platform.platformFeeRate == 0.005)
+  
+  debug "Initial platform fee rate: 0.5%"
+  
+  -- Update fee rate to 1%
+  platformCid2 <- submitMulti [parties.platform, parties.complianceOff] [] do
+    exerciseCmd platformCid UpdatePlatformFeeRate with
+      newFeeRate = 0.01
+      updateReason = "Increasing fee to cover operational costs"
+  
+  Some platform2 <- queryContractId parties.platform platformCid2
+  assert (platform2.platformFeeRate == 0.01)
+  
+  debug "✓ Platform fee rate updated to 1%"
+  
+  -- Update fee rate to 0.25%
+  platformCid3 <- submitMulti [parties.platform, parties.complianceOff] [] do
+    exerciseCmd platformCid2 UpdatePlatformFeeRate with
+      newFeeRate = 0.0025
+      updateReason = "Reducing fee to attract more lenders"
+  
+  Some platform3 <- queryContractId parties.platform platformCid3
+  assert (platform3.platformFeeRate == 0.0025)
+  
+  debug "✓ Platform fee rate updated to 0.25%"
+
+
+-- RUN ALL TESTS
+runAllAegisTests : Script ()
+runAllAegisTests = script do
+  debug "AEGIS PLATFORM TESTS"
+  
+  testPlatformInitialization
+  testTreasuryMinting
+  testBulkMinting
+  testLenderRegistrationAndFunding
+  testMultipleLenderFunding
+  testLenderReimbursement
+  testEmergencyMinting
+  testLiquiditySupport
+  testPlatformFeeCollection
+  testEmergencyShutdownAndReactivation
+  testTreasuryAutoReplenishment
+  testSeasonalFundingBoost
+  testAuthorizeNewAssets
+  testDeauthorizeAssets
+  testUpdatePlatformFeeRate
+  
+  debug "✓ All Aegis tests passed Successfully!"
