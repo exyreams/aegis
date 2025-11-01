@@ -384,7 +384,7 @@ template YieldOptimizer with
         poolId: Text
       controller owner
       do
-        assertMsg "Pool not already managed" (not (poolId `elem` managedPools))
+        assertMsg "Pool not already managed" (notElem poolId managedPools)
         
         create this with
           managedPools = poolId :: managedPools
