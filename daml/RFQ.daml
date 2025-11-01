@@ -432,7 +432,11 @@ template LoanProposal with
           None
         
         -- Create the loan
-        loanCid <- create Loan with
+        -- Initialize loan audit trail for compliance tracking
+        -- Note: Requires platform party - initialize manually or pass platform reference
+        -- auditTrailCid <- AuditLog.initializeLoanAuditTrail loanId borrower [lender] platform principal LoanActive
+        
+        create Loan with
           loanId
           borrower
           lenders = [lender]  -- Single lender for now, syndication later
@@ -452,12 +456,6 @@ template LoanProposal with
           lastPaymentDate = None
           totalInterestPaid = 0.0
           totalPrincipalPaid = 0.0
-        
-        -- Initialize loan audit trail for compliance tracking
-        -- Note: Requires platform party - initialize manually or pass platform reference
-        -- auditTrailCid <- AuditLog.initializeLoanAuditTrail loanId borrower [lender] platform principal LoanActive
-        
-        return loanCid
 
     -- | Lender rejects the loan proposal
     choice RejectLoan: () with
