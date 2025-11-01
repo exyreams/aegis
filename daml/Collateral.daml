@@ -77,12 +77,10 @@ template CollateralPool with
         let needsMarginCall = newLTV > (1.0 / collateralRequirements.maintenanceRatio)
         
         -- Determine new status
-        let newStatus = 
-              if newLTV > (1.0 / collateralRequirements.liquidationRatio)
-                then CollateralUnderliquidation
-              else if needsMarginCall
-                then CollateralMarginCall
-              else CollateralHealthy
+        let newStatus
+              | newLTV > (1.0 / collateralRequirements.liquidationRatio) = CollateralUnderliquidation
+              | needsMarginCall = CollateralMarginCall
+              | otherwise = CollateralHealthy
         
         create this with
           assets = updatedAssets
@@ -293,7 +291,7 @@ template CollateralPool with
         now <- getTime
         
         -- Remove specified assets
-        let remainingAssets = filter (\a -> not (a.assetId `elem` assetIdsToRelease)) assets
+        let remainingAssets = filter (\a -> notElem a.assetId assetIdsToRelease) assets
         
         assertMsg "Must keep at least one asset" (not (null remainingAssets))
         
