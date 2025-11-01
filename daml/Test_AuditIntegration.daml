@@ -49,7 +49,7 @@ testAuditLogsCreated = script do
   
   -- Verify borrower audit log was created
   borrowerLogs <- query @AuditLog.BorrowerAuditLog alice
-  assertMsg "Borrower audit log should be created for loan origination" (length borrowerLogs > 0)
+  assertMsg "Borrower audit log should be created for loan origination" (not (null borrowerLogs))
   debug "✓ Credit audit log verified"
   
   -- Record repayment (creates audit log with credit score update)

@@ -7,6 +7,7 @@ import Daml.Script
 import DA.Time
 import Types
 import AuditLog
+import DA.Assert ((===))
 
 
 -- TEST SETUP
@@ -62,9 +63,9 @@ testPlatformAuditLog = script do
     
     -- Verify log exists
     Some log <- queryContractId parties.platform platformLogCid
-    assert (log.eventType == TreasuryMinting)
+    log.eventType === TreasuryMinting
     
-    debug "✅ Platform audit log test passed!"
+    debug "✓ Platform audit log test passed!"
     return ()
 
 testLenderAuditLog : Script ()
@@ -91,9 +92,9 @@ testLenderAuditLog = script do
     
     -- Verify log exists
     Some log <- queryContractId parties.lender1 lenderLogCid
-    assert (log.eventType == LenderBidSubmitted)
+    log.eventType === LenderBidSubmitted
     
-    debug "✅ Lender audit log test passed!"
+    debug "✓ Lender audit log test passed!"
     return ()
 
 testBorrowerAuditLog : Script ()
@@ -120,9 +121,9 @@ testBorrowerAuditLog = script do
     
     -- Verify log exists
     Some log <- queryContractId parties.borrower1 borrowerLogCid
-    assert (log.eventType == BorrowerRFQCreated)
+    log.eventType === BorrowerRFQCreated
     
-    debug "✅ Borrower audit log test passed!"
+    debug "✓ Borrower audit log test passed!"
     return ()
 
 testLoanAuditTrail : Script ()
@@ -157,11 +158,11 @@ testLoanAuditTrail = script do
     
     -- Verify trail updated
     Some trail <- queryContractId parties.borrower1 paymentTrailCid
-    assert (trail.outstandingPrincipal == 490000.0)
-    assert (trail.totalPrincipalPaid == 10000.0)
-    assert (trail.totalInterestPaid == 2000.0)
+    trail.outstandingPrincipal === 490000.0
+    trail.totalPrincipalPaid === 10000.0
+    trail.totalInterestPaid === 2000.0
     
-    debug "✅ Loan audit trail test passed!"
+    debug "✓ Loan audit trail test passed!"
     return ()
 
 testComplianceAuditLog : Script ()
@@ -189,9 +190,9 @@ testComplianceAuditLog = script do
     
     -- Verify log exists
     Some log <- queryContractId parties.complianceOff complianceLogCid
-    assert (log.checkResult == Passed)
+    log.checkResult === Passed
     
-    debug "✅ Compliance audit log test passed!"
+    debug "✓ Compliance audit log test passed!"
     return ()
 
 testActivityMonitor : Script ()
@@ -225,10 +226,10 @@ testActivityMonitor = script do
     
     -- Verify threshold exceeded
     Some finalMonitor <- queryContractId parties.platform monitor6
-    assert (finalMonitor.activityCount == 6)
-    assert (finalMonitor.thresholdExceeded == True)
+    finalMonitor.activityCount === 6
+    assert finalMonitor.thresholdExceeded
     
-    debug "✅ Activity monitor test passed!"
+    debug "✓ Activity monitor test passed!"
     return ()
 
 
