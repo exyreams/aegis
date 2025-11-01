@@ -37,7 +37,7 @@ testSyndicateFormationCreation = do
   
   Some formation <- queryContractId leadArranger formationCid
   assertMsg "Formation is open" (formation.status == FormationOpen)
-  assertMsg "No commitments yet" (length formation.commitments == 0)
+  assertMsg "No commitments yet" (null formation.commitments)
   
   debug "=== Syndicate Formation Creation Test Completed ==="
 
@@ -559,7 +559,7 @@ testArrangementFeeDistribution = do
   debug "Arrangement fees distributed"
   
   Some loan <- queryContractId alice loanCid
-  assertMsg "Fees distributed" (length loan.arrangementFeeDistribution > 0)
+  assertMsg "Fees distributed" (not (null loan.arrangementFeeDistribution))
   
   debug "=== Arrangement Fee Distribution Test Completed ==="
 
