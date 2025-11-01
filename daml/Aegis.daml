@@ -7,6 +7,7 @@ import DA.Time
 import DA.Action (foldlA)
 import Types
 import qualified AuditLog
+import DA.Optional (fromOptional)
 
 --  AEGIS PLATFORM TEMPLATE
 -- | Central Aegis platform with treasury management and lender reimbursement
@@ -104,7 +105,7 @@ template AegisPlatform with
         assertMsg "Must provide at least one asset to authorize" (not (null newAssets))
         
         -- Add new assets to authorized list (avoiding duplicates)
-        let updatedAssets = authorizedAssets <> filter (\a -> not (a `elem` authorizedAssets)) newAssets
+        let updatedAssets = authorizedAssets <> filter (`notElem` authorizedAssets) newAssets
         
         create this with
           authorizedAssets = updatedAssets
@@ -123,7 +124,7 @@ template AegisPlatform with
         assertMsg "Cannot deauthorize assets with non-zero treasury balance" (not hasBalance)
         
         -- Remove assets from authorized list
-        let updatedAssets = filter (\a -> not (a `elem` assetsToRemove)) authorizedAssets
+        let updatedAssets = filter (`notElem` assetsToRemove) authorizedAssets
         
         assertMsg "Must keep at least one authorized asset" (not (null updatedAssets))
         
@@ -224,7 +225,7 @@ template AegisPlatform with
         
         assertMsg "Platform must be active" (platformStatus == PlatformActive)
         assertMsg "Asset type must be authorized" (assetType `elem` authorizedAssets)
-        assertMsg "Lender must not already be active" (not (newLender `elem` activeLenders))
+        assertMsg "Lender must not already be active" (notElem newLender activeLenders)
         
         -- Create zero balance for new lender
         newLenderBalance <- create AssetBalance with
@@ -677,9 +678,7 @@ template LiquiditySupport with
 -- | Get treasury balance for specific asset
 getTreasuryBalance : AegisTreasury -> AssetType -> Decimal
 getTreasuryBalance treasury assetType =
-  case lookup assetType treasury.treasuryBalances of
-    Some balance -> balance
-    None -> 0.0
+  fromOptional 0.0 (lookup assetType treasury.treasuryBalances)
 
 -- | Add funds to treasury
 addToTreasury : AegisTreasury -> AssetType -> Decimal -> AegisTreasury
