@@ -6,6 +6,7 @@ module Test_Credits where
 import Daml.Script
 import DA.Time
 import DA.List (head)
+import DA.Optional (isSome)
 import Test_Setup
 import Types
 import Credit
@@ -140,7 +141,7 @@ testSuccessfulRepayment = do
   
   -- Verify audit log was created for credit score update
   auditLogs <- query @AuditLog.BorrowerAuditLog alice
-  assertMsg "Audit log should be created for credit score update" (length auditLogs > 0)
+  assertMsg "Audit log should be created for credit score update" (not (null auditLogs))
   debug $ "✓ Audit logs created: " <> show (length auditLogs)
   
   debug "=== Successful Repayment Test Completed ==="
@@ -286,8 +287,8 @@ testDefaultResolution = do
   
   Some profile <- queryContractId alice profileCid
   let resolvedDefault = head profile.defaultHistory
-  assertMsg "Resolution date set" (resolvedDefault.resolutionDate /= None)
-  assertMsg "Recovery amount set" (resolvedDefault.recoveryAmount /= None)
+  assertMsg "Resolution date set" (isSome resolvedDefault.resolutionDate)
+  assertMsg "Recovery amount set" (isSome resolvedDefault.recoveryAmount)
   
   debug "=== Default Resolution Test Completed ==="
 
@@ -414,7 +415,7 @@ testCreditInquiry = do
   
   Some inquiry <- queryContractId lender inquiryCid
   assertMsg "Inquiry approved" (inquiry.status == InquiryApproved)
-  assertMsg "Credit information shared" (inquiry.sharedInformation /= None)
+  assertMsg "Credit information shared" (isSome inquiry.sharedInformation)
   
   debug "=== Credit Inquiry Test Completed ==="
 
