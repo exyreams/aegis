@@ -9,6 +9,7 @@ import Test_Setup
 import Types
 import Collateral
 import qualified Aegis
+import DA.Optional (isNone)
 
 
 -- COLLATERAL POOL TESTS
@@ -532,7 +533,7 @@ testCollateralRelease = do
   
   -- Verify pool is archived
   result <- queryContractId alice poolCid
-  assertMsg "Pool should be archived" (result == None)
+  assertMsg "Pool should be archived" (isNone result)
   
   debug "=== Collateral Release Test Completed ==="
 
@@ -602,7 +603,7 @@ testCancelLiquidation = do
   
   -- Verify liquidation is archived
   result <- queryContractId lender liquidationCid
-  assertMsg "Liquidation should be archived" (result == None)
+  assertMsg "Liquidation should be archived" (isNone result)
   
   debug "=== Cancel Liquidation Test Completed ==="
 
