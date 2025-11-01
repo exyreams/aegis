@@ -403,11 +403,10 @@ calculateLoanFairValue outstandingPrincipal interestRate discountRate remainingT
 calculateDiscountRate : Decimal -> Int -> Decimal -> Decimal
 calculateDiscountRate baseRate creditScore riskPremium =
   let -- Adjust for credit risk
-      creditAdjustment = if creditScore >= 750
-        then -0.01  -- Lower discount for excellent credit
-        else if creditScore >= 670
-          then 0.0
-          else 0.02  -- Higher discount for poor credit
+      creditAdjustment
+        | creditScore >= 750 = -0.01  -- Lower discount for excellent credit
+        | creditScore >= 670 = 0.0
+        | otherwise = 0.02  -- Higher discount for poor credit
       
       discountRate = baseRate + creditAdjustment + riskPremium
   in max 0.01 discountRate
