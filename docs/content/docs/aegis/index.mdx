@@ -1,0 +1,254 @@
+---
+title: Aegis Platform API
+description: Platform management, treasury operations, and system administration
+---
+
+# Aegis Platform API
+
+The Aegis Platform API provides platform-level operations including treasury management, asset minting, fee collection, and emergency controls.
+
+## Base Endpoint
+
+```
+/api/aegis
+```
+
+## Platform Management
+
+### Get Platform Status
+
+```http
+GET /api/aegis/platform
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "platformOperator": "AegisOperator",
+    "treasuryBalances": {
+      "BTC": "100.5",
+      "ETH": "5000.0",
+      "USDC": "10000000.00"
+    },
+    "platformFeeRate": "0.005",
+    "totalFeesCollected": "500000.00",
+    "registeredLenders": 150,
+    "activePools": 25,
+    "platformStatus": "Active"
+  }
+}
+```
+
+### Update Platform Fee Rate
+
+```http
+POST /api/aegis/platform/:contractId/update-fee-rate
+```
+
+**Request Body:**
+
+```json
+{
+  "newFeeRate": "0.0045"
+}
+```
+
+## Treasury Operations
+
+### Mint to Treasury
+
+```http
+POST /api/aegis/platform/:contractId/mint
+```
+
+**Request Body:**
+
+```json
+{
+  "assetType": "USDC",
+  "amount": "1000000.00"
+}
+```
+
+### Emergency Mint
+
+```http
+POST /api/aegis/platform/:contractId/emergency-mint
+```
+
+### Bulk Mint
+
+```http
+POST /api/aegis/platform/:contractId/bulk-mint
+```
+
+## Asset Management
+
+### Authorize New Assets
+
+```http
+POST /api/aegis/platform/:contractId/authorize-assets
+```
+
+**Request Body:**
+
+```json
+{
+  "newAssets": ["LINK", "UNI", "AAVE"]
+}
+```
+
+### Deauthorize Assets
+
+```http
+POST /api/aegis/platform/:contractId/deauthorize-assets
+```
+
+## Lender Management
+
+### Register New Lender
+
+```http
+POST /api/aegis/platform/:contractId/register-lender
+```
+
+**Request Body:**
+
+```json
+{
+  "lender": "NewLender",
+  "initialFunding": {
+    "assetType": "USDC",
+    "amount": "100000.00"
+  }
+}
+```
+
+### Admin Fund Lender
+
+```http
+POST /api/aegis/platform/:contractId/fund-lender
+```
+
+### Reimburse Lender
+
+```http
+POST /api/aegis/platform/:contractId/reimburse-lender
+```
+
+## Fee Collection
+
+### Collect Platform Fee
+
+```http
+POST /api/aegis/platform/:contractId/collect-fee
+```
+
+### Collect Secondary Market Fee
+
+```http
+POST /api/aegis/platform/:contractId/collect-secondary-fee
+```
+
+### Collect Syndication Fee
+
+```http
+POST /api/aegis/platform/:contractId/collect-syndication-fee
+```
+
+### Collect Pool Management Fee
+
+```http
+POST /api/aegis/platform/:contractId/collect-pool-fee
+```
+
+## Liquidity Support
+
+### Provide Liquidity Support
+
+```http
+POST /api/aegis/platform/:contractId/provide-liquidity
+```
+
+**Request Body:**
+
+```json
+{
+  "lender": "Bob",
+  "assetType": "USDC",
+  "supportAmount": "500000.00",
+  "supportReason": "Emergency liquidity",
+  "repaymentTerms": {
+    "interestRate": "0.03",
+    "repaymentDeadline": "2024-12-31T00:00:00Z"
+  }
+}
+```
+
+## Emergency Controls
+
+### Emergency Shutdown
+
+```http
+POST /api/aegis/platform/:contractId/emergency-shutdown
+```
+
+### Reactivate Platform
+
+```http
+POST /api/aegis/platform/:contractId/reactivate
+```
+
+## Code Example
+
+```typescript
+// Get platform status
+const getPlatformStatus = async () => {
+  const { data } = await api.get('/api/aegis/platform');
+  console.log('Platform status:', data.data);
+  return data;
+};
+
+// Register new lender
+const registerLender = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/aegis/platform/${contractId}/register-lender`,
+    {
+      lender: 'NewLender',
+      initialFunding: {
+        assetType: 'USDC',
+        amount: '100000.00'
+      }
+    }
+  );
+  
+  return data;
+};
+
+// Provide liquidity support
+const provideLiquidity = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/aegis/platform/${contractId}/provide-liquidity`,
+    {
+      lender: 'Bob',
+      assetType: 'USDC',
+      supportAmount: '500000.00',
+      supportReason: 'Emergency liquidity',
+      repaymentTerms: {
+        interestRate: '0.03',
+        repaymentDeadline: '2024-12-31T00:00:00Z'
+      }
+    }
+  );
+  
+  return data;
+};
+```
+
+## Next Steps
+
+- [Audit Logs API](/api/audit) - Compliance and audit trails
+- [RFQ API](/api/rfq) - Start creating loan requests

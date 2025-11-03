@@ -1,0 +1,356 @@
+---
+title: Audit Logs API
+description: Compliance tracking, audit trails, and regulatory reporting
+---
+
+# Audit Logs API
+
+The Audit Logs API provides comprehensive audit trails for compliance, regulatory reporting, and activity monitoring across the platform.
+
+## Base Endpoint
+
+```
+/api/audit
+```
+
+## Platform Audit Logs
+
+### Get Platform Audit Log
+
+```http
+GET /api/audit/platform
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00abc123...",
+    "platformOperator": "AegisOperator",
+    "events": [
+      {
+        "eventType": "PlatformFeeCollected",
+        "eventDescription": "Platform fee collected from loan",
+        "performedBy": "AegisOperator",
+        "timestamp": "2024-06-01T12:00:00Z",
+        "eventData": {
+          "loanId": "LOAN-001",
+          "feeAmount": "5000.00"
+        }
+      }
+    ],
+    "totalEvents": 1250
+  }
+}
+```
+
+### Log Platform Event
+
+```http
+POST /api/audit/platform/:contractId/log-event
+```
+
+## Lender Audit Logs
+
+### Get Lender Audit Log
+
+```http
+GET /api/audit/lender
+```
+
+### Log Lender Event
+
+```http
+POST /api/audit/lender/:contractId/log-event
+```
+
+## Borrower Audit Logs
+
+### Get Borrower Audit Log
+
+```http
+GET /api/audit/borrower
+```
+
+### Log Borrower Event
+
+```http
+POST /api/audit/borrower/:contractId/log-event
+```
+
+## Loan Audit Trails
+
+### Get Loan Audit Trail
+
+```http
+GET /api/audit/loans/:loanId
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "loanId": "LOAN-001",
+    "borrower": "Alice",
+    "lender": "Bob",
+    "events": [
+      {
+        "eventType": "LoanOriginated",
+        "eventDescription": "Loan created from accepted bid",
+        "performedBy": "Alice",
+        "timestamp": "2024-01-04T00:00:00Z",
+        "financialImpact": {
+          "totalAmount": "1000000.00",
+          "principalAmount": "1000000.00"
+        }
+      },
+      {
+        "eventType": "PaymentMade",
+        "eventDescription": "Regular payment made",
+        "performedBy": "Alice",
+        "timestamp": "2024-02-04T00:00:00Z",
+        "financialImpact": {
+          "totalAmount": "50000.00",
+          "principalAmount": "45000.00",
+          "interestAmount": "5000.00"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Log Loan Event
+
+```http
+POST /api/audit/loans/:contractId/log-event
+```
+
+**Request Body:**
+
+```json
+{
+  "eventType": "PaymentMade",
+  "eventDescription": "Monthly payment processed",
+  "performedBy": "Alice",
+  "eventData": {
+    "paymentAmount": "50000.00",
+    "principalPortion": "45000.00",
+    "interestPortion": "5000.00"
+  },
+  "financialImpact": {
+    "totalAmount": "50000.00",
+    "principalAmount": "45000.00",
+    "interestAmount": "5000.00"
+  }
+}
+```
+
+## Pool Audit Logs
+
+### Get Pool Audit Log
+
+```http
+GET /api/audit/pools/:poolId
+```
+
+### Log Pool Event
+
+```http
+POST /api/audit/pools/:contractId/log-event
+```
+
+## Compliance Audit Logs
+
+### Get Compliance Audit Log
+
+```http
+GET /api/audit/compliance
+```
+
+### Log Compliance Event
+
+```http
+POST /api/audit/compliance/:contractId/log-event
+```
+
+## Activity Monitoring
+
+### Get Activity Monitor
+
+```http
+GET /api/audit/activity-monitor
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "monitorId": "MON-001",
+    "platformOperator": "AegisOperator",
+    "recentActivity": [
+      {
+        "activityType": "LoanOrigination",
+        "party": "Alice",
+        "timestamp": "2024-06-01T10:00:00Z",
+        "details": "Loan LOAN-001 originated"
+      }
+    ],
+    "suspiciousActivities": [],
+    "complianceAlerts": []
+  }
+}
+```
+
+### Log Activity
+
+```http
+POST /api/audit/activity-monitor/:contractId/log-activity
+```
+
+## Compliance Alerts
+
+### List Compliance Alerts
+
+```http
+GET /api/audit/compliance-alerts
+```
+
+### Create Compliance Alert
+
+```http
+POST /api/audit/compliance-alerts
+```
+
+**Request Body:**
+
+```json
+{
+  "alertId": "ALERT-001",
+  "alertType": "SuspiciousActivity",
+  "severity": "High",
+  "description": "Unusual transaction pattern detected",
+  "affectedParties": ["Alice"],
+  "relatedContracts": ["LOAN-001"]
+}
+```
+
+### Resolve Alert
+
+```http
+POST /api/audit/compliance-alerts/:contractId/resolve
+```
+
+### Escalate Alert
+
+```http
+POST /api/audit/compliance-alerts/:contractId/escalate
+```
+
+## Platform Escalations
+
+### List Escalations
+
+```http
+GET /api/audit/escalations
+```
+
+### Create Escalation
+
+```http
+POST /api/audit/escalations
+```
+
+### Resolve Escalation
+
+```http
+POST /api/audit/escalations/:contractId/resolve
+```
+
+## Code Example
+
+```typescript
+// Get loan audit trail
+const getLoanAuditTrail = async (loanId: string) => {
+  const { data } = await api.get(`/api/audit/loans/${loanId}`);
+  
+  console.log('Loan audit trail:');
+  data.data.events.forEach(event => {
+    console.log(`${event.timestamp}: ${event.eventType} - ${event.eventDescription}`);
+  });
+  
+  return data;
+};
+
+// Log loan event
+const logLoanEvent = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/audit/loans/${contractId}/log-event`,
+    {
+      eventType: 'PaymentMade',
+      eventDescription: 'Monthly payment processed',
+      performedBy: 'Alice',
+      eventData: {
+        paymentAmount: '50000.00',
+        principalPortion: '45000.00',
+        interestPortion: '5000.00'
+      },
+      financialImpact: {
+        totalAmount: '50000.00',
+        principalAmount: '45000.00',
+        interestAmount: '5000.00'
+      }
+    }
+  );
+  
+  return data;
+};
+
+// Monitor compliance alerts
+const monitorCompliance = async () => {
+  const { data } = await api.get('/api/audit/compliance-alerts');
+  
+  const highSeverityAlerts = data.data.filter(
+    alert => alert.severity === 'High' && alert.status === 'Open'
+  );
+  
+  if (highSeverityAlerts.length > 0) {
+    console.warn(`⚠️ ${highSeverityAlerts.length} high-severity alerts require attention`);
+  }
+  
+  return highSeverityAlerts;
+};
+```
+
+## Event Types
+
+### Loan Events
+- `LoanOriginated`
+- `PaymentMade`
+- `LoanDefaulted`
+- `LoanRepaid`
+- `LoanRestructured`
+
+### Platform Events
+- `PlatformFeeCollected`
+- `LenderRegistered`
+- `AssetAuthorized`
+- `EmergencyShutdown`
+
+### Compliance Events
+- `ComplianceCheckPassed`
+- `ComplianceCheckFailed`
+- `SuspiciousActivityDetected`
+- `RegulatoryReportGenerated`
+
+## Next Steps
+
+- [Getting Started](/getting-started) - Set up the platform
+- [Authentication](/authentication) - Secure your API access
+- [RFQ API](/api/rfq) - Start creating loan requests

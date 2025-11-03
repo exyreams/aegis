@@ -1,0 +1,19 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "authentication",
+    "---API Reference---",
+    "aegis",
+    "audit",
+    "collateral",
+    "credit",
+    "rfq",
+    "secondary-market",
+    "syndication",
+    "yield",
+    "---Smart Contracts---",
+    "daml"
+  ]
+}

@@ -1,0 +1,221 @@
+---
+title: Authentication
+description: JWT-based authentication for Aegis RFQ platform
+---
+
+# Authentication
+
+Aegis RFQ uses JWT (JSON Web Tokens) for authentication. Each token contains a DAML party identifier that determines which contracts and operations the user can access.
+
+## Overview
+
+Authentication flow:
+1. User provides their DAML party name
+2. Backend generates a JWT token containing the party identifier
+3. Client includes the token in all API requests
+4. Backend validates the token and uses the party for DAML operations
+
+## Obtaining a Token
+
+### Development
+
+For development, use the token generation script:
+
+```bash
+cd backend
+bun run generate-token Alice
+```
+
+This outputs a JWT token for the party "Alice".
+
+### Production
+
+In production, integrate with your identity provider or use the login endpoint:
+
+```bash
+POST /api/auth/login
+```
+
+**Request Body:**
+```json
+{
+  "party": "Alice"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600,
+    "party": "Alice"
+  }
+}
+```
+
+## Using the Token
+
+Include the token in the `Authorization` header of all API requests:
+
+```bash
+curl -H "Authorization: Bearer <your-token>" \
+  https://api.aegis-rfq.com/api/rfqs
+```
+
+### JavaScript/TypeScript Example
+
+```typescript
+const token = 'your-jwt-token';
+
+const response = await fetch('https://api.aegis-rfq.com/api/rfqs', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+const data = await response.json();
+```
+
+### Using Axios
+
+```typescript
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://api.aegis-rfq.com',
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+
+const { data } = await api.get('/api/rfqs');
+```
+
+## Token Structure
+
+JWT tokens contain the following claims:
+
+```json
+{
+  "party": "Alice",
+  "scope": "daml:read daml:write",
+  "iat": 1640000000,
+  "exp": 1640003600
+}
+```
+
+- `party`: DAML party identifier
+- `scope`: Permissions (read/write access to DAML ledger)
+- `iat`: Issued at timestamp
+- `exp`: Expiration timestamp
+
+## Token Expiration
+
+Tokens expire after **1 hour** by default. Configure expiration in backend `.env`:
+
+```bash
+JWT_EXPIRY=3600  # seconds
+```
+
+When a token expires, you'll receive a `401 Unauthorized` response. Request a new token to continue.
+
+## Security Best Practices
+
+### 1. Store Tokens Securely
+
+**Browser:**
+- Use `httpOnly` cookies (recommended)
+- Or store in memory (not localStorage)
+
+**Mobile:**
+- Use secure storage (Keychain/Keystore)
+
+### 2. Token Refresh
+
+Implement token refresh before expiration:
+
+```typescript
+// Check if token expires in next 5 minutes
+const isExpiringSoon = (token: string) => {
+  const decoded = jwt.decode(token);
+  const expiresIn = decoded.exp - Date.now() / 1000;
+  return expiresIn < 300; // 5 minutes
+};
+
+if (isExpiringSoon(token)) {
+  token = await refreshToken();
+}
+```
+
+### 3. HTTPS Only
+
+Always use HTTPS in production to prevent token interception.
+
+### 4. Scope Limitation
+
+Request only the scopes you need:
+- `daml:read` - Read-only access
+- `daml:write` - Write access (includes read)
+
+## Error Responses
+
+### 401 Unauthorized
+
+Token is missing, invalid, or expired:
+
+```json
+{
+  "success": false,
+  "error": "User not authenticated"
+}
+```
+
+### 403 Forbidden
+
+Token is valid but lacks required permissions:
+
+```json
+{
+  "success": false,
+  "error": "Insufficient permissions"
+}
+```
+
+## Multi-Party Operations
+
+Some operations require multiple parties (e.g., loan acceptance). Each party must:
+1. Authenticate with their own token
+2. Execute their part of the workflow
+3. DAML ensures all required signatures are collected
+
+Example: Accepting a loan proposal
+```typescript
+// Borrower accepts
+await api.post('/api/loans/accept', {
+  proposalId: 'proposal-123'
+}, {
+  headers: { 'Authorization': `Bearer ${borrowerToken}` }
+});
+```
+
+## Testing Authentication
+
+Test your authentication setup:
+
+```bash
+# Get a token
+TOKEN=$(cd backend && bun run generate-token Alice)
+
+# Test authenticated request
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8000/api/rfqs
+```
+
+## Next Steps
+
+- [API Reference](/api) - Explore authenticated endpoints
+- [RFQ Management](/api/rfq) - Create your first RFQ
+- [Credit System](/api/credit) - Set up credit profiles

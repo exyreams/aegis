@@ -1,0 +1,586 @@
+---
+title: Collateral Management API
+description: Collateral pools, margin calls, liquidation, and asset management
+---
+
+# Collateral Management API
+
+The Collateral Management API handles collateral pools, valuations, margin calls, substitutions, and liquidation workflows for secured lending.
+
+## Base Endpoint
+
+```
+/api/collateral
+```
+
+## Collateral Pools
+
+### List Collateral Pools
+
+Get all collateral pools for the authenticated party.
+
+```http
+GET /api/collateral/pools
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "contractId": "00abc123...",
+      "poolId": "POOL-001",
+      "borrower": "Alice",
+      "lender": "Bob",
+      "loanId": "LOAN-001",
+      "assets": [
+        {
+          "assetType": "BTC",
+          "amount": "10.5",
+          "currentValue": "1200000.00"
+        }
+      ],
+      "totalValue": "1200000.00",
+      "requiredValue": "1000000.00",
+      "collateralRatio": "1.20",
+      "status": "Active",
+      "lastValuationDate": "2024-06-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### Get Collateral Pool
+
+Retrieve a specific collateral pool.
+
+```http
+GET /api/collateral/pools/:poolId
+```
+
+**Parameters:**
+- `poolId` (path): The collateral pool identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00abc123...",
+    "poolId": "POOL-001",
+    "borrower": "Alice",
+    "lender": "Bob",
+    "loanId": "LOAN-001",
+    "assets": [...],
+    "totalValue": "1200000.00",
+    "requiredValue": "1000000.00",
+    "collateralRatio": "1.20",
+    "marginCallThreshold": "1.15",
+    "liquidationThreshold": "1.10",
+    "status": "Active"
+  }
+}
+```
+
+### Create Collateral Pool
+
+Create a new collateral pool for a loan.
+
+```http
+POST /api/collateral/pools
+```
+
+**Request Body:**
+
+```json
+{
+  "poolId": "POOL-001",
+  "borrower": "Alice",
+  "lender": "Bob",
+  "loanId": "LOAN-001",
+  "assets": [
+    {
+      "assetType": "BTC",
+      "amount": "10.5",
+      "currentValue": "1200000.00"
+    }
+  ],
+  "requiredValue": "1000000.00",
+  "marginCallThreshold": "1.15",
+  "liquidationThreshold": "1.10"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00abc123...",
+    "poolId": "POOL-001",
+    "collateralRatio": "1.20"
+  }
+}
+```
+
+### Update Valuation
+
+Update the valuation of collateral assets.
+
+```http
+POST /api/collateral/pools/:contractId/update-valuation
+```
+
+**Parameters:**
+- `contractId` (path): The collateral pool contract ID
+
+**Request Body:**
+
+```json
+{
+  "newValuations": [
+    {
+      "assetType": "BTC",
+      "newValue": "1150000.00"
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Valuation updated",
+  "data": {
+    "newTotalValue": "1150000.00",
+    "newCollateralRatio": "1.15",
+    "marginCallTriggered": true
+  }
+}
+```
+
+### Release Collateral
+
+Release collateral after loan repayment.
+
+```http
+POST /api/collateral/pools/:contractId/release
+```
+
+**Parameters:**
+- `contractId` (path): The collateral pool contract ID
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Collateral released"
+}
+```
+
+### Partial Release
+
+Release a portion of collateral.
+
+```http
+POST /api/collateral/pools/:contractId/partial-release
+```
+
+**Parameters:**
+- `contractId` (path): The collateral pool contract ID
+
+**Request Body:**
+
+```json
+{
+  "releaseAmount": "200000.00"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Partial collateral released",
+  "data": {
+    "remainingValue": "1000000.00",
+    "newCollateralRatio": "1.00"
+  }
+}
+```
+
+## Margin Calls
+
+### Trigger Margin Call
+
+Lender triggers a margin call when collateral ratio falls below threshold.
+
+```http
+POST /api/collateral/pools/:contractId/margin-call
+```
+
+**Parameters:**
+- `contractId` (path): The collateral pool contract ID
+
+**Request Body:**
+
+```json
+{
+  "requiredAdditionalCollateral": "50000.00",
+  "deadline": "2024-06-10T00:00:00Z"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Margin call triggered",
+  "data": {
+    "marginCallId": "MC-001",
+    "deadline": "2024-06-10T00:00:00Z"
+  }
+}
+```
+
+### Respond to Margin Call
+
+Borrower responds to a margin call by adding collateral.
+
+```http
+POST /api/collateral/pools/:contractId/respond-margin-call
+```
+
+**Parameters:**
+- `contractId` (path): The collateral pool contract ID
+
+**Request Body:**
+
+```json
+{
+  "additionalAssets": [
+    {
+      "assetType": "ETH",
+      "amount": "25.0",
+      "value": "50000.00"
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Margin call satisfied",
+  "data": {
+    "newTotalValue": "1200000.00",
+    "newCollateralRatio": "1.20"
+  }
+}
+```
+
+## Collateral Substitution
+
+### Request Substitution
+
+Borrower requests to substitute collateral assets.
+
+```http
+POST /api/collateral/pools/:contractId/request-substitution
+```
+
+**Parameters:**
+- `contractId` (path): The collateral pool contract ID
+
+**Request Body:**
+
+```json
+{
+  "requestId": "SUB-001",
+  "assetsToRemove": [
+    {
+      "assetType": "BTC",
+      "amount": "5.0"
+    }
+  ],
+  "assetsToAdd": [
+    {
+      "assetType": "ETH",
+      "amount": "50.0",
+      "value": "600000.00"
+    }
+  ],
+  "reason": "Portfolio rebalancing"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Substitution request created",
+  "data": {
+    "requestContractId": "00def456..."
+  }
+}
+```
+
+### Approve Substitution
+
+Lender approves a collateral substitution request.
+
+```http
+POST /api/collateral/substitutions/:contractId/approve
+```
+
+**Parameters:**
+- `contractId` (path): The substitution request contract ID
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Substitution approved and executed"
+}
+```
+
+### Reject Substitution
+
+Lender rejects a collateral substitution request.
+
+```http
+POST /api/collateral/substitutions/:contractId/reject
+```
+
+**Parameters:**
+- `contractId` (path): The substitution request contract ID
+
+**Request Body:**
+
+```json
+{
+  "reason": "Proposed assets do not meet requirements"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Substitution rejected"
+}
+```
+
+## Liquidation
+
+### Initiate Liquidation
+
+Lender initiates liquidation when collateral ratio falls below liquidation threshold.
+
+```http
+POST /api/collateral/pools/:contractId/initiate-liquidation
+```
+
+**Parameters:**
+- `contractId` (path): The collateral pool contract ID
+
+**Request Body:**
+
+```json
+{
+  "reason": "Collateral ratio below liquidation threshold",
+  "outstandingDebt": "1000000.00"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Liquidation initiated",
+  "data": {
+    "liquidationContractId": "00ghi789..."
+  }
+}
+```
+
+### Execute Liquidation
+
+Execute the liquidation of collateral assets.
+
+```http
+POST /api/collateral/liquidations/:contractId/execute
+```
+
+**Parameters:**
+- `contractId` (path): The liquidation contract ID
+
+**Request Body:**
+
+```json
+{
+  "liquidationPrice": "1050000.00",
+  "liquidationCosts": "10000.00"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Liquidation executed",
+  "data": {
+    "settlementContractId": "00jkl012...",
+    "netProceeds": "1040000.00",
+    "debtCovered": "1000000.00",
+    "surplus": "40000.00"
+  }
+}
+```
+
+### Cancel Liquidation
+
+Cancel a liquidation if borrower satisfies the debt.
+
+```http
+POST /api/collateral/liquidations/:contractId/cancel
+```
+
+**Parameters:**
+- `contractId` (path): The liquidation contract ID
+
+**Request Body:**
+
+```json
+{
+  "reason": "Debt satisfied"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Liquidation cancelled"
+}
+```
+
+## Code Examples
+
+### TypeScript/JavaScript
+
+```typescript
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://api.aegis-rfq.com',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// Create collateral pool
+const createCollateralPool = async () => {
+  const { data } = await api.post('/api/collateral/pools', {
+    poolId: 'POOL-001',
+    borrower: 'Alice',
+    lender: 'Bob',
+    loanId: 'LOAN-001',
+    assets: [
+      {
+        assetType: 'BTC',
+        amount: '10.5',
+        currentValue: '1200000.00'
+      }
+    ],
+    requiredValue: '1000000.00',
+    marginCallThreshold: '1.15',
+    liquidationThreshold: '1.10'
+  });
+  
+  console.log('Collateral pool created:', data);
+};
+
+// Trigger margin call
+const triggerMarginCall = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/collateral/pools/${contractId}/margin-call`,
+    {
+      requiredAdditionalCollateral: '50000.00',
+      deadline: '2024-06-10T00:00:00Z'
+    }
+  );
+  
+  console.log('Margin call triggered:', data);
+};
+
+// Update valuation
+const updateValuation = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/collateral/pools/${contractId}/update-valuation`,
+    {
+      newValuations: [
+        {
+          assetType: 'BTC',
+          newValue: '1150000.00'
+        }
+      ]
+    }
+  );
+  
+  console.log('Valuation updated:', data);
+};
+```
+
+## Collateral Ratio Monitoring
+
+Monitor collateral ratios to prevent margin calls and liquidations:
+
+```typescript
+// Monitor collateral ratio
+const monitorCollateralRatio = async (poolId: string) => {
+  const { data } = await api.get(`/api/collateral/pools/${poolId}`);
+  
+  const ratio = parseFloat(data.data.collateralRatio);
+  const marginThreshold = parseFloat(data.data.marginCallThreshold);
+  const liquidationThreshold = parseFloat(data.data.liquidationThreshold);
+  
+  if (ratio < liquidationThreshold) {
+    console.warn('⚠️ CRITICAL: Below liquidation threshold!');
+  } else if (ratio < marginThreshold) {
+    console.warn('⚠️ WARNING: Below margin call threshold!');
+  } else {
+    console.log('✓ Collateral ratio healthy');
+  }
+  
+  return {
+    ratio,
+    status: ratio < liquidationThreshold ? 'critical' :
+            ratio < marginThreshold ? 'warning' : 'healthy'
+  };
+};
+```
+
+## Next Steps
+
+- [RFQ API](/api/rfq) - Create loan requests
+- [Credit API](/api/credit) - Credit scoring
+- [Syndication API](/api/syndication) - Multi-lender loans

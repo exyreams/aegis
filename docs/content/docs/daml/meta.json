@@ -1,0 +1,13 @@
+{
+  "title": "DAML Contracts",
+  "pages": [
+    "rfq",
+    "credit",
+    "collateral",
+    "syndication",
+    "yield",
+    "secondary-market",
+    "aegis",
+    "audit"
+  ]
+}

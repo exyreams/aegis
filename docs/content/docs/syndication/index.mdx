@@ -1,0 +1,228 @@
+---
+title: Syndication API
+description: Multi-lender syndicated loan structures with voting and governance
+---
+
+# Syndication API
+
+The Syndication API enables multi-lender loan structures with lead arrangers, voting mechanisms, and coordinated payment distribution.
+
+## Base Endpoint
+
+```
+/api/syndication
+```
+
+## Syndicated Loans
+
+### List Syndicated Loans
+
+```http
+GET /api/syndication/loans
+```
+
+### Get Syndicated Loan
+
+```http
+GET /api/syndication/loans/:loanId
+```
+
+### Make Syndicated Payment
+
+Borrower makes a payment distributed across all lenders.
+
+```http
+POST /api/syndication/loans/:contractId/payment
+```
+
+**Request Body:**
+
+```json
+{
+  "paymentAmount": "100000.00",
+  "principalPortion": "90000.00",
+  "interestPortion": "10000.00"
+}
+```
+
+### Propose Syndicate Decision
+
+Propose a decision requiring syndicate vote.
+
+```http
+POST /api/syndication/loans/:contractId/propose-decision
+```
+
+**Request Body:**
+
+```json
+{
+  "proposer": "Bob",
+  "decisionType": "AmendTerms",
+  "description": "Extend maturity by 6 months",
+  "votingDeadline": "2024-07-01T00:00:00Z",
+  "requiredMajority": "0.67"
+}
+```
+
+### Add Syndicate Participant
+
+```http
+POST /api/syndication/loans/:contractId/add-participant
+```
+
+### Remove Syndicate Participant
+
+```http
+POST /api/syndication/loans/:contractId/remove-participant
+```
+
+### Distribute Arrangement Fees
+
+```http
+POST /api/syndication/loans/:contractId/distribute-fees
+```
+
+## Syndicate Formation
+
+### List Formations
+
+```http
+GET /api/syndication/formations
+```
+
+### Create Formation
+
+```http
+POST /api/syndication/formations
+```
+
+**Request Body:**
+
+```json
+{
+  "formationId": "SYND-001",
+  "borrower": "Alice",
+  "leadArranger": "Bob",
+  "rfqId": "RFQ-001",
+  "targetAmount": "10000000.00",
+  "arrangementFee": "100000.00",
+  "formationDeadline": "2024-07-01T00:00:00Z"
+}
+```
+
+### Commit to Syndicate
+
+Lender commits to participate in syndicate.
+
+```http
+POST /api/syndication/formations/:contractId/commit
+```
+
+**Request Body:**
+
+```json
+{
+  "lender": "Charlie",
+  "profile": {
+    "lenderId": "LENDER-003",
+    "name": "Charlie's Capital"
+  },
+  "commitmentAmount": "2000000.00",
+  "role": "Participant"
+}
+```
+
+### Finalize Syndicate
+
+```http
+POST /api/syndication/formations/:contractId/finalize
+```
+
+### Cancel Formation
+
+```http
+POST /api/syndication/formations/:contractId/cancel
+```
+
+## Voting
+
+### List Votes
+
+```http
+GET /api/syndication/votes
+```
+
+### Vote For
+
+```http
+POST /api/syndication/votes/:contractId/vote-for
+```
+
+### Vote Against
+
+```http
+POST /api/syndication/votes/:contractId/vote-against
+```
+
+### Finalize Vote
+
+```http
+POST /api/syndication/votes/:contractId/finalize
+```
+
+## Reports
+
+### List Reports
+
+```http
+GET /api/syndication/reports
+```
+
+### Acknowledge Report
+
+```http
+POST /api/syndication/reports/:contractId/acknowledge
+```
+
+## Code Example
+
+```typescript
+// Create syndicate formation
+const createSyndicate = async () => {
+  const { data } = await api.post('/api/syndication/formations', {
+    formationId: 'SYND-001',
+    borrower: 'Alice',
+    leadArranger: 'Bob',
+    rfqId: 'RFQ-001',
+    targetAmount: '10000000.00',
+    arrangementFee: '100000.00',
+    formationDeadline: '2024-07-01T00:00:00Z'
+  });
+  
+  return data;
+};
+
+// Commit to syndicate
+const commitToSyndicate = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/syndication/formations/${contractId}/commit`,
+    {
+      lender: 'Charlie',
+      profile: {
+        lenderId: 'LENDER-003',
+        name: "Charlie's Capital"
+      },
+      commitmentAmount: '2000000.00',
+      role: 'Participant'
+    }
+  );
+  
+  return data;
+};
+```
+
+## Next Steps
+
+- [Yield API](/api/yield) - Liquidity pools
+- [Secondary Market API](/api/secondary-market) - Loan trading

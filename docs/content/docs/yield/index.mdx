@@ -1,0 +1,339 @@
+---
+title: Yield Generation API
+description: Liquidity pools, LP tokens, and automated yield optimization
+---
+
+# Yield Generation API
+
+The Yield Generation API provides liquidity pool management, LP token operations, yield distribution, and automated optimization strategies.
+
+## Base Endpoint
+
+```
+/api/yield
+```
+
+## Liquidity Pools
+
+### List Pools
+
+```http
+GET /api/yield/pools
+```
+
+### Get Pool
+
+```http
+GET /api/yield/pools/:poolId
+```
+
+### Create Pool
+
+```http
+POST /api/yield/pools
+```
+
+**Request Body:**
+
+```json
+{
+  "poolId": "POOL-001",
+  "poolManager": "Bob",
+  "poolName": "High Yield Lending Pool",
+  "poolStrategy": {
+    "strategyType": "Conservative",
+    "targetAPY": "0.12",
+    "riskLevel": "Low"
+  }
+}
+```
+
+### Join Pool
+
+Provide liquidity to a pool.
+
+```http
+POST /api/yield/pools/:contractId/join
+```
+
+**Request Body:**
+
+```json
+{
+  "participant": "Alice",
+  "contributionAmount": "100000.00"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Joined pool successfully",
+  "data": {
+    "lpTokensIssued": "100000.00"
+  }
+}
+```
+
+### Withdraw from Pool
+
+```http
+POST /api/yield/pools/:contractId/withdraw
+```
+
+**Request Body:**
+
+```json
+{
+  "participant": "Alice",
+  "lpTokensToRedeem": "50000.00"
+}
+```
+
+### Claim Yield
+
+```http
+POST /api/yield/pools/:contractId/claim-yield
+```
+
+### Reinvest Yield
+
+```http
+POST /api/yield/pools/:contractId/reinvest
+```
+
+### Distribute Yield
+
+Pool manager distributes yield to participants.
+
+```http
+POST /api/yield/pools/:contractId/distribute-yield
+```
+
+**Request Body:**
+
+```json
+{
+  "yieldAmount": "10000.00",
+  "source": "Loan interest payments"
+}
+```
+
+### Deploy Liquidity
+
+Deploy pool liquidity to fund a loan.
+
+```http
+POST /api/yield/pools/:contractId/deploy
+```
+
+**Request Body:**
+
+```json
+{
+  "loanId": "LOAN-001",
+  "amount": "500000.00"
+}
+```
+
+### Receive Repayment
+
+```http
+POST /api/yield/pools/:contractId/receive-repayment
+```
+
+**Request Body:**
+
+```json
+{
+  "loanId": "LOAN-001",
+  "principalAmount": "50000.00",
+  "interestAmount": "5000.00"
+}
+```
+
+### Update Performance Metrics
+
+```http
+POST /api/yield/pools/:contractId/update-metrics
+```
+
+### Rebalance Pool
+
+```http
+POST /api/yield/pools/:contractId/rebalance
+```
+
+## LP Tokens
+
+### List LP Tokens
+
+```http
+GET /api/yield/lp-tokens
+```
+
+### Transfer LP Token
+
+```http
+POST /api/yield/lp-tokens/:contractId/transfer
+```
+
+**Request Body:**
+
+```json
+{
+  "newOwner": "Charlie"
+}
+```
+
+### Split LP Token
+
+```http
+POST /api/yield/lp-tokens/:contractId/split
+```
+
+**Request Body:**
+
+```json
+{
+  "amounts": ["25000.00", "25000.00", "50000.00"]
+}
+```
+
+## Yield Optimizers
+
+### List Optimizers
+
+```http
+GET /api/yield/optimizers
+```
+
+### Optimize Yield
+
+```http
+POST /api/yield/optimizers/:contractId/optimize
+```
+
+**Request Body:**
+
+```json
+{
+  "newAllocations": [
+    ["POOL-001", "300000.00"],
+    ["POOL-002", "200000.00"]
+  ]
+}
+```
+
+### Update Strategy
+
+```http
+POST /api/yield/optimizers/:contractId/update-strategy
+```
+
+### Add Managed Pool
+
+```http
+POST /api/yield/optimizers/:contractId/add-pool
+```
+
+### Remove Managed Pool
+
+```http
+POST /api/yield/optimizers/:contractId/remove-pool
+```
+
+## Staking Rewards
+
+### List Staking Rewards
+
+```http
+GET /api/yield/staking
+```
+
+### Claim Staking Rewards
+
+```http
+POST /api/yield/staking/:contractId/claim
+```
+
+### Unstake
+
+```http
+POST /api/yield/staking/:contractId/unstake
+```
+
+### Accrue Rewards
+
+```http
+POST /api/yield/staking/:contractId/accrue
+```
+
+## Performance Bonuses
+
+### List Bonuses
+
+```http
+GET /api/yield/bonuses
+```
+
+### Claim Bonus
+
+```http
+POST /api/yield/bonuses/:contractId/claim
+```
+
+### Mark Distributed
+
+```http
+POST /api/yield/bonuses/:contractId/mark-distributed
+```
+
+## Code Example
+
+```typescript
+// Join liquidity pool
+const joinPool = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/yield/pools/${contractId}/join`,
+    {
+      participant: 'Alice',
+      contributionAmount: '100000.00'
+    }
+  );
+  
+  console.log('LP tokens issued:', data.data.lpTokensIssued);
+  return data;
+};
+
+// Claim yield
+const claimYield = async (contractId: string) => {
+  const { data } = await api.post(
+    `/api/yield/pools/${contractId}/claim-yield`,
+    {
+      participant: 'Alice'
+    }
+  );
+  
+  return data;
+};
+
+// Monitor pool performance
+const getPoolPerformance = async (poolId: string) => {
+  const { data } = await api.get(`/api/yield/pools/${poolId}`);
+  
+  const metrics = data.data.performanceMetrics;
+  console.log('Current APY:', metrics.currentAPY);
+  console.log('Total Return:', metrics.totalReturn);
+  console.log('Utilization Rate:', metrics.utilizationRate);
+  
+  return metrics;
+};
+```
+
+## Next Steps
+
+- [Secondary Market API](/api/secondary-market) - Loan trading
+- [Aegis Platform API](/api/aegis) - Platform management

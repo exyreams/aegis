@@ -1,0 +1,190 @@
+---
+title: Secondary Market API
+description: Loan trading, ownership transfers, and marketplace operations
+---
+
+# Secondary Market API
+
+The Secondary Market API enables lenders to list loans for sale, buyers to make offers, and facilitates ownership transfers with borrower notifications.
+
+## Base Endpoint
+
+```
+/api/secondary-market
+```
+
+## Loan Listings
+
+### List Loan Listings
+
+```http
+GET /api/secondary-market/listings
+```
+
+### Create Listing
+
+List a loan for sale on the secondary market.
+
+```http
+POST /api/secondary-market/listings
+```
+
+**Request Body:**
+
+```json
+{
+  "listingId": "LIST-001",
+  "seller": "Bob",
+  "loanId": "LOAN-001",
+  "askingPrice": "950000.00",
+  "minimumPrice": "900000.00",
+  "listingExpiry": "2024-12-31T23:59:59Z"
+}
+```
+
+### Update Listing Price
+
+```http
+POST /api/secondary-market/listings/:contractId/update-price
+```
+
+### Cancel Listing
+
+```http
+POST /api/secondary-market/listings/:contractId/cancel
+```
+
+## Offers
+
+### Make Offer
+
+Buyer makes an offer on a listed loan.
+
+```http
+POST /api/secondary-market/listings/:contractId/offer
+```
+
+**Request Body:**
+
+```json
+{
+  "offerId": "OFFER-001",
+  "buyer": "Charlie",
+  "offerPrice": "920000.00",
+  "offerExpiry": "2024-07-15T00:00:00Z"
+}
+```
+
+### Accept Offer
+
+```http
+POST /api/secondary-market/offers/:contractId/accept
+```
+
+### Reject Offer
+
+```http
+POST /api/secondary-market/offers/:contractId/reject
+```
+
+### Withdraw Offer
+
+```http
+POST /api/secondary-market/offers/:contractId/withdraw
+```
+
+## Transfers
+
+### List Transfers
+
+```http
+GET /api/secondary-market/transfers
+```
+
+### Complete Transfer
+
+```http
+POST /api/secondary-market/transfers/:contractId/complete
+```
+
+### Cancel Transfer
+
+```http
+POST /api/secondary-market/transfers/:contractId/cancel
+```
+
+## Valuations
+
+### Request Valuation
+
+```http
+POST /api/secondary-market/valuations
+```
+
+**Request Body:**
+
+```json
+{
+  "valuationId": "VAL-001",
+  "loanId": "LOAN-001",
+  "requestedBy": "Bob"
+}
+```
+
+### Update Valuation
+
+```http
+POST /api/secondary-market/valuations/:contractId/update
+```
+
+## Borrower Notifications
+
+### List Notifications
+
+```http
+GET /api/secondary-market/notifications
+```
+
+### Acknowledge Notification
+
+```http
+POST /api/secondary-market/notifications/:contractId/acknowledge
+```
+
+## Code Example
+
+```typescript
+// List loan for sale
+const listLoan = async () => {
+  const { data } = await api.post('/api/secondary-market/listings', {
+    listingId: 'LIST-001',
+    seller: 'Bob',
+    loanId: 'LOAN-001',
+    askingPrice: '950000.00',
+    minimumPrice: '900000.00',
+    listingExpiry: '2024-12-31T23:59:59Z'
+  });
+  
+  return data;
+};
+
+// Make offer
+const makeOffer = async (listingContractId: string) => {
+  const { data } = await api.post(
+    `/api/secondary-market/listings/${listingContractId}/offer`,
+    {
+      offerId: 'OFFER-001',
+      buyer: 'Charlie',
+      offerPrice: '920000.00',
+      offerExpiry: '2024-07-15T00:00:00Z'
+    }
+  );
+  
+  return data;
+};
+```
+
+## Next Steps
+
+- [Aegis Platform API](/api/aegis) - Platform management
+- [Audit Logs API](/api/audit) - Compliance tracking

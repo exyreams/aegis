@@ -1,0 +1,172 @@
+---
+title: Code Examples
+description: RFQ API code examples in multiple languages
+---
+
+# Code Examples
+
+## TypeScript/JavaScript
+
+```typescript
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://api.aegis-rfq.com',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// Create RFQ
+const createRFQ = async () => {
+  const { data } = await api.post('/api/rfqs', {
+    rfqId: 'RFQ-2024-001',
+    borrower: 'Alice',
+    loanAmount: '1000000.00',
+    interestRateRange: {
+      min: '0.05',
+      max: '0.15'
+    },
+    duration: '365',
+    collateralAsset: 'BTC',
+    collateralAmount: '1200000.00',
+    selectedLenders: ['Bob', 'Charlie'],
+    expirationDate: '2024-12-31T23:59:59Z'
+  });
+  
+  console.log('RFQ created:', data);
+  return data;
+};
+
+// Submit bid
+const submitBid = async (contractId: string) => {
+  const { data } = await api.post(`/api/rfqs/${contractId}/bid`, {
+    bidId: 'BID-2024-001',
+    lender: 'Bob',
+    lenderProfile: {
+      lenderId: 'LENDER-001',
+      name: "Bob's Lending",
+      creditRating: 'AAA',
+      totalCapital: '10000000.00',
+      availableCapital: '5000000.00'
+    },
+    offeredAmount: '1000000.00',
+    interestRate: '0.08',
+    terms: 'Standard terms apply'
+  });
+  
+  console.log('Bid submitted:', data);
+  return data;
+};
+
+// List RFQs
+const listRFQs = async () => {
+  const { data } = await api.get('/api/rfqs');
+  console.log('RFQs:', data.data);
+  return data;
+};
+```
+
+## Python
+
+```python
+import requests
+
+class AegisRFQClient:
+    def __init__(self, token):
+        self.base_url = 'https://api.aegis-rfq.com'
+        self.headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+    
+    def create_rfq(self, rfq_data):
+        response = requests.post(
+            f'{self.base_url}/api/rfqs',
+            json=rfq_data,
+            headers=self.headers
+        )
+        return response.json()
+    
+    def submit_bid(self, contract_id, bid_data):
+        response = requests.post(
+            f'{self.base_url}/api/rfqs/{contract_id}/bid',
+            json=bid_data,
+            headers=self.headers
+        )
+        return response.json()
+    
+    def list_rfqs(self):
+        response = requests.get(
+            f'{self.base_url}/api/rfqs',
+            headers=self.headers
+        )
+        return response.json()
+
+# Usage
+client = AegisRFQClient(token='your-jwt-token')
+
+rfq = client.create_rfq({
+    'rfqId': 'RFQ-2024-001',
+    'borrower': 'Alice',
+    'loanAmount': '1000000.00',
+    'interestRateRange': {
+        'min': '0.05',
+        'max': '0.15'
+    },
+    'duration': '365',
+    'collateralAsset': 'BTC',
+    'collateralAmount': '1200000.00',
+    'selectedLenders': ['Bob', 'Charlie'],
+    'expirationDate': '2024-12-31T23:59:59Z'
+})
+
+print('RFQ created:', rfq)
+```
+
+## cURL
+
+```bash
+# Create RFQ
+curl -X POST https://api.aegis-rfq.com/api/rfqs \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rfqId": "RFQ-2024-001",
+    "borrower": "Alice",
+    "loanAmount": "1000000.00",
+    "interestRateRange": {
+      "min": "0.05",
+      "max": "0.15"
+    },
+    "duration": "365",
+    "collateralAsset": "BTC",
+    "collateralAmount": "1200000.00",
+    "selectedLenders": ["Bob", "Charlie"],
+    "expirationDate": "2024-12-31T23:59:59Z"
+  }'
+
+# Submit bid
+curl -X POST https://api.aegis-rfq.com/api/rfqs/$CONTRACT_ID/bid \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bidId": "BID-2024-001",
+    "lender": "Bob",
+    "lenderProfile": {
+      "lenderId": "LENDER-001",
+      "name": "Bobs Lending",
+      "creditRating": "AAA",
+      "totalCapital": "10000000.00",
+      "availableCapital": "5000000.00"
+    },
+    "offeredAmount": "1000000.00",
+    "interestRate": "0.08",
+    "terms": "Standard terms apply"
+  }'
+
+# List RFQs
+curl -X GET https://api.aegis-rfq.com/api/rfqs \
+  -H "Authorization: Bearer $TOKEN"
+```

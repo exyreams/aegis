@@ -1,0 +1,684 @@
+---
+title: Credit System API
+description: Credit profiles, risk assessment, and scoring for institutional lending
+---
+
+# Credit System API
+
+The Credit System API provides comprehensive credit scoring, risk assessment, and credit inquiry management for borrowers and lenders.
+
+## Base Endpoint
+
+```
+/api/credit
+```
+
+## Credit Profiles
+
+### List Credit Profiles
+
+Get all credit profiles visible to the authenticated party.
+
+```http
+GET /api/credit/profiles
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "contractId": "00abc123...",
+      "profileId": "CREDIT-001",
+      "party": "Alice",
+      "creditScore": 750,
+      "totalLoans": 5,
+      "activeLoans": 2,
+      "defaultedLoans": 0,
+      "totalBorrowed": "5000000.00",
+      "totalRepaid": "3000000.00",
+      "onTimePaymentRate": "0.98",
+      "privacyLevel": "Public",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "lastUpdated": "2024-06-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### Get Credit Profile
+
+Retrieve a specific credit profile.
+
+```http
+GET /api/credit/profiles/:profileId
+```
+
+**Parameters:**
+- `profileId` (path): The credit profile identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00abc123...",
+    "profileId": "CREDIT-001",
+    "party": "Alice",
+    "creditScore": 750,
+    "totalLoans": 5,
+    "activeLoans": 2,
+    "defaultedLoans": 0,
+    "totalBorrowed": "5000000.00",
+    "totalRepaid": "3000000.00",
+    "onTimePaymentRate": "0.98",
+    "privacyLevel": "Public",
+    "loanHistory": [
+      {
+        "loanId": "LOAN-001",
+        "amount": "1000000.00",
+        "status": "Repaid",
+        "onTime": true
+      }
+    ],
+    "createdAt": "2024-01-01T00:00:00Z",
+    "lastUpdated": "2024-06-01T00:00:00Z"
+  }
+}
+```
+
+### Create Credit Profile
+
+Create a new credit profile for a party.
+
+```http
+POST /api/credit/profiles
+```
+
+**Request Body:**
+
+```json
+{
+  "party": "Alice",
+  "profileId": "CREDIT-001",
+  "initialCreditScore": 700,
+  "privacyLevel": "Public"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00abc123...",
+    "profileId": "CREDIT-001",
+    "creditScore": 700
+  }
+}
+```
+
+### Update Privacy Level
+
+Change the privacy level of a credit profile.
+
+```http
+POST /api/credit/profiles/:contractId/privacy
+```
+
+**Parameters:**
+- `contractId` (path): The credit profile contract ID
+
+**Request Body:**
+
+```json
+{
+  "newPrivacyLevel": "Private"
+}
+```
+
+**Privacy Levels:**
+- `Public`: Visible to all parties
+- `Restricted`: Visible only to approved parties
+- `Private`: Visible only to the profile owner
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Privacy level updated"
+}
+```
+
+### Record Loan Origination
+
+Record a new loan in the credit profile.
+
+```http
+POST /api/credit/profiles/:contractId/record-loan
+```
+
+**Parameters:**
+- `contractId` (path): The credit profile contract ID
+
+**Request Body:**
+
+```json
+{
+  "loanId": "LOAN-001",
+  "loanAmount": "1000000.00",
+  "lender": "Bob"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Loan recorded",
+  "data": {
+    "newCreditScore": 745
+  }
+}
+```
+
+### Record Repayment
+
+Record a loan repayment in the credit profile.
+
+```http
+POST /api/credit/profiles/:contractId/record-repayment
+```
+
+**Parameters:**
+- `contractId` (path): The credit profile contract ID
+
+**Request Body:**
+
+```json
+{
+  "loanId": "LOAN-001",
+  "repaymentAmount": "100000.00",
+  "onTime": true
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Repayment recorded",
+  "data": {
+    "newCreditScore": 755
+  }
+}
+```
+
+### Record Default
+
+Record a loan default in the credit profile.
+
+```http
+POST /api/credit/profiles/:contractId/record-default
+```
+
+**Parameters:**
+- `contractId` (path): The credit profile contract ID
+
+**Request Body:**
+
+```json
+{
+  "loanId": "LOAN-001",
+  "defaultAmount": "500000.00",
+  "defaultReason": "Unable to repay"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Default recorded",
+  "data": {
+    "newCreditScore": 550
+  }
+}
+```
+
+## Risk Assessments
+
+### List Risk Assessments
+
+Get all risk assessments for the authenticated party.
+
+```http
+GET /api/credit/risk-assessments
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "contractId": "00def456...",
+      "assessmentId": "RISK-001",
+      "borrower": "Alice",
+      "assessor": "Bob",
+      "riskScore": 75,
+      "riskCategory": "Medium",
+      "assessmentDate": "2024-01-15T00:00:00Z",
+      "status": "Approved"
+    }
+  ]
+}
+```
+
+### Create Risk Assessment
+
+Create a new risk assessment for a borrower.
+
+```http
+POST /api/credit/risk-assessments
+```
+
+**Request Body:**
+
+```json
+{
+  "assessmentId": "RISK-001",
+  "borrower": "Alice",
+  "assessor": "Bob",
+  "loanAmount": "1000000.00",
+  "collateralValue": "1200000.00",
+  "creditScore": 750,
+  "debtToIncomeRatio": "0.35",
+  "industryRisk": "Low",
+  "marketConditions": "Stable"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00def456...",
+    "assessmentId": "RISK-001",
+    "riskScore": 75,
+    "riskCategory": "Medium",
+    "recommendation": "Approve with standard terms"
+  }
+}
+```
+
+**Risk Categories:**
+- `Low` (80-100): Minimal risk, favorable terms
+- `Medium` (60-79): Moderate risk, standard terms
+- `High` (40-59): Elevated risk, stricter terms
+- `Very High` (0-39): Significant risk, may decline
+
+### Accept Risk Assessment
+
+Borrower accepts a risk assessment.
+
+```http
+POST /api/credit/risk-assessments/:contractId/accept
+```
+
+**Parameters:**
+- `contractId` (path): The risk assessment contract ID
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Risk assessment accepted"
+}
+```
+
+### Reject Risk Assessment
+
+Borrower rejects a risk assessment.
+
+```http
+POST /api/credit/risk-assessments/:contractId/reject
+```
+
+**Parameters:**
+- `contractId` (path): The risk assessment contract ID
+
+**Request Body:**
+
+```json
+{
+  "reason": "Terms not acceptable"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Risk assessment rejected"
+}
+```
+
+## Credit Inquiries
+
+### List Credit Inquiries
+
+Get all credit inquiries for the authenticated party.
+
+```http
+GET /api/credit/inquiries
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "contractId": "00ghi789...",
+      "inquiryId": "INQ-001",
+      "inquirer": "Bob",
+      "subject": "Alice",
+      "purpose": "Loan evaluation",
+      "status": "Pending",
+      "requestedAt": "2024-01-10T00:00:00Z"
+    }
+  ]
+}
+```
+
+### Create Credit Inquiry
+
+Request access to a party's credit information.
+
+```http
+POST /api/credit/inquiries
+```
+
+**Request Body:**
+
+```json
+{
+  "inquiryId": "INQ-001",
+  "inquirer": "Bob",
+  "subject": "Alice",
+  "purpose": "Loan evaluation",
+  "requestedInformation": ["creditScore", "loanHistory"]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00ghi789...",
+    "inquiryId": "INQ-001",
+    "status": "Pending"
+  }
+}
+```
+
+### Approve Credit Inquiry
+
+Subject approves a credit inquiry.
+
+```http
+POST /api/credit/inquiries/:contractId/approve
+```
+
+**Parameters:**
+- `contractId` (path): The credit inquiry contract ID
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Credit inquiry approved",
+  "data": {
+    "creditScore": 750,
+    "loanHistory": [...]
+  }
+}
+```
+
+### Decline Credit Inquiry
+
+Subject declines a credit inquiry.
+
+```http
+POST /api/credit/inquiries/:contractId/decline
+```
+
+**Parameters:**
+- `contractId` (path): The credit inquiry contract ID
+
+**Request Body:**
+
+```json
+{
+  "reason": "Privacy concerns"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Credit inquiry declined"
+}
+```
+
+## Portfolio Risk
+
+### Get Portfolio Risk
+
+Get portfolio risk analysis for a lender.
+
+```http
+GET /api/credit/portfolio-risk
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contractId": "00jkl012...",
+    "lender": "Bob",
+    "totalExposure": "10000000.00",
+    "averageRiskScore": 72,
+    "concentrationRisk": "Medium",
+    "diversificationScore": 85,
+    "activeLoans": 15,
+    "riskDistribution": {
+      "Low": 5,
+      "Medium": 8,
+      "High": 2
+    },
+    "lastUpdated": "2024-06-01T00:00:00Z"
+  }
+}
+```
+
+### Update Portfolio Risk
+
+Update portfolio risk metrics.
+
+```http
+POST /api/credit/portfolio-risk/:contractId/update
+```
+
+**Parameters:**
+- `contractId` (path): The portfolio risk contract ID
+
+**Request Body:**
+
+```json
+{
+  "newMetrics": {
+    "totalExposure": "11000000.00",
+    "averageRiskScore": 70,
+    "activeLoans": 16
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Portfolio risk updated"
+}
+```
+
+## Code Examples
+
+### TypeScript/JavaScript
+
+```typescript
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://api.aegis-rfq.com',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// Create credit profile
+const createCreditProfile = async () => {
+  const { data } = await api.post('/api/credit/profiles', {
+    party: 'Alice',
+    profileId: 'CREDIT-001',
+    initialCreditScore: 700,
+    privacyLevel: 'Public'
+  });
+  
+  console.log('Credit profile created:', data);
+};
+
+// Request risk assessment
+const requestRiskAssessment = async () => {
+  const { data } = await api.post('/api/credit/risk-assessments', {
+    assessmentId: 'RISK-001',
+    borrower: 'Alice',
+    assessor: 'Bob',
+    loanAmount: '1000000.00',
+    collateralValue: '1200000.00',
+    creditScore: 750,
+    debtToIncomeRatio: '0.35',
+    industryRisk: 'Low',
+    marketConditions: 'Stable'
+  });
+  
+  console.log('Risk assessment:', data);
+};
+
+// Get credit profile
+const getCreditProfile = async (profileId: string) => {
+  const { data } = await api.get(`/api/credit/profiles/${profileId}`);
+  console.log('Credit profile:', data);
+};
+```
+
+### Python
+
+```python
+import requests
+
+class CreditClient:
+    def __init__(self, token):
+        self.base_url = 'https://api.aegis-rfq.com'
+        self.headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+    
+    def create_credit_profile(self, profile_data):
+        response = requests.post(
+            f'{self.base_url}/api/credit/profiles',
+            json=profile_data,
+            headers=self.headers
+        )
+        return response.json()
+    
+    def get_credit_profile(self, profile_id):
+        response = requests.get(
+            f'{self.base_url}/api/credit/profiles/{profile_id}',
+            headers=self.headers
+        )
+        return response.json()
+    
+    def create_risk_assessment(self, assessment_data):
+        response = requests.post(
+            f'{self.base_url}/api/credit/risk-assessments',
+            json=assessment_data,
+            headers=self.headers
+        )
+        return response.json()
+
+# Usage
+client = CreditClient(token='your-jwt-token')
+
+profile = client.create_credit_profile({
+    'party': 'Alice',
+    'profileId': 'CREDIT-001',
+    'initialCreditScore': 700,
+    'privacyLevel': 'Public'
+})
+
+print('Credit profile:', profile)
+```
+
+## Credit Score Calculation
+
+The credit score is calculated based on multiple factors:
+
+```
+Credit Score = Base Score + Payment History + Loan Performance - Defaults
+
+Where:
+- Base Score: 300-850 range
+- Payment History: +50 for 100% on-time payments
+- Loan Performance: +10 per successfully repaid loan
+- Defaults: -100 per default
+```
+
+**Score Ranges:**
+- 800-850: Excellent
+- 740-799: Very Good
+- 670-739: Good
+- 580-669: Fair
+- 300-579: Poor
+
+## Next Steps
+
+- [Collateral API](/api/collateral) - Collateral pool management
+- [RFQ API](/api/rfq) - Create loan requests
+- [Syndication API](/api/syndication) - Multi-lender loans

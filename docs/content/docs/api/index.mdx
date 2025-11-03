@@ -1,0 +1,154 @@
+---
+title: API Reference
+description: Complete REST API documentation for Aegis RFQ platform
+---
+
+# API Reference
+
+The Aegis RFQ API provides programmatic access to all platform features including RFQ management, credit scoring, collateral handling, syndicated lending, and more.
+
+## Base URL
+
+```
+https://api.aegis-rfq.com
+```
+
+For development:
+```
+http://localhost:8000
+```
+
+## Authentication
+
+All API requests require authentication using JWT tokens. Include the token in the Authorization header:
+
+```bash
+Authorization: Bearer <your-jwt-token>
+```
+
+See [Authentication](/authentication) for details on obtaining tokens.
+
+## API Modules
+
+<Cards>
+  <Card title="RFQ Management" href="/api/rfq">
+    Create and manage Request for Quote workflows
+  </Card>
+  <Card title="Credit System" href="/api/credit">
+    Credit profiles, risk assessment, and scoring
+  </Card>
+  <Card title="Collateral" href="/api/collateral">
+    Collateral pool management and liquidation
+  </Card>
+  <Card title="Syndication" href="/api/syndication">
+    Multi-lender syndicated loan structures
+  </Card>
+  <Card title="Yield Generation" href="/api/yield">
+    Liquidity pools and yield optimization
+  </Card>
+  <Card title="Secondary Market" href="/api/secondary-market">
+    Loan trading and ownership transfers
+  </Card>
+  <Card title="Aegis Platform" href="/api/aegis">
+    Platform management and treasury operations
+  </Card>
+  <Card title="Audit Logs" href="/api/audit">
+    Compliance and audit trail management
+  </Card>
+</Cards>
+
+## Response Format
+
+All API responses follow a consistent format:
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "data": {
+    // Response data
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "error": "Error message description"
+}
+```
+
+## HTTP Status Codes
+
+| Code | Description |
+|------|-------------|
+| `200` | Success |
+| `201` | Created |
+| `400` | Bad Request - Invalid input |
+| `401` | Unauthorized - Invalid or missing token |
+| `403` | Forbidden - Insufficient permissions |
+| `404` | Not Found |
+| `429` | Too Many Requests - Rate limit exceeded |
+| `500` | Internal Server Error |
+
+## Rate Limiting
+
+API requests are rate-limited to:
+- **100 requests per 15 minutes** per IP address
+
+Rate limit headers are included in responses:
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1640000000
+```
+
+## Pagination
+
+List endpoints support pagination using query parameters:
+
+```bash
+GET /api/rfqs?page=1&limit=20
+```
+
+Parameters:
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 20, max: 100)
+
+Response includes pagination metadata:
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "pages": 8
+  }
+}
+```
+
+## Filtering and Sorting
+
+Many endpoints support filtering and sorting:
+
+```bash
+GET /api/rfqs?status=active&sort=createdAt:desc
+```
+
+## Webhooks
+
+Subscribe to real-time events using webhooks. See [Webhooks](/api/webhooks) for configuration.
+
+## SDKs and Libraries
+
+Official SDKs are available for:
+- TypeScript/JavaScript
+- Python
+- Go
+
+See [SDKs](/sdks) for installation and usage.

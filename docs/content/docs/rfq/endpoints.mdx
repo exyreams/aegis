@@ -1,0 +1,132 @@
+---
+title: RFQ Endpoints
+description: All RFQ Management API endpoints
+---
+
+# RFQ Endpoints
+
+## List RFQs
+
+```http
+GET /api/rfqs
+```
+
+Get all RFQs visible to the authenticated party.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [...]
+}
+```
+
+## Get RFQ by ID
+
+```http
+GET /api/rfqs/:rfqId
+```
+
+## Create RFQ
+
+```http
+POST /api/rfqs
+```
+
+**Request Body:**
+
+```json
+{
+  "rfqId": "RFQ-2024-001",
+  "borrower": "Alice",
+  "loanAmount": "1000000.00",
+  "interestRateRange": {
+    "min": "0.05",
+    "max": "0.15"
+  },
+  "duration": "365",
+  "collateralAsset": "BTC",
+  "collateralAmount": "1200000.00",
+  "selectedLenders": ["Bob", "Charlie"],
+  "expirationDate": "2024-12-31T23:59:59Z"
+}
+```
+
+## Submit Bid
+
+```http
+POST /api/rfqs/:contractId/bid
+```
+
+## Accept Bid
+
+```http
+POST /api/rfqs/:contractId/accept-bid
+```
+
+## Cancel RFQ
+
+```http
+POST /api/rfqs/:contractId/cancel
+```
+
+## Extend Expiration
+
+```http
+POST /api/rfqs/:contractId/extend
+```
+
+## Bid Endpoints
+
+### List Bids
+
+```http
+GET /api/bids?rfqId=RFQ-2024-001
+```
+
+### Withdraw Bid
+
+```http
+POST /api/bids/:contractId/withdraw
+```
+
+### Modify Bid
+
+```http
+POST /api/bids/:contractId/modify
+```
+
+## Loan Proposal Endpoints
+
+### List Loan Proposals
+
+```http
+GET /api/loan-proposals
+```
+
+### Accept Loan Proposal
+
+```http
+POST /api/loan-proposals/:contractId/accept
+```
+
+## Loan Endpoints
+
+### List Loans
+
+```http
+GET /api/loans
+```
+
+### Make Payment
+
+```http
+POST /api/loans/:contractId/payment
+```
+
+### Make Early Repayment
+
+```http
+POST /api/loans/:contractId/early-repayment
+```
