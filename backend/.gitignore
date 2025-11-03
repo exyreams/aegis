@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+bun.lockb
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database files
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Drizzle ORM (commit migrations and meta for version control)
+
+# Better-Auth
+.better-auth/
+
+# DAML generated bindings (auto-generated from daml build)
+daml.js/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
