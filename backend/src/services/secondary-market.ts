@@ -91,7 +91,8 @@ export class SecondaryMarketService {
   // LOAN LISTING QUERIES
 
   async queryLoanListings(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LoanListingData>[]>> {
     ConsoleLogger.info("Fetching loan listings");
     return this.damlService.queryContracts(
@@ -123,7 +124,8 @@ export class SecondaryMarketService {
     buyer: string,
     offerPrice: string,
     offerTerms: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Making offer on listing: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -141,7 +143,8 @@ export class SecondaryMarketService {
     contractId: string,
     offerCid: string,
     borrower: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Accepting offer for listing: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -158,7 +161,8 @@ export class SecondaryMarketService {
   async cancelListing(
     contractId: string,
     reason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Cancelling listing: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -175,7 +179,8 @@ export class SecondaryMarketService {
   async updateAskingPrice(
     contractId: string,
     newPrice: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Updating asking price for listing: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -192,7 +197,8 @@ export class SecondaryMarketService {
   // LOAN OFFER QUERIES
 
   async queryLoanOffers(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LoanOfferData>[]>> {
     ConsoleLogger.info("Fetching loan offers");
     return this.damlService.queryContracts(
@@ -224,7 +230,8 @@ export class SecondaryMarketService {
   async rejectOffer(
     contractId: string,
     rejectionReason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Rejecting offer: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -241,7 +248,8 @@ export class SecondaryMarketService {
   // SECONDARY LOAN TRANSFER QUERIES
 
   async querySecondaryLoanTransfers(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SecondaryLoanTransferData>[]>> {
     ConsoleLogger.info("Fetching secondary loan transfers");
     return this.damlService.queryContracts(
@@ -260,7 +268,8 @@ export class SecondaryMarketService {
     transferFee: string,
     platformCid: string | undefined,
     assetType: any,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Executing loan transfer: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -284,7 +293,8 @@ export class SecondaryMarketService {
   async cancelTransfer(
     contractId: string,
     cancellationReason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Cancelling transfer: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -301,7 +311,8 @@ export class SecondaryMarketService {
   // TRANSFER SETTLEMENT QUERIES
 
   async queryTransferSettlements(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<TransferSettlementData>[]>> {
     ConsoleLogger.info("Fetching transfer settlements");
     return this.damlService.queryContracts(
@@ -317,7 +328,8 @@ export class SecondaryMarketService {
   async acknowledgeSettlement(
     contractId: string,
     party: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Acknowledging settlement: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -334,7 +346,8 @@ export class SecondaryMarketService {
   // LOAN VALUATION QUERIES
 
   async queryLoanValuations(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LoanValuationData>[]>> {
     ConsoleLogger.info("Fetching loan valuations");
     return this.damlService.queryContracts(
@@ -352,7 +365,8 @@ export class SecondaryMarketService {
     newFairValue: string,
     newDiscountRate: string,
     newMethodology: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Updating loan valuation: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -369,7 +383,8 @@ export class SecondaryMarketService {
   // BORROWER NOTIFICATION QUERIES
 
   async queryBorrowerNotifications(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<BorrowerNotificationData>[]>> {
     ConsoleLogger.info("Fetching borrower notifications");
     return this.damlService.queryContracts(

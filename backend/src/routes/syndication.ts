@@ -36,7 +36,7 @@ syndication.get("/loans", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await syndicationService.getSyndicatedLoans(authToken);
+    const result = await syndicationService.getSyndicatedLoans(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -192,7 +192,7 @@ syndication.get("/formations", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await syndicationService.getSyndicateFormations(authToken);
+    const result = await syndicationService.getSyndicateFormations(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -349,7 +349,7 @@ syndication.get("/votes", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await syndicationService.getSyndicateVotes(authToken);
+    const result = await syndicationService.getSyndicateVotes(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -460,7 +460,7 @@ syndication.post("/votes/:contractId/finalize", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await syndicationService.finalizeVote(contractId, authToken);
+    const result = await syndicationService.finalizeVote(contractId, authToken, user);
 
     if (result.status === 200) {
       return c.json({
@@ -685,7 +685,7 @@ syndication.get("/reports", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await syndicationService.getSyndicateReports(authToken);
+    const result = await syndicationService.getSyndicateReports(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -747,3 +747,4 @@ syndication.post("/reports/:contractId/acknowledge", async (c) => {
 });
 
 export { syndication };
+

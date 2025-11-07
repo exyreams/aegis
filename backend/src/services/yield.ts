@@ -108,7 +108,8 @@ export class YieldService {
   }
 
   async getLiquidityPools(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LiquidityPoolData>[]>> {
     ConsoleLogger.info("Fetching liquidity pools");
     return this.damlService.queryContracts(
@@ -121,7 +122,8 @@ export class YieldService {
 
   async getLiquidityPoolById(
     poolId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LiquidityPoolData> | null>> {
     ConsoleLogger.info(`Fetching liquidity pool: ${poolId}`);
 
@@ -145,7 +147,8 @@ export class YieldService {
 
   async createLiquidityPool(
     poolData: LiquidityPoolData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LiquidityPoolData>>> {
     ConsoleLogger.info(`Creating liquidity pool: ${poolData.poolId}`);
 
@@ -162,7 +165,8 @@ export class YieldService {
     contractId: string,
     participant: string,
     contributionAmount: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Joining pool: ${contractId}`);
 
@@ -184,7 +188,8 @@ export class YieldService {
     contractId: string,
     participant: string,
     lpTokensToRedeem: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Withdrawing from pool: ${contractId}`);
 
@@ -206,7 +211,8 @@ export class YieldService {
     contractId: string,
     yieldAmount: string,
     source: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Distributing yield: ${contractId}`);
 
@@ -227,7 +233,8 @@ export class YieldService {
   async claimYield(
     contractId: string,
     participant: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Claiming yield: ${contractId}`);
 
@@ -247,7 +254,8 @@ export class YieldService {
   async reinvestYield(
     contractId: string,
     participant: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Reinvesting yield: ${contractId}`);
 
@@ -268,7 +276,8 @@ export class YieldService {
     contractId: string,
     loanId: string,
     amount: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Deploying liquidity: ${contractId}`);
 
@@ -291,7 +300,8 @@ export class YieldService {
     loanId: string,
     principalAmount: string,
     interestAmount: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Receiving repayment: ${contractId}`);
 
@@ -313,7 +323,8 @@ export class YieldService {
   async updatePerformanceMetrics(
     contractId: string,
     newMetrics: PoolPerformanceMetrics,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Updating performance metrics: ${contractId}`);
 
@@ -333,7 +344,8 @@ export class YieldService {
   async rebalancePool(
     contractId: string,
     newStrategy: YieldStrategy,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Rebalancing pool: ${contractId}`);
 
@@ -351,7 +363,8 @@ export class YieldService {
   }
 
   async getLPTokens(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LPTokenData>[]>> {
     ConsoleLogger.info("Fetching LP tokens");
     return this.damlService.queryContracts(
@@ -364,7 +377,8 @@ export class YieldService {
 
   async createLPToken(
     tokenData: LPTokenData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LPTokenData>>> {
     ConsoleLogger.info(`Creating LP token: ${tokenData.tokenId}`);
 
@@ -380,7 +394,8 @@ export class YieldService {
   async transferLPToken(
     contractId: string,
     newOwner: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Transferring LP token: ${contractId}`);
 
@@ -400,7 +415,8 @@ export class YieldService {
   async splitLPToken(
     contractId: string,
     amounts: string[],
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Splitting LP token: ${contractId}`);
 
@@ -418,7 +434,8 @@ export class YieldService {
   }
 
   async getYieldOptimizers(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<YieldOptimizerData>[]>> {
     ConsoleLogger.info("Fetching yield optimizers");
     return this.damlService.queryContracts(
@@ -431,7 +448,8 @@ export class YieldService {
 
   async createYieldOptimizer(
     optimizerData: YieldOptimizerData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<YieldOptimizerData>>> {
     ConsoleLogger.info(
       `Creating yield optimizer: ${optimizerData.optimizerId}`
@@ -449,7 +467,8 @@ export class YieldService {
   async optimizeYield(
     contractId: string,
     newAllocations: Array<[string, string]>,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Optimizing yield: ${contractId}`);
 
@@ -471,7 +490,8 @@ export class YieldService {
     newStrategy: YieldStrategy,
     newTargetYield: string,
     newRiskTolerance: RiskTolerance,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Updating optimizer strategy: ${contractId}`);
 
@@ -493,7 +513,8 @@ export class YieldService {
   async addManagedPool(
     contractId: string,
     poolId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Adding managed pool: ${contractId}`);
 
@@ -513,7 +534,8 @@ export class YieldService {
   async removeManagedPool(
     contractId: string,
     poolId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Removing managed pool: ${contractId}`);
 
@@ -531,7 +553,8 @@ export class YieldService {
   }
 
   async getStakingRewards(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<StakingRewardsData>[]>> {
     ConsoleLogger.info("Fetching staking rewards");
     return this.damlService.queryContracts(
@@ -544,7 +567,8 @@ export class YieldService {
 
   async createStakingRewards(
     stakingData: StakingRewardsData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<StakingRewardsData>>> {
     ConsoleLogger.info(`Creating staking rewards: ${stakingData.stakingId}`);
 
@@ -559,7 +583,8 @@ export class YieldService {
 
   async claimStakingRewards(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Claiming staking rewards: ${contractId}`);
 
@@ -576,7 +601,8 @@ export class YieldService {
 
   async unstake(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Unstaking: ${contractId}`);
 
@@ -594,7 +620,8 @@ export class YieldService {
   async accrueRewards(
     contractId: string,
     rewardAmount: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Accruing rewards: ${contractId}`);
 
@@ -612,7 +639,8 @@ export class YieldService {
   }
 
   async getPerformanceBonuses(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<PerformanceBonusData>[]>> {
     ConsoleLogger.info("Fetching performance bonuses");
     return this.damlService.queryContracts(
@@ -625,7 +653,8 @@ export class YieldService {
 
   async createPerformanceBonus(
     bonusData: PerformanceBonusData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<PerformanceBonusData>>> {
     ConsoleLogger.info(`Creating performance bonus: ${bonusData.bonusId}`);
 
@@ -641,7 +670,8 @@ export class YieldService {
   async claimBonus(
     contractId: string,
     participant: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Claiming bonus: ${contractId}`);
 
@@ -660,7 +690,8 @@ export class YieldService {
 
   async markDistributed(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Marking bonus as distributed: ${contractId}`);
 
@@ -680,7 +711,8 @@ export class YieldService {
     contractId: string,
     newStrategy: YieldStrategy,
     newTargetYield: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     const defaultRiskTolerance: RiskTolerance = {
       level: "Moderate",

@@ -81,20 +81,23 @@ export class CollateralService {
   }
 
   async getCollateralPools(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CollateralPoolData>[]>> {
     ConsoleLogger.info("Fetching collateral pools");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("CollateralPool")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async getCollateralPoolById(
     poolId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CollateralPoolData> | null>> {
     ConsoleLogger.info(`Fetching collateral pool: ${poolId}`);
 
@@ -102,7 +105,8 @@ export class CollateralService {
       {
         templateIds: [getTemplateId("CollateralPool")],
       },
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200 && result.result) {
@@ -118,7 +122,8 @@ export class CollateralService {
 
   async createCollateralPool(
     poolData: CollateralPoolData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CollateralPoolData>>> {
     ConsoleLogger.info(`Creating collateral pool: ${poolData.poolId}`);
 
@@ -127,7 +132,8 @@ export class CollateralService {
         templateId: getTemplateId("CollateralPool"),
         payload: poolData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -135,8 +141,9 @@ export class CollateralService {
     contractId: string,
     newAssetValues: Array<[string, string]>,
     valuationSource: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Updating collateral valuation: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -149,7 +156,8 @@ export class CollateralService {
           valuationSource,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -157,8 +165,9 @@ export class CollateralService {
     contractId: string,
     deadline: string,
     requiredAmount: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Triggering margin call: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -171,15 +180,17 @@ export class CollateralService {
           requiredAmount,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async respondToMarginCall(
     contractId: string,
     additionalAssets: CollateralAsset[],
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Responding to margin call: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -191,15 +202,17 @@ export class CollateralService {
           additionalAssets,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async initiateLiquidation(
     contractId: string,
     reason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Initiating liquidation: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -211,7 +224,8 @@ export class CollateralService {
           reason,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -220,8 +234,9 @@ export class CollateralService {
     assetToRemove: string,
     assetToAdd: CollateralAsset,
     reason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Requesting collateral substitution: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -235,14 +250,16 @@ export class CollateralService {
           reason,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async releaseCollateral(
     contractId: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Releasing collateral: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -252,15 +269,17 @@ export class CollateralService {
         choice: DAML_CONFIG.choices.CollateralPool.ReleaseCollateral,
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async partialRelease(
     contractId: string,
     assetIdsToRelease: string[],
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Partial collateral release: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -272,26 +291,30 @@ export class CollateralService {
           assetIdsToRelease,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async getSubstitutionRequests(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SubstitutionRequestData>[]>> {
     ConsoleLogger.info("Fetching substitution requests");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("SubstitutionRequest")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async approveSubstitution(
     contractId: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Approving substitution: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -301,15 +324,17 @@ export class CollateralService {
         choice: DAML_CONFIG.choices.SubstitutionRequest.ApproveSubstitution,
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async rejectSubstitution(
     contractId: string,
     rejectionReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Rejecting substitution: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -321,7 +346,8 @@ export class CollateralService {
           rejectionReason,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -332,7 +358,7 @@ export class CollateralService {
     assetType: any,
     repaymentTerms: any,
     authToken: string
-  ): Promise<DamlResponse<any>> {
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Requesting emergency support: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -352,14 +378,16 @@ export class CollateralService {
   }
 
   async getLiquidations(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CollateralLiquidationData>[]>> {
     ConsoleLogger.info("Fetching collateral liquidations");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("CollateralLiquidation")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -381,8 +409,9 @@ export class CollateralService {
     liquidationCosts: string,
     platformCid: string | undefined,
     assetType: any,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Executing liquidation: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -399,15 +428,17 @@ export class CollateralService {
           assetType,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async cancelLiquidation(
     contractId: string,
     cancellationReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Cancelling liquidation: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -419,19 +450,22 @@ export class CollateralService {
           cancellationReason,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async getSettlements(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LiquidationSettlementData>[]>> {
     ConsoleLogger.info("Fetching liquidation settlements");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("LiquidationSettlement")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -449,8 +483,9 @@ export class CollateralService {
 
   async acknowledgeSettlement(
     contractId: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Acknowledging settlement: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -460,7 +495,8 @@ export class CollateralService {
         choice: DAML_CONFIG.choices.LiquidationSettlement.AcknowledgeSettlement,
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
   }
 

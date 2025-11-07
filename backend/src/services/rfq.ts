@@ -94,7 +94,8 @@ export class RFQService {
   // RFQ QUERIES
 
   async queryRFQs(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<RFQData>[]>> {
     ConsoleLogger.info("Fetching RFQs");
     return this.damlService.queryContracts(
@@ -107,7 +108,8 @@ export class RFQService {
 
   async createRFQ(
     rfqData: RFQData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<RFQData>>> {
     ConsoleLogger.info(`Creating RFQ: ${rfqData.rfqId}`);
     return this.damlService.createContract(
@@ -129,7 +131,8 @@ export class RFQService {
     repaymentSchedule: any,
     proposedCovenants: any[],
     additionalTerms: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Submitting bid for RFQ: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -152,7 +155,8 @@ export class RFQService {
 
   async incrementBidCount(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Incrementing bid count: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -169,7 +173,8 @@ export class RFQService {
   async acceptBid(
     contractId: string,
     bidCid: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Accepting bid for RFQ: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -185,7 +190,8 @@ export class RFQService {
 
   async startReview(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Starting review for RFQ: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -202,7 +208,8 @@ export class RFQService {
   async cancelRFQ(
     contractId: string,
     reason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Cancelling RFQ: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -219,7 +226,8 @@ export class RFQService {
   async extendExpiration(
     contractId: string,
     newExpiresAt: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Extending RFQ expiration: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -235,7 +243,8 @@ export class RFQService {
 
   async markExpired(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Marking RFQ as expired: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -252,7 +261,8 @@ export class RFQService {
   // BID QUERIES
 
   async queryBids(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<BidData>[]>> {
     ConsoleLogger.info("Fetching bids");
     return this.damlService.queryContracts(
@@ -267,7 +277,8 @@ export class RFQService {
 
   async withdrawBid(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Withdrawing bid: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -285,7 +296,8 @@ export class RFQService {
     contractId: string,
     newInterestRateStructure: any,
     newRepaymentSchedule: any,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Modifying bid: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -301,7 +313,8 @@ export class RFQService {
 
   async markBidUnderReview(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Marking bid under review: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -318,7 +331,8 @@ export class RFQService {
   async rejectBid(
     contractId: string,
     reason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Rejecting bid: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -335,7 +349,8 @@ export class RFQService {
   // LOAN PROPOSAL QUERIES
 
   async queryLoanProposals(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LoanProposalData>[]>> {
     ConsoleLogger.info("Fetching loan proposals");
     return this.damlService.queryContracts(
@@ -350,7 +365,8 @@ export class RFQService {
 
   async acceptLoan(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Accepting loan proposal: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -367,7 +383,8 @@ export class RFQService {
   async rejectLoan(
     contractId: string,
     reason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Rejecting loan proposal: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -384,7 +401,8 @@ export class RFQService {
   // LOAN QUERIES
 
   async queryLoans(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<LoanData>[]>> {
     ConsoleLogger.info("Fetching loans");
     return this.damlService.queryContracts(
@@ -402,7 +420,8 @@ export class RFQService {
     paymentAmount: string,
     principalPortion: string,
     interestPortion: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Making payment for loan: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -419,7 +438,8 @@ export class RFQService {
   async makeEarlyRepayment(
     contractId: string,
     repaymentAmount: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Making early repayment for loan: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -435,7 +455,8 @@ export class RFQService {
 
   async markDelinquent(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Marking loan as delinquent: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -454,7 +475,8 @@ export class RFQService {
     reason: string,
     platformCid: string | undefined,
     assetType: any,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Marking loan as default: ${contractId}`);
     return this.damlService.exerciseChoice(
@@ -479,7 +501,8 @@ export class RFQService {
     newInterestRateStructure: any,
     newRepaymentSchedule: any,
     newCovenants: any[],
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Restructuring loan: ${contractId}`);
     return this.damlService.exerciseChoice(

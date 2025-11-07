@@ -5,12 +5,12 @@
  * defaults, and restructuring.
  */
 
-import { Hono } from "hono";
-import { DamlService } from "../services/daml";
-import { ConsoleLogger } from "../utils/logger";
-import { requireAuth } from "../middleware/auth";
-import { auth } from "../lib/auth";
-import { DAML_CONFIG } from "../config/daml";
+import {Hono} from "hono";
+import {DamlService} from "../services/daml";
+import {ConsoleLogger} from "../utils/logger";
+import {requireAuth} from "../middleware/auth";
+import {auth} from "../lib/auth";
+import {DAML_CONFIG} from "../config/daml";
 
 const loans = new Hono<{
   Variables: {
@@ -60,11 +60,9 @@ async function generateDamlTokenForUser(
       throw new Error("No JWT secret available");
     }
 
-    const token = jwt.default.sign(jwtPayload, secret, {
-      algorithm: "HS256",
+    return jwt.default.sign(jwtPayload, secret, {
+        algorithm: "HS256",
     });
-
-    return token;
   } catch (error) {
     console.error("Failed to generate Better Auth JWT token:", error);
     throw new Error("Failed to generate authentication token");
@@ -86,7 +84,7 @@ loans.get("/", async (c) => {
     const damlToken = await generateDamlTokenForUser(user);
     const authToken = `Bearer ${damlToken}`;
 
-    const result = await damlService.getLoans(authToken);
+    const result = await damlService.getLoans(authToken, user);
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request("GET", "/api/loans", result.status, duration);
@@ -122,7 +120,7 @@ loans.get("/proposals", async (c) => {
     const damlToken = await generateDamlTokenForUser(user);
     const authToken = `Bearer ${damlToken}`;
 
-    const result = await damlService.getLoanProposals(authToken);
+    const result = await damlService.getLoanProposals(authToken, user);
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -166,7 +164,7 @@ loans.post("/proposals/:contractId/accept", async (c) => {
     const damlToken = await generateDamlTokenForUser(user);
     const authToken = `Bearer ${damlToken}`;
 
-    const result = await damlService.acceptLoan(contractId, authToken);
+    const result = await damlService.acceptLoan(contractId, authToken, user);
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -228,7 +226,8 @@ loans.post("/proposals/:contractId/reject", async (c) => {
         choice: "RejectLoan",
         argument: { reason: body.reason },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -294,7 +293,8 @@ loans.post("/:contractId/payment", async (c) => {
           interestPortion: body.interestPortion,
         },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -357,7 +357,8 @@ loans.post("/:contractId/early-repayment", async (c) => {
         choice: "MakeEarlyRepayment",
         argument: { repaymentAmount: body.repaymentAmount },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -421,7 +422,8 @@ loans.post("/:contractId/mark-delinquent", async (c) => {
         choice: "MarkDelinquent",
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -487,7 +489,8 @@ loans.post("/:contractId/mark-default", async (c) => {
           assetType: body.assetType,
         },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -554,7 +557,8 @@ loans.post("/:contractId/restructure", async (c) => {
           newMaturityDate: body.newMaturityDate,
         },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;

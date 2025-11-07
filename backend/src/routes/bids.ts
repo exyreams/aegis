@@ -7,7 +7,6 @@
 
 import { Hono } from "hono";
 import { DamlService } from "../services/daml";
-import { userService } from "../services/user";
 import { ConsoleLogger } from "../utils/logger";
 import { requireAuth } from "../middleware/auth";
 import { auth } from "../lib/auth";
@@ -174,7 +173,7 @@ bids.get("/my-bids", async (c) => {
           }
 
           // Find the matching RFQ by constructing the same identifier
-          for (const [rfqId, rfq] of rfqMap) {
+          for (const [, rfq] of rfqMap) {
             const rfqData = rfq.payload as RFQData;
             const rfqLookupId = `${rfqData.borrower}:${rfqData.rfqId}`;
 
@@ -187,7 +186,7 @@ bids.get("/my-bids", async (c) => {
 
           // If no exact match found, try to match by borrower as fallback
           if (!associatedRFQ) {
-            for (const [rfqId, rfq] of rfqMap) {
+            for (const [, rfq] of rfqMap) {
               const rfqData = rfq.payload as RFQData;
               if (rfqData.borrower === bidPayload.borrower) {
                 associatedRFQ = rfq;
@@ -665,7 +664,8 @@ bids.post("/:contractId/withdraw", async (c) => {
         choice: "WithdrawBid",
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -724,7 +724,8 @@ bids.post("/:contractId/modify", async (c) => {
           newAdditionalTerms: body.newAdditionalTerms,
         },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -780,7 +781,8 @@ bids.post("/:contractId/mark-review", async (c) => {
         choice: "MarkUnderReview",
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -840,7 +842,8 @@ bids.post("/:contractId/reject", async (c) => {
         choice: "RejectBid",
         argument: { reason: body.reason },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;

@@ -47,7 +47,7 @@ secondaryMarket.get("/listings", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await secondaryMarketService.queryLoanListings(authToken);
+    const result = await secondaryMarketService.queryLoanListings(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -292,7 +292,7 @@ secondaryMarket.get("/offers", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await secondaryMarketService.queryLoanOffers(authToken);
+    const result = await secondaryMarketService.queryLoanOffers(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -601,7 +601,7 @@ secondaryMarket.get("/valuations", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await secondaryMarketService.queryLoanValuations(authToken);
+    const result = await secondaryMarketService.queryLoanValuations(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -743,3 +743,4 @@ secondaryMarket.post("/notifications/:contractId/acknowledge", async (c) => {
 });
 
 export { secondaryMarket };
+

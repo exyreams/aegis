@@ -6,13 +6,13 @@
  */
 
 import { Hono } from "hono";
+import type { BidData, RFQData } from "../services/rfq";
 import { RFQService } from "../services/rfq";
 import { userService } from "../services/user";
 import { ConsoleLogger } from "../utils/logger";
 import { requireAuth } from "../middleware/auth";
 import { auth } from "../lib/auth";
 import { DAML_CONFIG } from "../config/daml";
-import type { RFQData, BidData } from "../services/rfq";
 
 interface CollateralAsset {
   assetId: string;
@@ -81,11 +81,9 @@ async function generateDamlTokenForUser(
       throw new Error("No JWT secret available");
     }
 
-    const token = jwt.default.sign(jwtPayload, secret, {
+    return jwt.default.sign(jwtPayload, secret, {
       algorithm: "HS256",
     });
-
-    return token;
   } catch (error) {
     console.error("Failed to generate Better Auth JWT token:", error);
     throw new Error("Failed to generate authentication token");
@@ -110,7 +108,7 @@ rfq.get("/", async (c) => {
     const limit = parseInt(c.req.query("limit") || "50");
     const offset = parseInt(c.req.query("offset") || "0");
 
-    const result = await rfqService.queryRFQs(authToken);
+    const result = await rfqService.queryRFQs(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("GET", "/api/rfqs", result.status, duration);
@@ -244,7 +242,7 @@ rfq.get("/:contractId", async (c) => {
   try {
     const damlToken = await generateDamlTokenForUser(user);
     const authToken = `Bearer ${damlToken}`;
-    const result = await rfqService.queryRFQs(authToken);
+    const result = await rfqService.queryRFQs(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request(
@@ -425,7 +423,7 @@ rfq.post("/", async (c) => {
 
     const rfqId = `RFQ-${Date.now()}-${Math.random()
       .toString(36)
-      .substr(2, 9)}`;
+      .substring(2, 11)}`;
 
     const createAssetType = (category: string, asset: string) => {
       return {
@@ -522,7 +520,7 @@ rfq.post("/", async (c) => {
       acceptedBidId: undefined,
     };
 
-    const result = await rfqService.createRFQ(rfqData, authToken);
+    const result = await rfqService.createRFQ(rfqData, authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("POST", "/api/rfqs", result.status, duration);
@@ -639,7 +637,7 @@ rfq.post("/:contractId/bids", async (c) => {
     }
 
     // Get the RFQ data to construct proper bid reference
-    const rfqResult = await rfqService.queryRFQs(authToken);
+    const rfqResult = await rfqService.queryRFQs(authToken, user);
     if (rfqResult.status !== 200) {
       return c.json(
         {
@@ -741,7 +739,8 @@ rfq.post("/:contractId/bids", async (c) => {
       { frequency: body.paymentFrequency, installments: [] },
       [],
       body.additionalTerms,
-      authToken
+      authToken,
+      user
     );
     const duration = Date.now() - startTime;
 
@@ -809,7 +808,7 @@ rfq.get("/:contractId/bids", async (c) => {
     const authToken = `Bearer ${damlToken}`;
 
     // First, verify the user has access to this RFQ
-    const rfqResult = await rfqService.queryRFQs(authToken);
+    const rfqResult = await rfqService.queryRFQs(authToken, user);
     if (rfqResult.status !== 200) {
       return c.json(
         {
@@ -853,7 +852,7 @@ rfq.get("/:contractId/bids", async (c) => {
     }
 
     // Get all bids
-    const bidsResult = await rfqService.queryBids(authToken);
+    const bidsResult = await rfqService.queryBids(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request(
@@ -1000,7 +999,7 @@ rfq.get("/bids/my-bids", async (c) => {
     }
 
     // Get all bids
-    const bidsResult = await rfqService.queryBids(authToken);
+    const bidsResult = await rfqService.queryBids(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request(
@@ -1020,7 +1019,7 @@ rfq.get("/bids/my-bids", async (c) => {
       });
 
       // Get RFQ details for each bid
-      const rfqsResult = await rfqService.queryRFQs(authToken);
+      const rfqsResult = await rfqService.queryRFQs(authToken, user);
       const allRFQs = Array.isArray(rfqsResult.result) ? rfqsResult.result : [];
 
       // Format bids with RFQ information
@@ -1124,7 +1123,8 @@ rfq.post("/:contractId/accept-bid", async (c) => {
     const result = await rfqService.acceptBid(
       contractId,
       body.bidContractId,
-      authToken
+      authToken,
+      user
     );
     const duration = Date.now() - startTime;
 
@@ -1186,7 +1186,7 @@ rfq.post("/:contractId/start-review", async (c) => {
     const damlToken = await generateDamlTokenForUser(user);
     const authToken = `Bearer ${damlToken}`;
 
-    const result = await rfqService.startReview(contractId, authToken);
+    const result = await rfqService.startReview(contractId, authToken, user);
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -1238,7 +1238,8 @@ rfq.post("/:contractId/cancel", async (c) => {
     const result = await rfqService.cancelRFQ(
       contractId,
       body.reason,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1291,7 +1292,8 @@ rfq.post("/:contractId/extend", async (c) => {
     const result = await rfqService.extendExpiration(
       contractId,
       body.newExpiresAt,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1343,7 +1345,7 @@ rfq.post("/:contractId/mark-expired", async (c) => {
     const damlToken = await generateDamlTokenForUser(user);
     const authToken = `Bearer ${damlToken}`;
 
-    const result = await rfqService.markExpired(contractId, authToken);
+    const result = await rfqService.markExpired(contractId, authToken, user);
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(

@@ -137,7 +137,8 @@ export class SyndicationService {
   }
 
   async getSyndicatedLoans(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SyndicatedLoanData>[]>> {
     ConsoleLogger.info("Fetching syndicated loans");
     return this.damlService.queryContracts(
@@ -150,7 +151,8 @@ export class SyndicationService {
 
   async getSyndicatedLoanById(
     loanId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SyndicatedLoanData> | null>> {
     ConsoleLogger.info(`Fetching syndicated loan: ${loanId}`);
 
@@ -177,7 +179,8 @@ export class SyndicationService {
     paymentAmount: string,
     principalPortion: string,
     interestPortion: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Making syndicated payment: ${contractId}`);
 
@@ -199,7 +202,8 @@ export class SyndicationService {
   async markSyndicatedDefault(
     contractId: string,
     defaultReason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Marking syndicated loan as default: ${contractId}`);
 
@@ -223,7 +227,8 @@ export class SyndicationService {
     description: string,
     votingDeadline: string,
     requiredMajority: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Proposing syndicate decision: ${contractId}`);
 
@@ -247,7 +252,8 @@ export class SyndicationService {
   async addSyndicateParticipant(
     contractId: string,
     newParticipant: SyndicateParticipant,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Adding syndicate participant: ${contractId}`);
 
@@ -267,7 +273,8 @@ export class SyndicationService {
   async removeSyndicateParticipant(
     contractId: string,
     participantToRemove: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Removing syndicate participant: ${contractId}`);
 
@@ -286,7 +293,8 @@ export class SyndicationService {
 
   async distributeArrangementFees(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Distributing arrangement fees: ${contractId}`);
 
@@ -302,7 +310,8 @@ export class SyndicationService {
   }
 
   async getSyndicateVotes(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SyndicateDecisionVoteData>[]>> {
     ConsoleLogger.info("Fetching syndicate votes");
     return this.damlService.queryContracts(
@@ -316,7 +325,8 @@ export class SyndicationService {
   async voteFor(
     contractId: string,
     voter: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Voting for decision: ${contractId}`);
 
@@ -336,7 +346,8 @@ export class SyndicationService {
   async voteAgainst(
     contractId: string,
     voter: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Voting against decision: ${contractId}`);
 
@@ -355,7 +366,8 @@ export class SyndicationService {
 
   async finalizeVote(
     contractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Finalizing vote: ${contractId}`);
 
@@ -371,7 +383,8 @@ export class SyndicationService {
   }
 
   async getSyndicateFormations(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SyndicateFormationData>[]>> {
     ConsoleLogger.info("Fetching syndicate formations");
     return this.damlService.queryContracts(
@@ -384,7 +397,8 @@ export class SyndicationService {
 
   async createSyndicateFormation(
     formationData: SyndicateFormationData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SyndicateFormationData>>> {
     ConsoleLogger.info(
       `Creating syndicate formation: ${formationData.formationId}`
@@ -405,7 +419,8 @@ export class SyndicationService {
     profile: LenderProfile,
     commitmentAmount: string,
     role: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Committing to syndicate: ${contractId}`);
 
@@ -432,7 +447,8 @@ export class SyndicationService {
     collateralAssets: any[],
     covenants: LoanCovenant[],
     loanDuration: { microseconds: string },
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Finalizing syndicate: ${contractId}`);
 
@@ -456,7 +472,8 @@ export class SyndicationService {
   async cancelFormation(
     contractId: string,
     reason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Cancelling syndicate formation: ${contractId}`);
 
@@ -474,7 +491,8 @@ export class SyndicationService {
   }
 
   async getSyndicateReports(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SyndicateReportData>[]>> {
     ConsoleLogger.info("Fetching syndicate reports");
     return this.damlService.queryContracts(
@@ -487,7 +505,8 @@ export class SyndicationService {
 
   async createSyndicateReport(
     reportData: SyndicateReportData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<SyndicateReportData>>> {
     ConsoleLogger.info(`Creating syndicate report: ${reportData.reportId}`);
 
@@ -503,7 +522,8 @@ export class SyndicationService {
   async acknowledgeReport(
     contractId: string,
     participant: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Acknowledging report: ${contractId}`);
 

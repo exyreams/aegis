@@ -36,7 +36,7 @@ yieldRoutes.get("/pools", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.getLiquidityPools(authToken);
+    const result = await yieldService.getLiquidityPools(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -72,7 +72,7 @@ yieldRoutes.get("/pools/:poolId", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.getLiquidityPoolById(poolId, authToken);
+    const result = await yieldService.getLiquidityPoolById(poolId, authToken, user);
 
     if (result.status === 200) {
       if (result.result) {
@@ -110,7 +110,7 @@ yieldRoutes.post("/pools", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.createLiquidityPool(body, authToken);
+    const result = await yieldService.createLiquidityPool(body, authToken, user);
 
     if (result.status === 200 && result.result) {
       return c.json(
@@ -297,7 +297,7 @@ yieldRoutes.get("/lp-tokens", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.getLPTokens(authToken);
+    const result = await yieldService.getLPTokens(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -369,7 +369,7 @@ yieldRoutes.get("/staking", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.getStakingRewards(authToken);
+    const result = await yieldService.getStakingRewards(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -440,7 +440,7 @@ yieldRoutes.post("/staking/:contractId/unstake", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.unstake(contractId, authToken);
+    const result = await yieldService.unstake(contractId, authToken, user);
 
     if (result.status === 200) {
       return c.json({
@@ -710,7 +710,7 @@ yieldRoutes.get("/optimizers", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.getYieldOptimizers(authToken);
+    const result = await yieldService.getYieldOptimizers(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -942,7 +942,7 @@ yieldRoutes.get("/bonuses", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await yieldService.getPerformanceBonuses(authToken);
+    const result = await yieldService.getPerformanceBonuses(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -1042,3 +1042,4 @@ yieldRoutes.post("/bonuses/:contractId/mark-distributed", async (c) => {
 });
 
 export { yieldRoutes };
+

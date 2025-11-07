@@ -23,11 +23,11 @@ const damlService = DamlService.getInstance();
 daml.use("*", requireAuth);
 daml.get("/parties", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
-    const result = await damlService.getParties(authToken);
+    const result = await damlService.getParties(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("GET", "/api/daml/parties", result.status, duration);
@@ -49,12 +49,12 @@ daml.get("/parties", async (c) => {
 
 daml.post("/query", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const body = await c.req.json();
-    const result = await damlService.queryContracts(body, authToken);
+    const result = await damlService.queryContracts(body, authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("POST", "/api/daml/query", result.status, duration);
@@ -78,12 +78,12 @@ daml.post("/query", async (c) => {
 
 daml.post("/create", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const body = await c.req.json();
-    const result = await damlService.createContract(body, authToken);
+    const result = await damlService.createContract(body, authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("POST", "/api/daml/create", result.status, duration);
@@ -107,12 +107,12 @@ daml.post("/create", async (c) => {
 
 daml.post("/exercise", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const body = await c.req.json();
-    const result = await damlService.exerciseChoice(body, authToken);
+    const result = await damlService.exerciseChoice(body, authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request(
@@ -139,11 +139,11 @@ daml.post("/exercise", async (c) => {
 
 daml.get("/rfqs", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
-    const result = await damlService.getRFQs(authToken);
+    const result = await damlService.getRFQs(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("GET", "/api/daml/rfqs", result.status, duration);
@@ -165,11 +165,11 @@ daml.get("/rfqs", async (c) => {
 
 daml.get("/bids", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
-    const result = await damlService.getBids(authToken);
+    const result = await damlService.getBids(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("GET", "/api/daml/bids", result.status, duration);
@@ -191,11 +191,11 @@ daml.get("/bids", async (c) => {
 
 daml.get("/loans", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
-    const result = await damlService.getLoans(authToken);
+    const result = await damlService.getLoans(authToken, user);
     const duration = Date.now() - startTime;
 
     ConsoleLogger.request("GET", "/api/daml/loans", result.status, duration);

@@ -34,7 +34,7 @@ credit.get("/profiles", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.getCreditProfiles(authToken);
+    const result = await creditService.getCreditProfiles(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -72,7 +72,8 @@ credit.get("/profiles/:party", async (c) => {
   try {
     const result = await creditService.getCreditProfileByParty(
       party,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -111,7 +112,11 @@ credit.post("/profiles", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.createCreditProfile(body, authToken);
+    const result = await creditService.createCreditProfile(
+      body,
+      authToken,
+      user
+    );
 
     if (result.status === 200 && result.result) {
       return c.json(
@@ -148,7 +153,7 @@ credit.get("/risk-assessments", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.getRiskAssessments(authToken);
+    const result = await creditService.getRiskAssessments(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -184,7 +189,11 @@ credit.post("/risk-assessments", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.createRiskAssessment(body, authToken);
+    const result = await creditService.createRiskAssessment(
+      body,
+      authToken,
+      user
+    );
 
     if (result.status === 200 && result.result) {
       return c.json(
@@ -230,7 +239,8 @@ credit.post("/profiles/:contractId/record-loan", async (c) => {
       contractId,
       body.loanId,
       body.loanAmount,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -396,7 +406,8 @@ credit.post("/profiles/:contractId/update-privacy", async (c) => {
     const result = await creditService.updatePrivacyLevel(
       contractId,
       body.newPrivacyLevel,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -433,7 +444,11 @@ credit.post("/risk-assessments/:contractId/accept", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.acceptAssessment(contractId, authToken);
+    const result = await creditService.acceptAssessment(
+      contractId,
+      authToken,
+      user
+    );
 
     if (result.status === 200) {
       return c.json({
@@ -470,7 +485,8 @@ credit.post("/risk-assessments/:contractId/reject", async (c) => {
     const result = await creditService.rejectAssessment(
       contractId,
       body.rejectionReason,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -505,7 +521,7 @@ credit.get("/portfolio-risks", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.getPortfolioRisks(authToken);
+    const result = await creditService.getPortfolioRisks(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -542,7 +558,11 @@ credit.post("/portfolio-risks", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.createPortfolioRisk(body, authToken);
+    const result = await creditService.createPortfolioRisk(
+      body,
+      authToken,
+      user
+    );
 
     if (result.status === 200 && result.result) {
       return c.json(
@@ -666,7 +686,7 @@ credit.get("/insurance-policies", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.getInsurancePolicies(authToken);
+    const result = await creditService.getInsurancePolicies(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -703,7 +723,11 @@ credit.post("/insurance-policies", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.createInsurancePolicy(body, authToken);
+    const result = await creditService.createInsurancePolicy(
+      body,
+      authToken,
+      user
+    );
 
     if (result.status === 200 && result.result) {
       return c.json(
@@ -822,7 +846,7 @@ credit.get("/guarantees", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.getGuarantees(authToken);
+    const result = await creditService.getGuarantees(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -859,7 +883,7 @@ credit.post("/guarantees", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.createGuarantee(body, authToken);
+    const result = await creditService.createGuarantee(body, authToken, user);
 
     if (result.status === 200 && result.result) {
       return c.json(
@@ -940,7 +964,7 @@ credit.get("/inquiries", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.getInquiries(authToken);
+    const result = await creditService.getInquiries(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -977,7 +1001,7 @@ credit.post("/inquiries", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await creditService.createInquiry(body, authToken);
+    const result = await creditService.createInquiry(body, authToken, user);
 
     if (result.status === 200 && result.result) {
       return c.json(

@@ -114,20 +114,23 @@ export class CreditService {
   }
 
   async getCreditProfiles(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CreditProfileData>[]>> {
     ConsoleLogger.info("Fetching credit profiles");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("CreditProfileContract")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async getCreditProfileByParty(
     party: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CreditProfileData> | null>> {
     ConsoleLogger.info(`Fetching credit profile for party: ${party}`);
 
@@ -135,7 +138,8 @@ export class CreditService {
       {
         templateIds: [getTemplateId("CreditProfileContract")],
       },
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200 && result.result) {
@@ -151,7 +155,8 @@ export class CreditService {
 
   async createCreditProfile(
     profileData: CreditProfileData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CreditProfileData>>> {
     ConsoleLogger.info(
       `Creating credit profile for party: ${profileData.party}`
@@ -162,7 +167,8 @@ export class CreditService {
         templateId: getTemplateId("CreditProfileContract"),
         payload: profileData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -170,8 +176,9 @@ export class CreditService {
     contractId: string,
     loanId: string,
     loanAmount: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Recording loan origination: ${loanId}`);
 
     return this.damlService.exerciseChoice(
@@ -184,7 +191,8 @@ export class CreditService {
           loanAmount,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -195,7 +203,7 @@ export class CreditService {
     daysToRepay: number,
     wasOnTime: boolean,
     authToken: string
-  ): Promise<DamlResponse<any>> {
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Recording repayment for loan: ${loanId}`);
 
     return this.damlService.exerciseChoice(
@@ -223,7 +231,7 @@ export class CreditService {
     platformCid: string | undefined,
     assetType: any,
     authToken: string
-  ): Promise<DamlResponse<any>> {
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Recording default for loan: ${loanId}`);
 
     return this.damlService.exerciseChoice(
@@ -252,7 +260,7 @@ export class CreditService {
     resolutionDate: string,
     recoveryAmount: string,
     authToken: string
-  ): Promise<DamlResponse<any>> {
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Recording default resolution for loan: ${loanId}`);
 
     return this.damlService.exerciseChoice(
@@ -274,8 +282,9 @@ export class CreditService {
   async updatePrivacyLevel(
     contractId: string,
     newPrivacyLevel: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Updating privacy level: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -287,25 +296,29 @@ export class CreditService {
           newPrivacyLevel,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async getRiskAssessments(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<RiskAssessmentData>[]>> {
     ConsoleLogger.info("Fetching risk assessments");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("RiskAssessment")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async createRiskAssessment(
     assessmentData: RiskAssessmentData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<RiskAssessmentData>>> {
     ConsoleLogger.info(
       `Creating risk assessment: ${assessmentData.assessmentId}`
@@ -316,14 +329,16 @@ export class CreditService {
         templateId: getTemplateId("RiskAssessment"),
         payload: assessmentData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async acceptAssessment(
     contractId: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Accepting risk assessment: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -333,15 +348,17 @@ export class CreditService {
         choice: DAML_CONFIG.choices.RiskAssessment.AcceptAssessment,
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async rejectAssessment(
     contractId: string,
     rejectionReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Rejecting risk assessment: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -353,25 +370,29 @@ export class CreditService {
           rejectionReason,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async getPortfolioRisks(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<PortfolioRiskData>[]>> {
     ConsoleLogger.info("Fetching portfolio risks");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("PortfolioRisk")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async createPortfolioRisk(
     portfolioData: PortfolioRiskData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<PortfolioRiskData>>> {
     ConsoleLogger.info(`Creating portfolio risk: ${portfolioData.portfolioId}`);
 
@@ -380,7 +401,8 @@ export class CreditService {
         templateId: getTemplateId("PortfolioRisk"),
         payload: portfolioData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -393,7 +415,7 @@ export class CreditService {
     newConcentrationByAssetType: Array<[string, string]>,
     newRiskMetrics: RiskMetrics,
     authToken: string
-  ): Promise<DamlResponse<any>> {
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Updating portfolio risk: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -419,7 +441,7 @@ export class CreditService {
     maxBorrowerConcentration: string,
     maxAssetTypeConcentration: string,
     authToken: string
-  ): Promise<DamlResponse<any>> {
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Checking concentration limits: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -438,21 +460,24 @@ export class CreditService {
 
   // Insurance methods
   async getInsurancePolicies(
-    authToken: string
-  ): Promise<DamlResponse<DamlContract<any>[]>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse<DamlContract[]>> {
     ConsoleLogger.info("Fetching insurance policies");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("CreditInsurance")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async createInsurancePolicy(
     policyData: any,
-    authToken: string
-  ): Promise<DamlResponse<DamlContract<any>>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse<DamlContract>> {
     ConsoleLogger.info(`Creating insurance policy: ${policyData.policyId}`);
 
     return this.damlService.createContract(
@@ -460,7 +485,8 @@ export class CreditService {
         templateId: getTemplateId("CreditInsurance"),
         payload: policyData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -469,8 +495,9 @@ export class CreditService {
     defaultAmount: string,
     claimDate: string,
     claimEvidence: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Filing insurance claim: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -484,15 +511,17 @@ export class CreditService {
           claimEvidence,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async cancelInsurance(
     contractId: string,
     cancellationReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Cancelling insurance: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -504,27 +533,31 @@ export class CreditService {
           cancellationReason,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   // Guarantee methods
   async getGuarantees(
-    authToken: string
-  ): Promise<DamlResponse<DamlContract<any>[]>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse<DamlContract[]>> {
     ConsoleLogger.info("Fetching guarantees");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("CreditGuarantee")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async createGuarantee(
     guaranteeData: any,
-    authToken: string
-  ): Promise<DamlResponse<DamlContract<any>>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse<DamlContract>> {
     ConsoleLogger.info(`Creating guarantee: ${guaranteeData.guaranteeId}`);
 
     return this.damlService.createContract(
@@ -532,7 +565,8 @@ export class CreditService {
         templateId: getTemplateId("CreditGuarantee"),
         payload: guaranteeData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -541,8 +575,9 @@ export class CreditService {
     loanId: string,
     defaultAmount: string,
     invokeDate: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Invoking guarantee: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -556,26 +591,30 @@ export class CreditService {
           invokeDate,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   // Inquiry methods
   async getInquiries(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CreditInquiryData>[]>> {
     ConsoleLogger.info("Fetching credit inquiries");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("CreditInquiry")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async createInquiry(
     inquiryData: CreditInquiryData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<CreditInquiryData>>> {
     ConsoleLogger.info(`Creating credit inquiry: ${inquiryData.inquiryId}`);
 
@@ -584,15 +623,17 @@ export class CreditService {
         templateId: getTemplateId("CreditInquiry"),
         payload: inquiryData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async approveInquiry(
     contractId: string,
     creditProfile: CreditProfile,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Approving credit inquiry: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -604,15 +645,17 @@ export class CreditService {
           creditProfile,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async declineInquiry(
     contractId: string,
     reason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Declining credit inquiry: ${contractId}`);
 
     return this.damlService.exerciseChoice(
@@ -624,7 +667,8 @@ export class CreditService {
           reason,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 

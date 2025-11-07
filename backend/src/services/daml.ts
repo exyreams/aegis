@@ -520,24 +520,28 @@ export class DamlService {
   }
 
   async getLoans(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<any>[]>> {
     return this.queryContracts(
       {
         templateIds: [getTemplateId("Loan")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async getLoanProposals(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<any>[]>> {
     return this.queryContracts(
       {
         templateIds: [getTemplateId("LoanProposal")],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -636,7 +640,8 @@ export class DamlService {
 
   async acceptLoan(
     proposalContractId: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     return this.exerciseChoice(
       {
@@ -645,7 +650,8 @@ export class DamlService {
         choice: DAML_CONFIG.choices.LoanProposal.AcceptLoan,
         argument: {},
       },
-      authToken
+      authToken,
+      user
     );
   }
 

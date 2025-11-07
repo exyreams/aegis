@@ -34,7 +34,7 @@ collateral.get("/pools", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await collateralService.getCollateralPools(authToken);
+    const result = await collateralService.getCollateralPools(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -72,7 +72,8 @@ collateral.get("/pools/:poolId", async (c) => {
   try {
     const result = await collateralService.getCollateralPoolById(
       poolId,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -113,7 +114,8 @@ collateral.post("/pools", async (c) => {
   try {
     const result = await collateralService.createCollateralPool(
       body,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200 && result.result) {
@@ -157,7 +159,8 @@ collateral.post("/pools/:contractId/update-valuation", async (c) => {
       contractId,
       body.newAssetValues,
       body.valuationSource,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -232,7 +235,8 @@ collateral.post("/pools/:contractId/respond-margin-call", async (c) => {
     const result = await collateralService.respondToMarginCall(
       contractId,
       body.additionalAssets,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -269,7 +273,8 @@ collateral.post("/pools/:contractId/liquidate", async (c) => {
     const result = await collateralService.initiateLiquidation(
       contractId,
       body.reason,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -390,7 +395,8 @@ collateral.post("/pools/:contractId/release", async (c) => {
   try {
     const result = await collateralService.releaseCollateral(
       contractId,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -428,7 +434,8 @@ collateral.post("/pools/:contractId/partial-release", async (c) => {
     const result = await collateralService.partialRelease(
       contractId,
       body.assetIdsToRelease,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -464,7 +471,10 @@ collateral.get("/substitution-requests", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await collateralService.getSubstitutionRequests(authToken);
+    const result = await collateralService.getSubstitutionRequests(
+      authToken,
+      user
+    );
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -503,7 +513,8 @@ collateral.post("/substitution-requests/:contractId/approve", async (c) => {
   try {
     const result = await collateralService.approveSubstitution(
       contractId,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -542,7 +553,8 @@ collateral.post("/substitution-requests/:contractId/reject", async (c) => {
     const result = await collateralService.rejectSubstitution(
       contractId,
       body.rejectionReason,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -577,7 +589,7 @@ collateral.get("/liquidations", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await collateralService.getLiquidations(authToken);
+    const result = await collateralService.getLiquidations(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -660,7 +672,8 @@ collateral.post("/liquidations/:contractId/cancel", async (c) => {
     const result = await collateralService.cancelLiquidation(
       contractId,
       body.cancellationReason,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
@@ -695,7 +708,7 @@ collateral.get("/settlements", async (c) => {
   const authToken = `Bearer ${damlToken}`;
 
   try {
-    const result = await collateralService.getSettlements(authToken);
+    const result = await collateralService.getSettlements(authToken, user);
 
     if (result.status === 200) {
       const contracts = Array.isArray(result.result) ? result.result : [];
@@ -734,7 +747,8 @@ collateral.post("/settlements/:contractId/acknowledge", async (c) => {
   try {
     const result = await collateralService.acknowledgeSettlement(
       contractId,
-      authToken
+      authToken,
+      user
     );
 
     if (result.status === 200) {
