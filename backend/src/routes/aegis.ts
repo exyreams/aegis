@@ -149,7 +149,7 @@ aegis.post("/platform", requireRole("admin"), async (c) => {
         totalLoansOriginated: "0.0",
         totalFeesCollected: "0.0",
         activeLenders: [],
-        platformStatus: { tag: "PlatformActive" },
+        platformStatus: "PlatformActive" as any,
       },
       authToken,
       user
