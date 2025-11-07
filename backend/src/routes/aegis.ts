@@ -222,7 +222,12 @@ aegis.get("/platform", async (c) => {
       return c.json({
         success: true,
         data: {
-          platform: platformContract ? platformContract.payload : null,
+          platform: platformContract
+            ? {
+                ...platformContract.payload,
+                contractId: platformContract.contractId,
+              }
+            : null,
         },
       });
     }
@@ -781,19 +786,37 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token"; // Placeholder to trigger user-based token generation
     const contractId = c.req.param("contractId");
 
     try {
       const body = await c.req.json();
       const validated = UpdateFeeRateSchema.parse(body);
 
+      // Convert fee rate from percentage to decimal (e.g., 0.5% -> 0.005)
+      const feeRateDecimal = (
+        parseFloat(validated.newFeeRate) / 100
+      ).toString();
+
+      // Validate fee rate is within DAML constraints (0% to 10%)
+      const feeRateNum = parseFloat(feeRateDecimal);
+      if (feeRateNum < 0 || feeRateNum > 0.1) {
+        return c.json(
+          {
+            success: false,
+            error: "Platform fee rate must be between 0% and 10%",
+          },
+          400
+        );
+      }
+
       const result = await aegisService.updatePlatformFeeRate(
         contractId,
-        validated.newFeeRate,
+        feeRateDecimal,
         validated.updateReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;

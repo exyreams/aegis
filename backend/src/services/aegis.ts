@@ -275,7 +275,8 @@ export class AegisService {
     contractId: string,
     newFeeRate: string,
     updateReason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<any>> {
     ConsoleLogger.info(`Updating platform fee rate to: ${newFeeRate}`);
     return this.damlService.exerciseChoice(
@@ -285,7 +286,8 @@ export class AegisService {
         choice: "UpdatePlatformFeeRate",
         argument: { newFeeRate, updateReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
