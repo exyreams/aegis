@@ -107,12 +107,29 @@ const CreatePlatformSchema = z.object({
 
 aegis.post("/platform", requireRole("admin"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token"; // Placeholder to trigger user-based token generation
 
   try {
     const body = await c.req.json();
     const validated = CreatePlatformSchema.parse(body);
+
+    // Convert fee rate from percentage to decimal (e.g., 0.5% -> 0.005)
+    const feeRateDecimal = (
+      parseFloat(validated.platformFeeRate) / 100
+    ).toString();
+
+    // Validate fee rate is within DAML constraints (0% to 10%)
+    const feeRateNum = parseFloat(feeRateDecimal);
+    if (feeRateNum < 0 || feeRateNum > 0.1) {
+      return c.json(
+        {
+          success: false,
+          error: "Platform fee rate must be between 0% and 10%",
+        },
+        400
+      );
+    }
 
     // Create initial empty treasury
     const initialTreasury = {
@@ -126,7 +143,7 @@ aegis.post("/platform", requireRole("admin"), async (c) => {
         platform: validated.platform,
         treasury: initialTreasury,
         authorizedAssets: validated.authorizedAssets,
-        platformFeeRate: validated.platformFeeRate,
+        platformFeeRate: feeRateDecimal,
         emergencyOperator: validated.emergencyOperator,
         complianceOfficer: validated.complianceOfficer,
         totalLoansOriginated: "0.0",
@@ -134,7 +151,8 @@ aegis.post("/platform", requireRole("admin"), async (c) => {
         activeLenders: [],
         platformStatus: { tag: "PlatformActive" },
       },
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -185,11 +203,11 @@ aegis.post("/platform", requireRole("admin"), async (c) => {
 // Get platform details
 aegis.get("/platform", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token"; // Placeholder to trigger user-based token generation
 
   try {
-    const result = await aegisService.queryPlatform(authToken);
+    const result = await aegisService.queryPlatform(authToken, user);
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -200,9 +218,12 @@ aegis.get("/platform", async (c) => {
     );
 
     if (result.status === 200 && result.result) {
+      const platformContract = result.result[0];
       return c.json({
         success: true,
-        platform: result.result[0] || null,
+        data: {
+          platform: platformContract ? platformContract.payload : null,
+        },
       });
     }
 
@@ -210,6 +231,7 @@ aegis.get("/platform", async (c) => {
       {
         success: false,
         error: result.errors?.[0] || "Failed to fetch platform",
+        data: null,
       },
       result.status as any
     );

@@ -92,14 +92,16 @@ export class AegisService {
   // PLATFORM QUERIES
 
   async queryPlatform(
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<AegisPlatformData>[]>> {
     ConsoleLogger.info("Fetching Aegis platform");
     return this.damlService.queryContracts(
       {
         templateIds: [getTemplateId("AegisPlatform" as any)],
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -139,7 +141,8 @@ export class AegisService {
 
   async createPlatform(
     platformData: AegisPlatformData,
-    authToken: string
+    authToken: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<AegisPlatformData>>> {
     ConsoleLogger.info("Creating Aegis platform");
     return this.damlService.createContract(
@@ -147,7 +150,8 @@ export class AegisService {
         templateId: getTemplateId("AegisPlatform" as any),
         payload: platformData,
       },
-      authToken
+      authToken,
+      user
     );
   }
 

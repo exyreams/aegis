@@ -38,9 +38,16 @@ class RateLimiter {
   }
 
   private getKey(c: Context): string {
-    // Use IP address as the key, with fallback to user agent
-    const ip =
-      c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+    // Get real IP from headers (set by reverse proxy)
+    const forwardedFor = c.req.header("x-forwarded-for");
+    const realIp = c.req.header("x-real-ip");
+
+    // x-forwarded-for can contain multiple IPs (client, proxy1, proxy2)
+    // Take the first one which is the real client IP
+    const ip = forwardedFor
+      ? forwardedFor.split(",")[0].trim()
+      : realIp || "unknown";
+
     const userAgent = c.req.header("user-agent") || "unknown";
     return `${ip}:${userAgent.slice(0, 50)}`;
   }
@@ -101,10 +108,17 @@ export const rateLimitMiddleware = (limiter: RateLimiter = globalLimiter) => {
     c.header("X-RateLimit-Reset", new Date(result.resetTime).toISOString());
 
     if (!result.allowed) {
+      // Get real IP for logging
+      const forwardedFor = c.req.header("x-forwarded-for");
+      const realIp = c.req.header("x-real-ip");
+      const ip = forwardedFor
+        ? forwardedFor.split(",")[0].trim()
+        : realIp || "unknown";
+
       ConsoleLogger.warning("Rate limit exceeded", {
         path: c.req.path,
         method: c.req.method,
-        ip: c.req.header("x-forwarded-for") || "unknown",
+        ip,
         userAgent: c.req.header("user-agent")?.slice(0, 100),
       });
 
