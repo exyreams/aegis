@@ -56,8 +56,8 @@ const FlagSuspiciousSchema = z.object({
 // Get platform audit logs
 audit.get("/platform", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -75,7 +75,8 @@ audit.get("/platform", async (c) => {
 
     const result = await auditService.queryPlatformLogs(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -115,8 +116,8 @@ audit.post(
   requireRole("compliance"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -128,7 +129,8 @@ audit.post(
         validated.reviewer,
         validated.notes,
         validated.approved,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -175,8 +177,8 @@ audit.post(
   requireRole("compliance"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -187,7 +189,8 @@ audit.post(
         contractId,
         validated.escalationReason,
         validated.escalatedTo,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -231,9 +234,8 @@ audit.post(
 // Archive platform log
 audit.post("/platform/:contractId/archive", requireRole("admin"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
   const user = c.get("user");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -244,7 +246,8 @@ audit.post("/platform/:contractId/archive", requireRole("admin"), async (c) => {
       contractId,
       user?.damlParty || "",
       archiveReason,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -281,8 +284,8 @@ audit.post("/platform/:contractId/archive", requireRole("admin"), async (c) => {
 // Get lender audit logs
 audit.get("/lender", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -298,7 +301,8 @@ audit.get("/lender", async (c) => {
 
     const result = await auditService.queryLenderLogs(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -330,14 +334,15 @@ audit.get("/lender", async (c) => {
 // Acknowledge lender log
 audit.post("/lender/:contractId/acknowledge", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
     const result = await auditService.acknowledgeLenderLog(
       contractId,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -372,12 +377,16 @@ audit.post("/lender/:contractId/acknowledge", async (c) => {
 // Export lender log
 audit.post("/lender/:contractId/export", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
-    const result = await auditService.exportLenderLog(contractId, authToken);
+    const result = await auditService.exportLenderLog(
+      contractId,
+      authToken,
+      user
+    );
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -411,8 +420,8 @@ audit.post("/lender/:contractId/export", async (c) => {
 // Flag suspicious activity
 audit.post("/lender/:contractId/flag", requireRole("compliance"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -424,7 +433,8 @@ audit.post("/lender/:contractId/flag", requireRole("compliance"), async (c) => {
       validated.flaggedBy,
       validated.suspicionReason,
       validated.alertLevel,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -464,8 +474,8 @@ audit.post("/lender/:contractId/flag", requireRole("compliance"), async (c) => {
 // Get borrower audit logs
 audit.get("/borrower", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -481,7 +491,8 @@ audit.get("/borrower", async (c) => {
 
     const result = await auditService.queryBorrowerLogs(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -518,14 +529,15 @@ audit.get("/borrower", async (c) => {
 // Acknowledge borrower log
 audit.post("/borrower/:contractId/acknowledge", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
     const result = await auditService.acknowledgeBorrowerLog(
       contractId,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -560,12 +572,16 @@ audit.post("/borrower/:contractId/acknowledge", async (c) => {
 // Export borrower log
 audit.post("/borrower/:contractId/export", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
-    const result = await auditService.exportBorrowerLog(contractId, authToken);
+    const result = await auditService.exportBorrowerLog(
+      contractId,
+      authToken,
+      user
+    );
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -601,8 +617,8 @@ audit.post("/borrower/:contractId/export", async (c) => {
 // Get loan audit trails
 audit.get("/loan", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -616,7 +632,8 @@ audit.get("/loan", async (c) => {
 
     const result = await auditService.queryLoanTrails(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -648,9 +665,8 @@ audit.get("/loan", async (c) => {
 // Log loan event
 audit.post("/loan/:contractId/log-event", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
   const user = c.get("user");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -664,7 +680,8 @@ audit.post("/loan/:contractId/log-event", async (c) => {
       user?.damlParty || "",
       eventData || [],
       financialImpact || null,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -699,16 +716,16 @@ audit.post("/loan/:contractId/log-event", async (c) => {
 // Generate loan report
 audit.post("/loan/:contractId/report", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
   const user = c.get("user");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
     const result = await auditService.generateLoanReport(
       contractId,
       user?.damlParty || "",
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -741,9 +758,8 @@ audit.post("/loan/:contractId/report", async (c) => {
 // Update loan status
 audit.post("/loan/:contractId/status", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
   const user = c.get("user");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -754,7 +770,8 @@ audit.post("/loan/:contractId/status", async (c) => {
       contractId,
       newStatus,
       user?.damlParty || "",
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -789,8 +806,8 @@ audit.post("/loan/:contractId/status", async (c) => {
 // Get pool audit logs
 audit.get("/pool", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -804,7 +821,8 @@ audit.get("/pool", async (c) => {
 
     const result = await auditService.queryPoolLogs(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -836,12 +854,16 @@ audit.get("/pool", async (c) => {
 // Generate pool report
 audit.post("/pool/:contractId/report", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
-    const result = await auditService.generatePoolReport(contractId, authToken);
+    const result = await auditService.generatePoolReport(
+      contractId,
+      authToken,
+      user
+    );
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -875,8 +897,8 @@ audit.post("/pool/:contractId/report", async (c) => {
 // Get compliance audit logs
 audit.get("/compliance", requireRole("compliance"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -896,7 +918,8 @@ audit.get("/compliance", requireRole("compliance"), async (c) => {
 
     const result = await auditService.queryComplianceLogs(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -936,9 +959,8 @@ audit.post(
   requireRole("compliance"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
     const user = c.get("user");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -949,7 +971,8 @@ audit.post(
         contractId,
         action,
         user?.damlParty || "",
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -991,8 +1014,8 @@ audit.post(
   requireRole("compliance"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1003,7 +1026,8 @@ audit.post(
         contractId,
         escalationReason,
         escalatedTo,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1041,8 +1065,8 @@ audit.post(
 // Get activity monitors
 audit.get("/activity-monitor", requireRole("compliance"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -1061,7 +1085,8 @@ audit.get("/activity-monitor", requireRole("compliance"), async (c) => {
 
     const result = await auditService.queryActivityMonitors(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1101,12 +1126,16 @@ audit.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
-      const result = await auditService.recordActivity(contractId, authToken);
+      const result = await auditService.recordActivity(
+        contractId,
+        authToken,
+        user
+      );
 
       const duration = Date.now() - startTime;
       ConsoleLogger.request(
@@ -1147,9 +1176,8 @@ audit.post(
   requireRole("compliance"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
     const user = c.get("user");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1197,8 +1225,8 @@ audit.post(
 // Get compliance alerts
 audit.get("/alerts", requireRole("compliance"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -1216,7 +1244,8 @@ audit.get("/alerts", requireRole("compliance"), async (c) => {
 
     const result = await auditService.queryComplianceAlerts(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1251,9 +1280,8 @@ audit.post(
   requireRole("compliance"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
     const user = c.get("user");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1305,8 +1333,8 @@ audit.post(
 // Get platform escalations
 audit.get("/escalations/platform", requireRole("compliance"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -1320,7 +1348,8 @@ audit.get("/escalations/platform", requireRole("compliance"), async (c) => {
 
     const result = await auditService.queryPlatformEscalations(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1362,8 +1391,8 @@ audit.get("/escalations/platform", requireRole("compliance"), async (c) => {
 // Get compliance escalations
 audit.get("/escalations/compliance", requireRole("compliance"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
 
   try {
     const filters: any = {};
@@ -1379,7 +1408,8 @@ audit.get("/escalations/compliance", requireRole("compliance"), async (c) => {
 
     const result = await auditService.queryComplianceEscalations(
       authToken,
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1421,9 +1451,8 @@ audit.get("/escalations/compliance", requireRole("compliance"), async (c) => {
 // Resolve platform escalation
 audit.post("/escalations/platform/:contractId/resolve", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
   const user = c.get("user");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -1469,9 +1498,8 @@ audit.post("/escalations/platform/:contractId/resolve", async (c) => {
 // Resolve compliance escalation
 audit.post("/escalations/compliance/:contractId/resolve", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
   const user = c.get("user");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {

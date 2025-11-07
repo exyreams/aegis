@@ -107,7 +107,8 @@ export class AegisService {
 
   async queryAssetBalances(
     authToken: string,
-    owner?: string
+    owner?: string,
+    user?: any
   ): Promise<DamlResponse<DamlContract<AssetBalanceData>[]>> {
     ConsoleLogger.info("Fetching asset balances");
     const query: any = {
@@ -118,12 +119,13 @@ export class AegisService {
       query.query = { owner };
     }
 
-    return this.damlService.queryContracts(query, authToken);
+    return this.damlService.queryContracts(query, authToken, user);
   }
 
   async queryLiquiditySupport(
     authToken: string,
-    lender?: string
+    lender?: string,
+    _user?: any
   ): Promise<DamlResponse<DamlContract<LiquiditySupportData>[]>> {
     ConsoleLogger.info("Fetching liquidity support records");
     const query: any = {
@@ -163,8 +165,9 @@ export class AegisService {
     mintAmount: string,
     mintReason: string,
     authorizedBy: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Minting to treasury: ${mintAmount}`);
     return this.damlService.exerciseChoice(
       {
@@ -173,7 +176,8 @@ export class AegisService {
         choice: "MintToTreasury",
         argument: { assetType, mintAmount, mintReason, authorizedBy },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -182,8 +186,9 @@ export class AegisService {
     assetType: AssetType,
     emergencyAmount: string,
     emergencyReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Emergency mint: ${emergencyAmount}`);
     return this.damlService.exerciseChoice(
       {
@@ -192,7 +197,8 @@ export class AegisService {
         choice: "EmergencyMint",
         argument: { assetType, emergencyAmount, emergencyReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -200,8 +206,9 @@ export class AegisService {
     contractId: string,
     mintingPlan: Array<[AssetType, string]>,
     bulkReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Bulk minting to treasury`);
     return this.damlService.exerciseChoice(
       {
@@ -210,7 +217,8 @@ export class AegisService {
         choice: "BulkMintToTreasury",
         argument: { mintingPlan, bulkReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -219,8 +227,9 @@ export class AegisService {
     assetType: AssetType,
     amount: string,
     injectionReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Injecting treasury funds: ${amount}`);
     return this.damlService.exerciseChoice(
       {
@@ -229,7 +238,8 @@ export class AegisService {
         choice: "InjectTreasuryFunds",
         argument: { assetType, amount, injectionReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -239,8 +249,9 @@ export class AegisService {
     contractId: string,
     newAssets: AssetType[],
     authorizationReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Authorizing ${newAssets.length} new assets`);
     return this.damlService.exerciseChoice(
       {
@@ -249,7 +260,8 @@ export class AegisService {
         choice: "AuthorizeNewAssets",
         argument: { newAssets, authorizationReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -257,8 +269,9 @@ export class AegisService {
     contractId: string,
     assetsToRemove: AssetType[],
     deauthorizationReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Deauthorizing ${assetsToRemove.length} assets`);
     return this.damlService.exerciseChoice(
       {
@@ -267,7 +280,8 @@ export class AegisService {
         choice: "DeauthorizeAssets",
         argument: { assetsToRemove, deauthorizationReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -277,7 +291,7 @@ export class AegisService {
     updateReason: string,
     authToken: string,
     user?: any
-  ): Promise<DamlResponse<any>> {
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Updating platform fee rate to: ${newFeeRate}`);
     return this.damlService.exerciseChoice(
       {
@@ -297,8 +311,9 @@ export class AegisService {
     contractId: string,
     newLender: string,
     assetType: AssetType,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Registering new lender: ${newLender}`);
     return this.damlService.exerciseChoice(
       {
@@ -307,7 +322,8 @@ export class AegisService {
         choice: "RegisterNewLender",
         argument: { newLender, assetType },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -318,8 +334,9 @@ export class AegisService {
     fundingAmount: string,
     fundingReason: string,
     adminApproval: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Admin funding lender ${lender}: ${fundingAmount}`);
     return this.damlService.exerciseChoice(
       {
@@ -334,7 +351,8 @@ export class AegisService {
           adminApproval,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -345,8 +363,9 @@ export class AegisService {
     amount: string,
     reimbursementReason: string,
     approvedBy: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Reimbursing lender ${lender}: ${amount}`);
     return this.damlService.exerciseChoice(
       {
@@ -361,7 +380,8 @@ export class AegisService {
           approvedBy,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -373,8 +393,9 @@ export class AegisService {
     loanAmount: string,
     lender: string,
     assetType: AssetType,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Collecting platform fee for loan: ${loanId}`);
     return this.damlService.exerciseChoice(
       {
@@ -383,7 +404,8 @@ export class AegisService {
         choice: "CollectPlatformFee",
         argument: { loanId, loanAmount, lender, assetType },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -394,8 +416,9 @@ export class AegisService {
     seller: string,
     buyer: string,
     assetType: AssetType,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Collecting secondary market fee: ${transferId}`);
     return this.damlService.exerciseChoice(
       {
@@ -404,7 +427,8 @@ export class AegisService {
         choice: "CollectSecondaryMarketFee",
         argument: { transferId, transferAmount, seller, buyer, assetType },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -415,8 +439,9 @@ export class AegisService {
     leadLender: string,
     participantCount: number,
     assetType: AssetType,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Collecting syndication fee for loan: ${loanId}`);
     return this.damlService.exerciseChoice(
       {
@@ -431,7 +456,8 @@ export class AegisService {
           assetType,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -443,8 +469,9 @@ export class AegisService {
     poolManager: string,
     initialLiquidity: string,
     assetType: AssetType,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Registering liquidity pool: ${poolId}`);
     return this.damlService.exerciseChoice(
       {
@@ -453,7 +480,8 @@ export class AegisService {
         choice: "RegisterLiquidityPool",
         argument: { poolId, poolManager, initialLiquidity, assetType },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -464,8 +492,9 @@ export class AegisService {
     managementFee: string,
     totalLiquidity: string,
     assetType: AssetType,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Collecting pool management fee: ${poolId}`);
     return this.damlService.exerciseChoice(
       {
@@ -480,7 +509,8 @@ export class AegisService {
           assetType,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -491,8 +521,9 @@ export class AegisService {
     bonusAmount: string,
     performanceMetric: string,
     assetType: AssetType,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Providing pool performance bonus: ${poolId}`);
     return this.damlService.exerciseChoice(
       {
@@ -507,7 +538,8 @@ export class AegisService {
           assetType,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -516,8 +548,9 @@ export class AegisService {
   async emergencyShutdown(
     contractId: string,
     shutdownReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info("Initiating emergency platform shutdown");
     return this.damlService.exerciseChoice(
       {
@@ -526,15 +559,17 @@ export class AegisService {
         choice: "EmergencyShutdown",
         argument: { shutdownReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async reactivatePlatform(
     contractId: string,
     reactivationReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info("Reactivating platform");
     return this.damlService.exerciseChoice(
       {
@@ -543,7 +578,8 @@ export class AegisService {
         choice: "ReactivatePlatform",
         argument: { reactivationReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -556,8 +592,9 @@ export class AegisService {
     supportAmount: string,
     supportReason: string,
     repaymentTerms: LiquiditySupportTerms,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(
       `Providing liquidity support to ${lender}: ${supportAmount}`
     );
@@ -574,15 +611,17 @@ export class AegisService {
           repaymentTerms,
         },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
   async repaySupport(
     contractId: string,
     repaymentAmount: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Repaying liquidity support: ${repaymentAmount}`);
     return this.damlService.exerciseChoice(
       {
@@ -591,7 +630,8 @@ export class AegisService {
         choice: "RepaySupport",
         argument: { repaymentAmount },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -602,8 +642,9 @@ export class AegisService {
     amount: string,
     sender: string,
     receiptReason: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Receiving funds: ${amount}`);
     return this.damlService.exerciseChoice(
       {
@@ -612,7 +653,8 @@ export class AegisService {
         choice: "ReceiveFunds",
         argument: { amount, sender, receiptReason },
       },
-      authToken
+      authToken,
+      user
     );
   }
 
@@ -621,8 +663,9 @@ export class AegisService {
     amount: string,
     purpose: string,
     lockDuration: string,
-    authToken: string
-  ): Promise<DamlResponse<any>> {
+    authToken: string,
+    user?: any
+  ): Promise<DamlResponse> {
     ConsoleLogger.info(`Locking funds: ${amount}`);
     return this.damlService.exerciseChoice(
       {
@@ -631,7 +674,8 @@ export class AegisService {
         choice: "LockFunds",
         argument: { amount, purpose, lockDuration },
       },
-      authToken
+      authToken,
+      user
     );
   }
 }

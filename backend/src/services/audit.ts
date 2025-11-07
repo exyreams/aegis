@@ -13,9 +13,9 @@
  * - Escalations (platform and compliance)
  */
 
-import { DamlService } from "./daml";
-import { getTemplateId } from "../config/daml";
-import { ConsoleLogger } from "../utils/logger";
+import {DamlService} from "./daml";
+import {getTemplateId} from "../config/daml";
+import {ConsoleLogger} from "../utils/logger";
 
 export class AuditService {
   private static instance: AuditService;
@@ -45,7 +45,8 @@ export class AuditService {
       severity?: string;
       requiresReview?: boolean;
       reviewed?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -56,8 +57,7 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(query, authToken, user);
     } catch (error) {
       ConsoleLogger.error("Query platform logs error", error);
       throw error;
@@ -72,19 +72,20 @@ export class AuditService {
     reviewer: string,
     notes: string,
     approved: boolean,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
+      return await this.damlService.exerciseChoice(
         {
           templateId: getTemplateId("PlatformAuditLog" as any),
           contractId,
           choice: "ReviewLogEntry",
           argument: { reviewer, notes, approved },
         },
-        authToken
+        authToken,
+        user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Review log entry error", error);
       throw error;
@@ -98,19 +99,20 @@ export class AuditService {
     contractId: string,
     escalationReason: string,
     escalatedTo: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
+      return await this.damlService.exerciseChoice(
         {
           templateId: getTemplateId("PlatformAuditLog" as any),
           contractId,
           choice: "EscalateEvent",
           argument: { escalationReason, escalatedTo },
         },
-        authToken
+        authToken,
+        user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Escalate event error", error);
       throw error;
@@ -129,7 +131,8 @@ export class AuditService {
       eventType?: string;
       counterparty?: string;
       acknowledged?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -140,8 +143,7 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(query, authToken, user);
     } catch (error) {
       ConsoleLogger.error("Query lender logs error", error);
       throw error;
@@ -151,18 +153,22 @@ export class AuditService {
   /**
    * Acknowledge lender log
    */
-  async acknowledgeLenderLog(contractId: string, authToken: string) {
+  async acknowledgeLenderLog(
+    contractId: string,
+    authToken: string,
+    user?: any
+  ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("LenderAuditLog" as any),
-          contractId,
-          choice: "AcknowledgeLenderLog",
-          argument: {},
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("LenderAuditLog" as any),
+              contractId,
+              choice: "AcknowledgeLenderLog",
+              argument: {},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Acknowledge lender log error", error);
       throw error;
@@ -172,18 +178,18 @@ export class AuditService {
   /**
    * Export lender log
    */
-  async exportLenderLog(contractId: string, authToken: string) {
+  async exportLenderLog(contractId: string, authToken: string, user?: any) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("LenderAuditLog" as any),
-          contractId,
-          choice: "ExportLenderLog",
-          argument: {},
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("LenderAuditLog" as any),
+              contractId,
+              choice: "ExportLenderLog",
+              argument: {},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Export lender log error", error);
       throw error;
@@ -198,19 +204,20 @@ export class AuditService {
     flaggedBy: string,
     suspicionReason: string,
     alertLevel: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("LenderAuditLog" as any),
-          contractId,
-          choice: "FlagSuspiciousActivity",
-          argument: { flaggedBy, suspicionReason, alertLevel },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("LenderAuditLog" as any),
+              contractId,
+              choice: "FlagSuspiciousActivity",
+              argument: {flaggedBy, suspicionReason, alertLevel},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Flag suspicious activity error", error);
       throw error;
@@ -229,7 +236,8 @@ export class AuditService {
       eventType?: string;
       counterparty?: string;
       acknowledged?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -240,8 +248,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query borrower logs error", error);
       throw error;
@@ -251,18 +262,22 @@ export class AuditService {
   /**
    * Acknowledge borrower log
    */
-  async acknowledgeBorrowerLog(contractId: string, authToken: string) {
+  async acknowledgeBorrowerLog(
+    contractId: string,
+    authToken: string,
+    user?: any
+  ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("BorrowerAuditLog" as any),
-          contractId,
-          choice: "AcknowledgeBorrowerLog",
-          argument: {},
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("BorrowerAuditLog" as any),
+              contractId,
+              choice: "AcknowledgeBorrowerLog",
+              argument: {},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Acknowledge borrower log error", error);
       throw error;
@@ -272,18 +287,18 @@ export class AuditService {
   /**
    * Export borrower log
    */
-  async exportBorrowerLog(contractId: string, authToken: string) {
+  async exportBorrowerLog(contractId: string, authToken: string, user?: any) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("BorrowerAuditLog" as any),
-          contractId,
-          choice: "ExportBorrowerLog",
-          argument: {},
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("BorrowerAuditLog" as any),
+              contractId,
+              choice: "ExportBorrowerLog",
+              argument: {},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Export borrower log error", error);
       throw error;
@@ -301,7 +316,8 @@ export class AuditService {
       borrower?: string;
       loanId?: string;
       currentStatus?: string;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -312,8 +328,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query loan trails error", error);
       throw error;
@@ -330,25 +349,26 @@ export class AuditService {
     performedBy: string,
     eventData: Array<[string, string]>,
     financialImpact: any,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("LoanAuditTrail" as any),
-          contractId,
-          choice: "LogLoanEvent",
-          argument: {
-            eventType,
-            eventDescription,
-            performedBy,
-            eventData,
-            financialImpact,
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("LoanAuditTrail" as any),
+              contractId,
+              choice: "LogLoanEvent",
+              argument: {
+                  eventType,
+                  eventDescription,
+                  performedBy,
+                  eventData,
+                  financialImpact,
+              },
           },
-        },
-        authToken
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Log loan event error", error);
       throw error;
@@ -361,19 +381,20 @@ export class AuditService {
   async generateLoanReport(
     contractId: string,
     requestedBy: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("LoanAuditTrail" as any),
-          contractId,
-          choice: "GenerateLoanReport",
-          argument: { requestedBy },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("LoanAuditTrail" as any),
+              contractId,
+              choice: "GenerateLoanReport",
+              argument: {requestedBy},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Generate loan report error", error);
       throw error;
@@ -387,19 +408,20 @@ export class AuditService {
     contractId: string,
     newStatus: string,
     updatedBy: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("LoanAuditTrail" as any),
-          contractId,
-          choice: "UpdateLoanStatus",
-          argument: { newStatus, updatedBy },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("LoanAuditTrail" as any),
+              contractId,
+              choice: "UpdateLoanStatus",
+              argument: {newStatus, updatedBy},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Update loan status error", error);
       throw error;
@@ -417,7 +439,8 @@ export class AuditService {
       poolManager?: string;
       poolId?: string;
       eventType?: string;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -428,8 +451,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query pool logs error", error);
       throw error;
@@ -439,18 +465,18 @@ export class AuditService {
   /**
    * Generate pool report
    */
-  async generatePoolReport(contractId: string, authToken: string) {
+  async generatePoolReport(contractId: string, authToken: string, user?: any) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("PoolAuditLog" as any),
-          contractId,
-          choice: "GeneratePoolReport",
-          argument: {},
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("PoolAuditLog" as any),
+              contractId,
+              choice: "GeneratePoolReport",
+              argument: {},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Generate pool report error", error);
       throw error;
@@ -471,7 +497,8 @@ export class AuditService {
       checkResult?: string;
       riskLevel?: string;
       actionRequired?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -482,8 +509,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query compliance logs error", error);
       throw error;
@@ -497,19 +527,20 @@ export class AuditService {
     contractId: string,
     action: string,
     actionBy: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("ComplianceAuditLog" as any),
-          contractId,
-          choice: "RecordComplianceAction",
-          argument: { action, actionBy },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("ComplianceAuditLog" as any),
+              contractId,
+              choice: "RecordComplianceAction",
+              argument: {action, actionBy},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Record compliance action error", error);
       throw error;
@@ -523,19 +554,20 @@ export class AuditService {
     contractId: string,
     escalationReason: string,
     escalatedTo: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("ComplianceAuditLog" as any),
-          contractId,
-          choice: "EscalateComplianceIssue",
-          argument: { escalationReason, escalatedTo },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("ComplianceAuditLog" as any),
+              contractId,
+              choice: "EscalateComplianceIssue",
+              argument: {escalationReason, escalatedTo},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Escalate compliance issue error", error);
       throw error;
@@ -555,7 +587,8 @@ export class AuditService {
       activityType?: string;
       thresholdExceeded?: boolean;
       alertTriggered?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -566,8 +599,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query activity monitors error", error);
       throw error;
@@ -577,18 +613,18 @@ export class AuditService {
   /**
    * Record activity
    */
-  async recordActivity(contractId: string, authToken: string) {
+  async recordActivity(contractId: string, authToken: string, user?: any) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("ActivityMonitor" as any),
-          contractId,
-          choice: "RecordActivity",
-          argument: {},
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("ActivityMonitor" as any),
+              contractId,
+              choice: "RecordActivity",
+              argument: {},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Record activity error", error);
       throw error;
@@ -601,19 +637,20 @@ export class AuditService {
   async resetActivityCounter(
     contractId: string,
     resetBy: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("ActivityMonitor" as any),
-          contractId,
-          choice: "ResetActivityCounter",
-          argument: { resetBy },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("ActivityMonitor" as any),
+              contractId,
+              choice: "ResetActivityCounter",
+              argument: {resetBy},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Reset activity counter error", error);
       throw error;
@@ -633,7 +670,8 @@ export class AuditService {
       alertType?: string;
       alertLevel?: string;
       investigated?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -644,8 +682,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query compliance alerts error", error);
       throw error;
@@ -659,19 +700,20 @@ export class AuditService {
     contractId: string,
     investigator: string,
     notes: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("ComplianceAlert" as any),
-          contractId,
-          choice: "InvestigateAlert",
-          argument: { investigator, notes },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("ComplianceAlert" as any),
+              contractId,
+              choice: "InvestigateAlert",
+              argument: {investigator, notes},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Investigate alert error", error);
       throw error;
@@ -689,7 +731,8 @@ export class AuditService {
       complianceOfficer?: string;
       escalatedTo?: string;
       resolved?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -700,8 +743,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query platform escalations error", error);
       throw error;
@@ -718,7 +764,8 @@ export class AuditService {
       subject?: string;
       escalatedTo?: string;
       resolved?: boolean;
-    }
+    },
+    user?: any
   ) {
     try {
       const query: any = {
@@ -729,8 +776,11 @@ export class AuditService {
         query.query = filters;
       }
 
-      const result = await this.damlService.queryContracts(query, authToken);
-      return result;
+      return await this.damlService.queryContracts(
+          query,
+          authToken,
+          user
+      );
     } catch (error) {
       ConsoleLogger.error("Query compliance escalations error", error);
       throw error;
@@ -747,16 +797,15 @@ export class AuditService {
     authToken: string
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("PlatformEscalation" as any),
-          contractId,
-          choice: "ResolvePlatformEscalation",
-          argument: { resolver, notes },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("PlatformEscalation" as any),
+              contractId,
+              choice: "ResolvePlatformEscalation",
+              argument: {resolver, notes},
+          },
+          authToken
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Resolve platform escalation error", error);
       throw error;
@@ -773,16 +822,15 @@ export class AuditService {
     authToken: string
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("ComplianceEscalation" as any),
-          contractId,
-          choice: "ResolveComplianceEscalation",
-          argument: { resolver, notes },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("ComplianceEscalation" as any),
+              contractId,
+              choice: "ResolveComplianceEscalation",
+              argument: {resolver, notes},
+          },
+          authToken
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Resolve compliance escalation error", error);
       throw error;
@@ -798,19 +846,20 @@ export class AuditService {
     contractId: string,
     archiver: string,
     archiveReason: string,
-    authToken: string
+    authToken: string,
+    user?: any
   ) {
     try {
-      const result = await this.damlService.exerciseChoice(
-        {
-          templateId: getTemplateId("PlatformAuditLog" as any),
-          contractId,
-          choice: "ArchiveLog",
-          argument: { archiver, archiveReason },
-        },
-        authToken
+        return await this.damlService.exerciseChoice(
+          {
+              templateId: getTemplateId("PlatformAuditLog" as any),
+              contractId,
+              choice: "ArchiveLog",
+              argument: {archiver, archiveReason},
+          },
+          authToken,
+          user
       );
-      return result;
     } catch (error) {
       ConsoleLogger.error("Archive platform log error", error);
       throw error;

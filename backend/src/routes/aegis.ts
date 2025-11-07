@@ -108,7 +108,7 @@ const CreatePlatformSchema = z.object({
 aegis.post("/platform", requireRole("admin"), async (c) => {
   const startTime = Date.now();
   const user = c.get("user");
-  const authToken = "user-token"; // Placeholder to trigger user-based token generation
+  const authToken = "user-token";
 
   try {
     const body = await c.req.json();
@@ -204,7 +204,7 @@ aegis.post("/platform", requireRole("admin"), async (c) => {
 aegis.get("/platform", async (c) => {
   const startTime = Date.now();
   const user = c.get("user");
-  const authToken = "user-token"; // Placeholder to trigger user-based token generation
+  const authToken = "user-token";
 
   try {
     const result = await aegisService.queryPlatform(authToken, user);
@@ -251,12 +251,16 @@ aegis.get("/platform", async (c) => {
 // Get asset balances
 aegis.get("/balances", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const owner = c.req.query("owner");
 
   try {
-    const result = await aegisService.queryAssetBalances(authToken, owner);
+    const result = await aegisService.queryAssetBalances(
+      authToken,
+      owner,
+      user
+    );
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -291,12 +295,16 @@ aegis.get("/balances", async (c) => {
 // Get liquidity support records
 aegis.get("/liquidity-support", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const lender = c.req.query("lender");
 
   try {
-    const result = await aegisService.queryLiquiditySupport(authToken, lender);
+    const result = await aegisService.queryLiquiditySupport(
+      authToken,
+      lender,
+      user
+    );
 
     const duration = Date.now() - startTime;
     ConsoleLogger.request(
@@ -333,9 +341,8 @@ aegis.get("/liquidity-support", async (c) => {
 // Mint funds to treasury (Admin only - platform owner)
 aegis.post("/platform/:contractId/mint", requireRole("admin"), async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
   const user = c.get("user");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -348,7 +355,8 @@ aegis.post("/platform/:contractId/mint", requireRole("admin"), async (c) => {
       validated.mintAmount,
       validated.mintReason,
       user?.damlParty || "",
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -408,8 +416,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -424,7 +432,8 @@ aegis.post(
         contractId,
         mintingPlan,
         validated.bulkReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -486,8 +495,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -498,7 +507,8 @@ aegis.post(
         contractId,
         validated.newLender,
         validated.assetType,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -558,9 +568,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
     const user = c.get("user");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -574,7 +583,8 @@ aegis.post(
         validated.fundingAmount,
         validated.fundingReason,
         user?.damlParty || "",
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -635,9 +645,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
     const user = c.get("user");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -651,7 +660,8 @@ aegis.post(
         validated.amount,
         validated.reimbursementReason,
         user?.damlParty || "",
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -714,8 +724,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -726,7 +736,8 @@ aegis.post(
         contractId,
         validated.newAssets,
         validated.authorizationReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -787,7 +798,7 @@ aegis.post(
   async (c) => {
     const startTime = Date.now();
     const user = c.get("user");
-    const authToken = "user-token"; // Placeholder to trigger user-based token generation
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -878,8 +889,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -893,7 +904,8 @@ aegis.post(
         validated.supportAmount,
         validated.supportReason,
         validated.repaymentTerms,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -951,8 +963,8 @@ aegis.post(
 // Repay liquidity support
 aegis.post("/liquidity-support/:contractId/repay", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -972,7 +984,8 @@ aegis.post("/liquidity-support/:contractId/repay", async (c) => {
     const result = await aegisService.repaySupport(
       contractId,
       repaymentAmount,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1018,8 +1031,8 @@ aegis.post("/liquidity-support/:contractId/repay", async (c) => {
 // Receive funds
 aegis.post("/balances/:contractId/receive", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -1041,7 +1054,8 @@ aegis.post("/balances/:contractId/receive", async (c) => {
       amount,
       sender,
       receiptReason,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1083,8 +1097,8 @@ aegis.post("/balances/:contractId/receive", async (c) => {
 // Lock funds
 aegis.post("/balances/:contractId/lock", async (c) => {
   const startTime = Date.now();
-  const session = c.get("session");
-  const authToken = `Bearer ${session?.token || ""}`;
+  const user = c.get("user");
+  const authToken = "user-token";
   const contractId = c.req.param("contractId");
 
   try {
@@ -1106,7 +1120,8 @@ aegis.post("/balances/:contractId/lock", async (c) => {
       amount,
       purpose,
       lockDuration,
-      authToken
+      authToken,
+      user
     );
 
     const duration = Date.now() - startTime;
@@ -1153,8 +1168,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1166,7 +1181,8 @@ aegis.post(
         assetType,
         emergencyAmount,
         emergencyReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1211,8 +1227,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1223,7 +1239,8 @@ aegis.post(
         contractId,
         assetsToRemove,
         deauthorizationReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1268,8 +1285,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1282,7 +1299,8 @@ aegis.post(
         loanAmount,
         lender,
         assetType,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1325,8 +1343,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1340,7 +1358,8 @@ aegis.post(
         seller,
         buyer,
         assetType,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1383,8 +1402,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1399,7 +1418,8 @@ aegis.post(
         leadLender,
         participantCount,
         assetType,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1442,8 +1462,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1456,7 +1476,8 @@ aegis.post(
         poolManager,
         initialLiquidity,
         assetType,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1499,8 +1520,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1515,7 +1536,8 @@ aegis.post(
         managementFee,
         totalLiquidity,
         assetType,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1558,8 +1580,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1574,7 +1596,8 @@ aegis.post(
         bonusAmount,
         performanceMetric,
         assetType,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1620,8 +1643,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1633,7 +1656,8 @@ aegis.post(
         assetType,
         injectionAmount,
         injectionReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1678,8 +1702,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1689,7 +1713,8 @@ aegis.post(
       const result = await aegisService.emergencyShutdown(
         contractId,
         shutdownReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
@@ -1732,8 +1757,8 @@ aegis.post(
   requireRole("admin"),
   async (c) => {
     const startTime = Date.now();
-    const session = c.get("session");
-    const authToken = `Bearer ${session?.token || ""}`;
+    const user = c.get("user");
+    const authToken = "user-token";
     const contractId = c.req.param("contractId");
 
     try {
@@ -1743,7 +1768,8 @@ aegis.post(
       const result = await aegisService.reactivatePlatform(
         contractId,
         reactivationReason,
-        authToken
+        authToken,
+        user
       );
 
       const duration = Date.now() - startTime;
