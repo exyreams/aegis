@@ -8,8 +8,6 @@ import {
   IconShield,
 } from "@tabler/icons-react";
 import { Settings } from "@/components/icons";
-import { RolePermissions } from "@/lib/rolePermissions";
-import type { UserRole } from "@/types/api";
 
 import { Badge } from "@/components/ui/Badge";
 import { GlassAvatar } from "@/components/ui/GlassAvatar";
@@ -37,16 +35,15 @@ export function NavUser({
     name: string;
     email: string;
     avatar: string;
-    role?: UserRole;
   };
 }) {
   const { isMobile } = useSidebar();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       router.push("/auth");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -59,12 +56,6 @@ export function NavUser({
 
   const handlePreferencesClick = () => {
     router.push("/dashboard/settings");
-  };
-
-  const getRoleBadgeColor = (role?: UserRole) => {
-    if (!role) return "outline";
-    const config = RolePermissions.getRoleConfig(role);
-    return config.color as "destructive" | "default" | "secondary" | "outline";
   };
 
   // Render avatar component based on type
@@ -112,14 +103,6 @@ export function NavUser({
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <div className="flex items-center gap-2">
                     <span className="truncate font-medium">{user.name}</span>
-                    {user.role && (
-                      <Badge
-                        variant={getRoleBadgeColor(user.role)}
-                        className="text-xs"
-                      >
-                        {RolePermissions.getRoleConfig(user.role).name}
-                      </Badge>
-                    )}
                   </div>
                   <span className="text-muted-foreground truncate text-xs">
                     {user.email}

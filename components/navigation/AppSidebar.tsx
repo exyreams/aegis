@@ -26,7 +26,6 @@ import {
   SidebarRail,
 } from "@/components/ui/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { RolePermissions } from "@/lib/rolePermissions";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { auth } = useAuth();
@@ -37,7 +36,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   // Navigation items aligned with hackathon categories
-  const navItems = [
+  const navMain = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -70,21 +69,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
-  // Filter navigation items based on user role (using existing logic)
-  const navMain = navItems.filter((item: any) => {
-    try {
-      return RolePermissions.canAccessRoute(auth.user!.role, item.url);
-    } catch (error) {
-      console.error(
-        `Error checking route access for role ${auth.user!.role} and route ${
-          item.url
-        }:`,
-        error
-      );
-      return false;
-    }
-  });
-
   const navSecondary = [
     {
       title: "Settings",
@@ -98,7 +82,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: auth.user.name,
     email: auth.user.email,
     avatar: auth.user.image || auth.user.name || auth.user.email,
-    role: auth.user.role,
   };
 
   return (

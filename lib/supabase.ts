@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { User, UserRole } from "@/types/api";
+import type { User } from "@/types/api";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey =
@@ -8,4 +8,4 @@ const supabaseAnonKey =
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Re-export types for convenience
-export type { User, UserRole };
+export type { User };
