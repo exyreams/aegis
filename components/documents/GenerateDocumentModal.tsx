@@ -191,7 +191,7 @@ export function GenerateDocumentModal({
                 progress = Math.min(95, (fullDocument.length / 5000) * 100);
                 setGenerationProgress(progress);
               }
-            } catch (e) {
+            } catch {
               // Ignore parsing errors for partial chunks
             }
           }
@@ -244,12 +244,6 @@ export function GenerateDocumentModal({
       toast.error("Failed to save document");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const nextStep = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
     }
   };
 
@@ -328,7 +322,7 @@ export function GenerateDocumentModal({
           </button>
 
           {/* Left Sidebar - Progress */}
-          <div className="w-80 bg-gradient-to-t from-primary/5 to-card dark:bg-card rounded-xl border shadow-sm flex flex-col">
+          <div className="w-80 bg-linear-to-t from-primary/5 to-card dark:bg-card rounded-xl border shadow-sm flex flex-col">
             {/* Header */}
             <div className="p-4 border-b border-border">
               <div className="flex items-center gap-2">
@@ -367,7 +361,7 @@ export function GenerateDocumentModal({
                       }}
                     >
                       <div
-                        className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                        className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                           isCompleted
                             ? "bg-primary text-primary-foreground"
                             : isActive
@@ -494,7 +488,7 @@ export function GenerateDocumentModal({
 
                       <div className="grid grid-cols-2 gap-6">
                         {/* Document Type */}
-                        <div className="col-span-2">
+                        <div className="col-span-2 space-y-2">
                           <Label>Document Type</Label>
                           <Select
                             value={watchedValues.documentType}
@@ -502,7 +496,7 @@ export function GenerateDocumentModal({
                               setValue("documentType", value)
                             }
                           >
-                            <SelectTrigger className="h-12">
+                            <SelectTrigger className="h-12 py-3">
                               <SelectValue placeholder="Select document type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -528,7 +522,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Loan Amount */}
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="loanAmount">Loan Amount ($)</Label>
                           <Input
                             id="loanAmount"
@@ -545,7 +539,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Interest Rate */}
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="interestRate">
                             Interest Rate (%)
                           </Label>
@@ -567,7 +561,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Term */}
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="term">Term (months)</Label>
                           <Input
                             id="term"
@@ -584,7 +578,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Borrower Name */}
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="borrowerName">Borrower Name</Label>
                           <Input
                             id="borrowerName"
@@ -600,7 +594,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Lender Name */}
-                        <div>
+                        <div className="col-span-2 space-y-2">
                           <Label htmlFor="lenderName">Lender Name</Label>
                           <Input
                             id="lenderName"
@@ -616,7 +610,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Collateral */}
-                        <div className="col-span-2">
+                        <div className="col-span-2 space-y-2">
                           <Label htmlFor="collateral">
                             Collateral (Optional)
                           </Label>
@@ -629,7 +623,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Purpose */}
-                        <div className="col-span-2">
+                        <div className="col-span-2 space-y-2">
                           <Label htmlFor="purpose">
                             Loan Purpose (Optional)
                           </Label>
@@ -642,7 +636,7 @@ export function GenerateDocumentModal({
                         </div>
 
                         {/* Additional Terms */}
-                        <div className="col-span-2">
+                        <div className="col-span-2 space-y-2 pb-6">
                           <Label htmlFor="additionalTerms">
                             Additional Terms (Optional)
                           </Label>
@@ -750,13 +744,14 @@ export function GenerateDocumentModal({
                       </div>
 
                       <div className="bg-card p-6 rounded-lg border max-h-96 overflow-y-auto">
-                        <ReactMarkdown
-                          className="prose prose-sm max-w-none dark:prose-invert"
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
-                        >
-                          {generatedDocument}
-                        </ReactMarkdown>
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                          >
+                            {generatedDocument}
+                          </ReactMarkdown>
+                        </div>
                       </div>
                     </motion.div>
                   )}

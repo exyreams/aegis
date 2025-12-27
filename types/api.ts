@@ -1,12 +1,8 @@
-// Simplified user roles for hackathon demo
-export type UserRole = "admin" | "lender" | "borrower";
-
 // User interface
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: UserRole;
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -22,7 +18,6 @@ export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
-  role: UserRole;
   image?: string;
 }
 
