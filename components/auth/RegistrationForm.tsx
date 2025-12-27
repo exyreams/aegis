@@ -6,15 +6,6 @@ import { Button } from "@/components/ui/Button";
 
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
-import { RolePermissions } from "@/lib/rolePermissions";
-import type { UserRole } from "@/types/api";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -50,7 +41,6 @@ const registrationSchema = z
       .string()
       .min(1, "Name is required")
       .min(2, "Name must be at least 2 characters long"),
-    role: z.enum(["borrower", "lender", "admin"]),
     password: z
       .string()
       .min(1, "Password is required")
@@ -83,7 +73,6 @@ export function RegistrationForm({
     password: "",
     confirmPassword: "",
     name: "",
-    role: "" as UserRole,
     image: "", // Avatar seed
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -91,7 +80,7 @@ export function RegistrationForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { register } = useAuth();
+  const { signUp } = useAuth();
 
   const [isPasswordGenerated, setIsPasswordGenerated] = useState(false);
   const [avatarSeed, setAvatarSeed] = useState("");
@@ -216,20 +205,19 @@ export function RegistrationForm({
         200
       );
 
-      const user = await register({
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        role: formData.role,
-        image: avatarDataUrl, // Avatar data URL for database
-      });
+      await signUp(
+        formData.email,
+        formData.password,
+        formData.name,
+        avatarDataUrl
+      );
 
       setSuccess("Registration successful! You are now logged in.");
       toast.success(`Welcome ${formData.name}! Registration successful.`);
 
       // Call success callback if provided
       if (onSuccess) {
-        onSuccess(user);
+        onSuccess({ email: formData.email, name: formData.name });
       }
     } catch (err) {
       const errorMessage =
@@ -297,34 +285,6 @@ export function RegistrationForm({
               className="pl-10"
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="role">Role</Label>
-          <Select
-            value={formData.role}
-            onValueChange={(value) => handleInputChange("role", value)}
-            disabled={loading}
-          >
-            <SelectTrigger className="min-h-[45px]">
-              <SelectValue placeholder="Select Role" />
-            </SelectTrigger>
-            <SelectContent>
-              {RolePermissions.getAllRoles().map((role) => {
-                const config = RolePermissions.getRoleConfig(role);
-                return (
-                  <SelectItem key={role} value={role}>
-                    <div className="flex flex-col items-start">
-                      <span>{config.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {config.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Profile Avatar Section */}
