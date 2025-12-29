@@ -4,6 +4,7 @@ export interface User {
   email: string;
   name: string;
   image?: string;
+  role: "borrower" | "lender" | "admin";
   createdAt: string;
   updatedAt: string;
 }

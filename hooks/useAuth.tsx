@@ -9,6 +9,7 @@ interface UserProfile {
   name: string;
   email: string;
   image?: string;
+  role: "borrower" | "lender" | "admin";
   created_at: string;
   updated_at: string;
 }
@@ -149,6 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       throw error;
     }
+    // Redirect to home page after signout
+    window.location.href = "/";
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {

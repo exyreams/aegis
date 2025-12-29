@@ -18,10 +18,10 @@ export default function AuthPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (auth.isAuthenticated) {
+    if (auth.user && !auth.loading) {
       router.push("/dashboard");
     }
-  }, [auth.isAuthenticated, router]);
+  }, [auth.user, auth.loading, router]);
 
   const handleRegistrationSuccess = () => {
     // Auto-redirect to dashboard after successful registration

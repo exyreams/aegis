@@ -43,7 +43,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { login } = useAuth();
+  const { signIn } = useAuth();
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -78,10 +78,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setSuccess("");
 
     try {
-      await login({
-        email: formData.email,
-        password: formData.password,
-      });
+      await signIn(formData.email, formData.password);
 
       setSuccess("Login successful! Welcome back.");
       toast.success("Login successful! Welcome back.");
