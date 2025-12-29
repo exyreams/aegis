@@ -20,13 +20,13 @@ export default function Home() {
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
-    if (auth.user && !auth.isLoading) {
+    if (auth.user && !auth.loading) {
       router.push("/dashboard");
     }
-  }, [auth.user, auth.isLoading, router]);
+  }, [auth.user, auth.loading, router]);
 
   // Show loading while checking authentication
-  if (auth.isLoading) {
+  if (auth.loading) {
     return <PageLoader />;
   }
 

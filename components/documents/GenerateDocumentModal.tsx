@@ -33,7 +33,7 @@ import {
   Save,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { documentService } from "@/lib/documents";
+import { useCreateDocument } from "@/hooks/useDocuments";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -97,10 +97,10 @@ export function GenerateDocumentModal({
   onSuccess,
 }: GenerateDocumentModalProps) {
   const { auth } = useAuth();
+  const createDocumentMutation = useCreateDocument();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generatedDocument, setGeneratedDocument] = useState<string>("");
 
@@ -214,15 +214,13 @@ export function GenerateDocumentModal({
       return;
     }
 
-    setIsSaving(true);
+    const documentTitle = `${
+      DOCUMENT_TYPES.find((t) => t.value === watchedValues.documentType)
+        ?.label || "Document"
+    } - ${watchedValues.borrowerName}`;
 
-    try {
-      const documentTitle = `${
-        DOCUMENT_TYPES.find((t) => t.value === watchedValues.documentType)
-          ?.label || "Document"
-      } - ${watchedValues.borrowerName}`;
-
-      const document = await documentService.createDocument({
+    createDocumentMutation.mutate(
+      {
         title: documentTitle,
         document_type: watchedValues.documentType,
         content: generatedDocument,
@@ -234,17 +232,14 @@ export function GenerateDocumentModal({
         collateral: watchedValues.collateral,
         purpose: watchedValues.purpose,
         additional_terms: watchedValues.additionalTerms,
-      });
-
-      toast.success("Document saved successfully!");
-      onSuccess?.(document.id);
-      handleClose();
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Failed to save document");
-    } finally {
-      setIsSaving(false);
-    }
+      },
+      {
+        onSuccess: (document) => {
+          onSuccess?.(document.id);
+          handleClose();
+        },
+      }
+    );
   };
 
   const prevStep = () => {
@@ -315,7 +310,7 @@ export function GenerateDocumentModal({
           {/* Close Button */}
           <button
             onClick={handleClose}
-            disabled={isGenerating || isSaving}
+            disabled={isGenerating || createDocumentMutation.isPending}
             className="absolute top-3 right-3 z-20 p-2 hover:bg-muted/80 rounded-full transition-colors bg-background/80 backdrop-blur-sm border"
           >
             <X className="h-4 w-4" />
@@ -417,7 +412,11 @@ export function GenerateDocumentModal({
                 <Button
                   type="button"
                   onClick={prevStep}
-                  disabled={currentStep === 1 || isGenerating || isSaving}
+                  disabled={
+                    currentStep === 1 ||
+                    isGenerating ||
+                    createDocumentMutation.isPending
+                  }
                   variant="ghost"
                   size="sm"
                   className="disabled:opacity-50"
@@ -445,16 +444,18 @@ export function GenerateDocumentModal({
                   <Button
                     type="button"
                     onClick={saveDocument}
-                    disabled={isSaving}
+                    disabled={createDocumentMutation.isPending}
                     size="sm"
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    {isSaving ? (
+                    {createDocumentMutation.isPending ? (
                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                     ) : (
                       <Save className="h-4 w-4 mr-1" />
                     )}
-                    Save Document
+                    {createDocumentMutation.isPending
+                      ? "Saving..."
+                      : "Save Document"}
                   </Button>
                 ) : null}
               </div>
