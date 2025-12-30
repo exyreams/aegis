@@ -5,11 +5,9 @@ import {
   IconDotsVertical,
   IconLogout,
   IconUserCircle,
-  IconShield,
 } from "@tabler/icons-react";
 import { Settings } from "@/components/icons";
 
-import { Badge } from "@/components/ui/Badge";
 import { GlassAvatar } from "@/components/ui/GlassAvatar";
 import {
   DropdownMenu,
@@ -79,16 +77,14 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
             >
-              {renderAvatar(40, "h-10 w-10 rounded-lg")}
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              {renderAvatar(32, "size-8 rounded-lg")}
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
-                </span>
+                <span className="truncate text-xs">{user.email}</span>
               </div>
-              <IconDotsVertical className="ml-auto size-4" />
+              <IconDotsVertical className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
