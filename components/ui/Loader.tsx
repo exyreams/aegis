@@ -1,5 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+
 
 interface LoaderProps {
   className?: string;
@@ -8,7 +9,13 @@ interface LoaderProps {
 export function Loader({ className = "" }: LoaderProps) {
   return (
     <div className={cn("flex items-center justify-center", className)}>
-      <Image src="/loader.svg" alt="Loading" width={80} height={80} />
+      <img
+        src="/loader.svg"
+        alt="Loading"
+        width={80}
+        height={80}
+        className="h-auto"
+      />
     </div>
   );
 }
@@ -33,7 +40,15 @@ export function InlineLoader() {
 }
 
 export function ButtonLoader() {
-  return <Image src="/loader.svg" alt="Loading" width={20} height={20} />;
+  return (
+    <img
+      src="/loader.svg"
+      alt="Loading"
+      width={20}
+      height={20}
+      className="h-auto"
+    />
+  );
 }
 
 export function ProtectedRoutesLoader() {

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LoginForm, RegistrationForm } from "@/components/auth";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
-import Image from "next/image";
+
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 type AuthMode = "login" | "register";
@@ -85,7 +86,7 @@ export default function AuthPage() {
         {/* Left Panel - Auth Forms */}
         <div className="flex flex-col gap-4 p-6 md:p-10 relative overflow-hidden">
           {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
           {/* Header */}
           <motion.div
@@ -102,14 +103,14 @@ export default function AuthPage() {
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Image
+                <img
                   src="/aegis.svg"
                   alt="Aegis"
                   width={32}
                   height={32}
                   className="object-contain dark:hidden"
                 />
-                <Image
+                <img
                   src="/aegis_dark.svg"
                   alt="Aegis"
                   width={32}
@@ -207,7 +208,7 @@ export default function AuthPage() {
           {/* Animated background */}
           <div className="absolute inset-0">
             <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-background"
+              className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/10 to-background"
               animate={{
                 background: [
                   "linear-gradient(135deg, hsl(var(--primary))/0.2, hsl(var(--primary))/0.1, hsl(var(--background)))",
@@ -263,18 +264,17 @@ export default function AuthPage() {
                 }}
                 className="mb-8"
               >
-                <Image
+                <img
                   src="/auth_animation.svg"
                   alt="Aegis Authentication"
                   width={256}
                   height={256}
                   className="mx-auto object-contain"
-                  priority
                 />
               </motion.div>
 
               <motion.h2
-                className="text-3xl font-bold text-foreground mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text"
+                className="text-3xl font-bold text-foreground mb-4 bg-linear-to-r from-primary to-secondary bg-clip-text"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.7 }}

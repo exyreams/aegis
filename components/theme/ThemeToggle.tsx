@@ -188,6 +188,7 @@ export const ThemeToggle = ({
       >
         <clipPath id="theme-toggle-clip">
           <motion.path
+            initial={false}
             animate={{ y: isDark ? 10 : 0, x: isDark ? -12 : 0 }}
             transition={{
               type: "spring",
@@ -200,6 +201,7 @@ export const ThemeToggle = ({
         </clipPath>
         <g clipPath="url(#theme-toggle-clip)">
           <motion.circle
+            initial={false}
             animate={{ r: isDark ? 10 : 8 }}
             transition={{
               type: "spring",
@@ -211,6 +213,7 @@ export const ThemeToggle = ({
             cy="16"
           />
           <motion.g
+            initial={false}
             animate={{
               rotate: isDark ? -100 : 0,
               scale: isDark ? 0.5 : 1,
