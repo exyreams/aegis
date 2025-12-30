@@ -95,6 +95,36 @@ export interface LoanTrade {
   completedAt?: string;
 }
 
+// Secondary Market interfaces
+export interface LoanListing {
+  listingId: string;
+  seller: string;
+  loanId: string;
+  askingPrice: string;
+  status: "active" | "pending" | "sold" | "expired" | "cancelled";
+  loanDetails: {
+    originalAmount: string;
+    outstandingAmount: string;
+    interestRate: string;
+    maturityDate: string;
+    borrower: string;
+  };
+  listedAt: string;
+  updatedAt: string;
+}
+
+export interface LoanOffer {
+  offerId: string;
+  buyer: string;
+  listingId: string;
+  offerPrice: string;
+  terms: string;
+  status: "pending" | "accepted" | "rejected" | "expired" | "withdrawn";
+  validUntil: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // API Response wrapper
 export interface ApiResponse<T> {
   success: boolean;
