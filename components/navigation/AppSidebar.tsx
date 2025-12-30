@@ -2,14 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  FileText,
-  ArrowLeftRight,
-  Settings,
-  Shield,
-  Leaf,
-} from "lucide-react";
+import { Compliance, Dashboard, Documents, ESG, DigitalLoans, SecondaryMarket, Settings } from "@/components/icons";
 
 import { NavMain } from "@/components/navigation/NavMain";
 import { NavSecondary } from "@/components/navigation/NavSecondary";
@@ -23,8 +16,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/Sidebar";
+
 import { useAuth } from "@/hooks/useAuth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -40,32 +33,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       title: "Dashboard",
       url: "/dashboard",
-      icon: LayoutDashboard,
+      icon: Dashboard,
     },
     {
       title: "Digital Loans",
       url: "/dashboard/loans",
-      icon: FileText,
+      icon: DigitalLoans,
     },
     {
       title: "Document Creation",
       url: "/dashboard/documents",
-      icon: FileText,
+      icon: Documents,
     },
     {
       title: "Secondary Market",
       url: "/dashboard/secondary-market",
-      icon: ArrowLeftRight,
+      icon: SecondaryMarket,
     },
     {
       title: "Compliance",
       url: "/dashboard/compliance",
-      icon: Shield,
+      icon: Compliance,
     },
     {
       title: "ESG Reporting",
       url: "/dashboard/esg",
-      icon: Leaf,
+      icon: ESG,
     },
   ];
 
@@ -108,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <NavUser user={userData} />
       </SidebarFooter>
-      <SidebarRail />
+
     </Sidebar>
   );
 }

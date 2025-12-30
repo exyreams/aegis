@@ -1,11 +1,9 @@
 import {
-  Coins,
-  CreditCard,
-  Shield,
-  FileDescription,
-  Loan,
+  Documents,
+  DigitalLoans,
   Users,
 } from "@/components/icons";
+import { Coins, CreditCard, ShieldCheck } from "lucide-react";
 
 export interface Feature {
   icon: React.ComponentType<{ className?: string }>;
@@ -17,7 +15,7 @@ export interface Feature {
 
 export const PLATFORM_FEATURES: Feature[] = [
   {
-    icon: FileDescription,
+    icon: Documents,
     title: "Digital Loan Documents",
     description:
       "AI-powered extraction and standardization of loan terms from complex legal documents",
@@ -29,7 +27,7 @@ export const PLATFORM_FEATURES: Feature[] = [
     route: "/dashboard/documents",
   },
   {
-    icon: Shield,
+    icon: ShieldCheck,
     title: "Document Creation & Negotiation",
     description:
       "Accelerate loan document creation with intelligent templates and real-time collaboration",
@@ -41,7 +39,7 @@ export const PLATFORM_FEATURES: Feature[] = [
     route: "/dashboard/creation",
   },
   {
-    icon: Loan,
+    icon: DigitalLoans,
     title: "Transparent Loan Trading",
     description:
       "Automate secondary market due diligence with smart contracts and real-time verification",
