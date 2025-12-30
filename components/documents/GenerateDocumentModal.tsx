@@ -253,7 +253,7 @@ export function GenerateDocumentModal({
   };
 
   const handleClose = () => {
-    if (!isGenerating && !isSaving) {
+    if (!isGenerating && !createDocumentMutation.isPending) {
       reset();
       setCurrentStep(1);
       setGeneratedDocument("");
@@ -295,7 +295,16 @@ export function GenerateDocumentModal({
   ];
 
   return (
-    <WideModal open={open} onOpenChange={handleClose}>
+    <WideModal
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          handleClose();
+        } else {
+          onOpenChange(newOpen);
+        }
+      }}
+    >
       <WideModalContent className="overflow-hidden" showCloseButton={false}>
         <WideModalTitle className="sr-only">
           Generate Document - Step {currentStep} of 3:{" "}

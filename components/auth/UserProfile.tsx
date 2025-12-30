@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 export function UserProfile() {
   const { auth, signOut } = useAuth();

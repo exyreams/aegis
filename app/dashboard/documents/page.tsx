@@ -25,7 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
-import { GenerateDocumentModal, DocumentList } from "@/components/documents";
+import {
+  GenerateDocumentModal,
+  CreateDocumentModal,
+  DocumentList,
+} from "@/components/documents";
 import { toast } from "sonner";
 import {
   Plus,
@@ -44,6 +48,7 @@ export default function DocumentsPage() {
   const user = auth.user;
 
   // Modal states
+  const [generateDocModalOpen, setGenerateDocModalOpen] = useState(false);
   const [createDocModalOpen, setCreateDocModalOpen] = useState(false);
 
   // Search and filter states
@@ -61,6 +66,13 @@ export default function DocumentsPage() {
 
   const handleDocumentGenerated = (documentId: string) => {
     toast.success("Document generated successfully!");
+    setGenerateDocModalOpen(false);
+    // Optionally navigate to the new document
+    // router.push(`/dashboard/documents/${documentId}`);
+  };
+
+  const handleDocumentCreated = (documentId: string) => {
+    toast.success("Document created successfully!");
     setCreateDocModalOpen(false);
     // Optionally navigate to the new document
     // router.push(`/dashboard/documents/${documentId}`);
@@ -108,7 +120,7 @@ export default function DocumentsPage() {
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => setCreateDocModalOpen(true)}
+                      onClick={() => setGenerateDocModalOpen(true)}
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
                       AI Generate
@@ -335,7 +347,7 @@ export default function DocumentsPage() {
                           variant="outline"
                           size="sm"
                           className="w-full"
-                          onClick={() => setCreateDocModalOpen(true)}
+                          onClick={() => setGenerateDocModalOpen(true)}
                         >
                           Browse Templates
                         </Button>
@@ -382,11 +394,18 @@ export default function DocumentsPage() {
           </div>
         </SidebarInset>
 
-        {/* Generate Document Modal */}
+        {/* AI Generate Document Modal */}
         <GenerateDocumentModal
+          open={generateDocModalOpen}
+          onOpenChange={setGenerateDocModalOpen}
+          onSuccess={handleDocumentGenerated}
+        />
+
+        {/* Create Document Modal */}
+        <CreateDocumentModal
           open={createDocModalOpen}
           onOpenChange={setCreateDocModalOpen}
-          onSuccess={handleDocumentGenerated}
+          onSuccess={handleDocumentCreated}
         />
       </SidebarProvider>
     </ProtectedRoute>

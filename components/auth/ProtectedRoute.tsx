@@ -3,7 +3,6 @@
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent } from "@/components/ui/Card";
 import { ProtectedRoutesLoader } from "@/components/ui/Loader";
 
 interface ProtectedRouteProps {

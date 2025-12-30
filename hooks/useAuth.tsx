@@ -6,7 +6,7 @@ import {
   createContext,
   useContext,
   useMemo,
-  memo,
+  useCallback,
 } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -42,45 +42,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const fetchUserProfile = async (
+  userId: string
+): Promise<UserProfile | null> => {
+  try {
+    const fetchPromise = supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Profile fetch timeout")), 5000)
+    );
+
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error && error.message === "Profile fetch timeout") {
+      console.error("Profile fetch timeout");
+    } else {
+      console.error("Error fetching user profile:", error);
+    }
+    return null;
+  }
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({
     user: null,
     session: null,
     loading: true,
   });
-
-  const fetchUserProfile = async (
-    userId: string
-  ): Promise<UserProfile | null> => {
-    try {
-      // Add timeout to prevent hanging
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single()
-        .abortSignal(controller.signal);
-
-      clearTimeout(timeoutId);
-
-      if (error) {
-        console.error("Error fetching user profile:", error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      if (error.name === "AbortError") {
-        console.error("Profile fetch timeout");
-      } else {
-        console.error("Error fetching user profile:", error);
-      }
-      return null;
-    }
-  };
 
   useEffect(() => {
     let profileCache: UserProfile | null = null;
@@ -176,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -185,65 +184,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const signUp = async (
-    email: string,
-    password: string,
-    name: string,
-    image?: string
-  ) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          image,
+  const signUp = useCallback(
+    async (email: string, password: string, name: string, image?: string) => {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            image,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      throw error;
-    }
-  };
+      if (error) {
+        throw error;
+      }
+    },
+    []
+  );
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       throw error;
     }
     // Redirect to home page after signout
     window.location.href = "/";
-  };
+  }, []);
 
-  const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!auth.user) {
-      throw new Error("No user logged in");
-    }
+  const updateProfile = useCallback(
+    async (data: Partial<UserProfile>) => {
+      if (!auth.user) {
+        throw new Error("No user logged in");
+      }
 
-    const { error } = await supabase
-      .from("users")
-      .update({
-        ...data,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", auth.user.id);
+      const { error } = await supabase
+        .from("users")
+        .update({
+          ...data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", auth.user.id);
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    // Refresh user profile
-    const updatedProfile = await fetchUserProfile(auth.user.id);
-    if (updatedProfile) {
-      setAuth((prev) => ({
-        ...prev,
-        user: updatedProfile,
-      }));
-    }
-  };
+      // Refresh user profile
+      const updatedProfile = await fetchUserProfile(auth.user.id);
+      if (updatedProfile) {
+        setAuth((prev) => ({
+          ...prev,
+          user: updatedProfile,
+        }));
+      }
+    },
+    [auth.user]
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -253,7 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       updateProfile,
     }),
-    [auth]
+    [auth, signIn, signUp, signOut, updateProfile]
   );
 
   return (
