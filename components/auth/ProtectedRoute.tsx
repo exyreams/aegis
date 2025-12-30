@@ -15,13 +15,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!auth.loading && !auth.user) {
+    // Only redirect if we're certain there's no user (not loading and no user)
+    if (!auth.loading && !auth.user && !auth.session) {
       router.push("/auth");
     }
-  }, [auth.loading, auth.user, router]);
+  }, [auth.loading, auth.user, auth.session, router]);
 
-  // Show loading while checking authentication
-  if (auth.loading) {
+  // Show loading only if we're still checking auth AND don't have a session
+  if (auth.loading && !auth.session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <ProtectedRoutesLoader />
@@ -29,8 +30,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
+  // If we have a session but no user profile yet, show the protected content
+  // (profile will load in background)
+  if (auth.session) {
+    return <>{children}</>;
+  }
+
   // Redirect to login if not authenticated
-  if (!auth.user) {
+  if (!auth.loading && !auth.user && !auth.session) {
     return null;
   }
 

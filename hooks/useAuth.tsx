@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  useMemo,
+  memo,
+} from "react";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
@@ -46,11 +53,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userId: string
   ): Promise<UserProfile | null> => {
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .eq("id", userId)
-        .single();
+        .single()
+        .abortSignal(controller.signal);
+
+      clearTimeout(timeoutId);
 
       if (error) {
         console.error("Error fetching user profile:", error);
@@ -59,26 +73,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return data;
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      if (error.name === "AbortError") {
+        console.error("Profile fetch timeout");
+      } else {
+        console.error("Error fetching user profile:", error);
+      }
       return null;
     }
   };
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    let profileCache: UserProfile | null = null;
 
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setAuth({
-          user: profile,
-          session,
-          loading: false,
-        });
-      } else {
+    // Get initial session with timeout
+    const getInitialSession = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          // Set session immediately, fetch profile in background
+          setAuth((prev) => ({
+            ...prev,
+            session,
+            loading: false,
+          }));
+
+          // Fetch profile with timeout
+          const profile = await Promise.race([
+            fetchUserProfile(session.user.id),
+            new Promise<null>((_, reject) =>
+              setTimeout(() => reject(new Error("Profile fetch timeout")), 3000)
+            ),
+          ]).catch(() => null);
+
+          profileCache = profile;
+          setAuth({
+            user: profile,
+            session,
+            loading: false,
+          });
+        } else {
+          setAuth({
+            user: null,
+            session: null,
+            loading: false,
+          });
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
         setAuth({
           user: null,
           session: null,
@@ -94,13 +138,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setAuth({
-          user: profile,
-          session,
-          loading: false,
-        });
+        // Use cached profile if same user, otherwise fetch new
+        if (profileCache?.id === session.user.id) {
+          setAuth({
+            user: profileCache,
+            session,
+            loading: false,
+          });
+        } else {
+          // Set session immediately, fetch profile in background
+          setAuth((prev) => ({
+            ...prev,
+            session,
+            loading: false,
+          }));
+
+          const profile = await fetchUserProfile(session.user.id).catch(
+            () => null
+          );
+          profileCache = profile;
+          setAuth({
+            user: profile,
+            session,
+            loading: false,
+          });
+        }
       } else {
+        profileCache = null;
         setAuth({
           user: null,
           session: null,
@@ -181,18 +245,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const contextValue = useMemo(
+    () => ({
+      auth,
+      signIn,
+      signUp,
+      signOut,
+      updateProfile,
+    }),
+    [auth]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        auth,
-        signIn,
-        signUp,
-        signOut,
-        updateProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 

@@ -18,35 +18,25 @@ export default function Home() {
   const router = useRouter();
   const { auth } = useAuth();
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to dashboard (only when we're sure they're authenticated)
   useEffect(() => {
     if (auth.user && !auth.loading) {
       router.push("/dashboard");
     }
   }, [auth.user, auth.loading, router]);
 
-  // Show loading while checking authentication
-  if (auth.loading) {
-    return <PageLoader />;
-  }
-
-  // Show landing page for unauthenticated users
-  if (!auth.user) {
-    return (
-      <div className="min-h-screen">
-        <LandingNavigation />
-        <main>
-          <HeroSection />
-          <FeaturesSection />
-          <SecuritySection />
-          <StatsSection />
-          <CTASection />
-        </main>
-        <LandingFooter />
-      </div>
-    );
-  }
-
-  // Show loading while redirecting authenticated users
-  return <PageLoader />;
+  // Always show landing page immediately - redirect happens in background
+  return (
+    <div className="min-h-screen">
+      <LandingNavigation />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <SecuritySection />
+        <StatsSection />
+        <CTASection />
+      </main>
+      <LandingFooter />
+    </div>
+  );
 }
