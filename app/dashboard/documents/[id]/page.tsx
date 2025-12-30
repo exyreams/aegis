@@ -16,12 +16,9 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Edit3,
-  Eye,
   Download,
   Copy,
-  Share2,
   Trash2,
-  Save,
   X,
   FileText,
   Calendar,
@@ -37,7 +34,7 @@ export default function DocumentDetailPage() {
   const router = useRouter();
   const documentId = params.id as string;
 
-  const { data: document, isLoading, error } = useDocument(documentId);
+  const { data: document, isLoading } = useDocument(documentId);
   const deleteDocumentMutation = useDeleteDocument();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -65,7 +62,7 @@ export default function DocumentDetailPage() {
     try {
       await navigator.clipboard.writeText(document.content);
       toast.success("Document content copied to clipboard");
-    } catch (error) {
+    } catch {
       toast.error("Failed to copy content");
     }
   };
@@ -75,12 +72,12 @@ export default function DocumentDetailPage() {
 
     const blob = new Blob([document.content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = globalThis.document.createElement("a");
     a.href = url;
     a.download = `${document.title}.md`;
-    document.body.appendChild(a);
+    globalThis.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    globalThis.document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast.success("Document downloaded");
   };
@@ -121,7 +118,7 @@ export default function DocumentDetailPage() {
     );
   }
 
-  if (error) {
+  if (!document) {
     return (
       <ProtectedRoute>
         <SidebarProvider>
@@ -134,8 +131,8 @@ export default function DocumentDetailPage() {
                   Document not found
                 </h2>
                 <p className="text-muted-foreground mb-4">
-                  The document you're looking for doesn't exist or you don't
-                  have access to it.
+                  The document you&apos;re looking for doesn&apos;t exist or you
+                  don&apos;t have access to it.
                 </p>
                 <Button onClick={() => router.push("/dashboard/documents")}>
                   Back to Documents
@@ -146,10 +143,6 @@ export default function DocumentDetailPage() {
         </SidebarProvider>
       </ProtectedRoute>
     );
-  }
-
-  if (!document) {
-    return null;
   }
 
   return (
