@@ -125,7 +125,11 @@ Format the document with proper legal structure, numbered sections, and professi
       console.log("Stream created successfully");
     } catch (streamError) {
       console.error("Error creating Cerebras stream:", streamError);
-      throw new Error(`Cerebras API error: ${streamError.message}`);
+      const errorMessage =
+        streamError instanceof Error
+          ? streamError.message
+          : String(streamError);
+      throw new Error(`Cerebras API error: ${errorMessage}`);
     }
 
     // Create a readable stream for the response
@@ -134,11 +138,25 @@ Format the document with proper legal structure, numbered sections, and professi
       async start(controller) {
         try {
           for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || "";
-            if (content) {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
-              );
+            // Type guard for chunk structure
+            if (
+              chunk &&
+              typeof chunk === "object" &&
+              "choices" in chunk &&
+              Array.isArray(chunk.choices) &&
+              chunk.choices[0] &&
+              typeof chunk.choices[0] === "object" &&
+              "delta" in chunk.choices[0] &&
+              chunk.choices[0].delta &&
+              typeof chunk.choices[0].delta === "object" &&
+              "content" in chunk.choices[0].delta
+            ) {
+              const content = chunk.choices[0].delta.content || "";
+              if (content && typeof content === "string") {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
+                );
+              }
             }
           }
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
