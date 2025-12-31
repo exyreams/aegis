@@ -2,11 +2,20 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Compliance, Dashboard, Documents, ESG, DigitalLoans, SecondaryMarket, Settings } from "@/components/icons";
+import {
+  Compliance,
+  Dashboard,
+  Documents,
+  ESG,
+  DigitalLoans,
+  SecondaryMarket,
+  Settings,
+} from "@/components/icons";
 
 import { NavMain } from "@/components/navigation/NavMain";
 import { NavSecondary } from "@/components/navigation/NavSecondary";
 import { NavUser } from "@/components/navigation/NavUser";
+import { NavUserSkeleton } from "@/components/navigation/NavUserSkeleton";
 import { Logo } from "@/components/ui/Logo";
 import {
   Sidebar,
@@ -22,11 +31,6 @@ import { useAuth } from "@/hooks/useAuth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { auth } = useAuth();
-
-  // Don't render sidebar if user is not authenticated
-  if (!auth.user) {
-    return null;
-  }
 
   // Navigation items aligned with hackathon categories
   const navMain = [
@@ -70,12 +74,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
-  // User data from authenticated user
-  const userData = {
-    name: auth.user.name,
-    email: auth.user.email,
-    avatar: auth.user.image || auth.user.name || auth.user.email,
-  };
+  // User data from authenticated user (only when available)
+  const userData = auth.user
+    ? {
+        name: auth.user.name,
+        email: auth.user.email,
+        avatar: auth.user.image || auth.user.name || auth.user.email,
+      }
+    : null;
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -99,9 +105,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userData} />
+        {auth.loading || !userData ? (
+          <NavUserSkeleton />
+        ) : (
+          <NavUser user={userData} />
+        )}
       </SidebarFooter>
-
     </Sidebar>
   );
 }
