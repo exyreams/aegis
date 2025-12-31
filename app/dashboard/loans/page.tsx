@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
-import { UploadDocumentModal } from "@/components/loans";
+import { UploadDocumentModal } from "@/components/digital-loans";
 import { toast } from "sonner";
 import {
   Plus,
