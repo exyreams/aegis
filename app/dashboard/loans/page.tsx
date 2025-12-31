@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/navigation";
 import { SiteHeader } from "@/components/layout";
 import { SidebarInset, SidebarProvider } from "@/components/ui/Sidebar";
@@ -24,7 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
-import { UploadDocumentModal } from "@/components/digital-loans";
+
+import {
+  UploadDocumentModal,
+  LoanCard,
+  CreateLoanModal,
+  type LoanData,
+} from "@/components/digital-loans";
 import { toast } from "sonner";
 import {
   Plus,
@@ -32,19 +38,20 @@ import {
   Upload,
   Search,
   X,
-  TrendingUp,
   Clock,
   DollarSign,
-  AlertCircle,
   Building2,
   FileSearch,
-  ClipboardCheck,
-  Leaf,
+  TrendingUp,
+  BarChart3,
+  Database,
+  ArrowUpRight,
+  Zap,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function DigitalLoansPage() {
   const { auth } = useAuth();
-  const user = auth.user;
 
   // Modal states
   const [createLoanModalOpen, setCreateLoanModalOpen] = useState(false);
@@ -56,13 +63,168 @@ export default function DigitalLoansPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
 
-  // Mock data - replace with real API calls later
-  const loans: any[] = [];
+  // Loan data state
+  const [loans, setLoans] = useState<LoanData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load mock loan data
+  useEffect(() => {
+    const loadMockData = async () => {
+      setIsLoading(true);
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Generate mock loans
+      const mockLoans: LoanData[] = [
+        {
+          id: "LOAN-001",
+          borrower: "Global Manufacturing Corp",
+          lender: "JPMorgan Chase Bank, N.A.",
+          amount: 250000000,
+          currency: "USD",
+          interestRate: 4.75,
+          term: 60,
+          maturityDate: "2029-12-31",
+          facilityType: "Revolving Credit Facility",
+          status: "active",
+          purpose: "General corporate purposes and working capital",
+          riskRating: "BBB",
+          covenants: [
+            {
+              type: "financial",
+              description: "Leverage Ratio ≤ 3.50:1.00",
+              status: "compliant",
+            },
+            {
+              type: "financial",
+              description: "Interest Coverage Ratio ≥ 4.00:1.00",
+              status: "compliant",
+            },
+            {
+              type: "operational",
+              description: "Material Adverse Change",
+              status: "compliant",
+            },
+          ],
+          documents: [
+            {
+              id: "DOC-001",
+              name: "Credit Agreement",
+              type: "Legal Document",
+              uploadedAt: "2024-01-15",
+              processed: true,
+            },
+            {
+              id: "DOC-002",
+              name: "Financial Statements Q4 2023",
+              type: "Financial Report",
+              uploadedAt: "2024-01-20",
+              processed: true,
+            },
+          ],
+          createdAt: "2024-01-15",
+          updatedAt: "2024-01-20",
+          esgScore: 75,
+          sustainabilityLinked: true,
+        },
+        {
+          id: "LOAN-002",
+          borrower: "Tech Innovations Ltd",
+          lender: "Goldman Sachs Bank",
+          amount: 150000000,
+          currency: "USD",
+          interestRate: 5.25,
+          term: 36,
+          maturityDate: "2027-06-30",
+          facilityType: "Term Loan",
+          status: "under_review",
+          purpose: "Acquisition financing",
+          riskRating: "BB",
+          covenants: [
+            {
+              type: "financial",
+              description: "Debt Service Coverage Ratio ≥ 1.25x",
+              status: "warning",
+            },
+          ],
+          documents: [
+            {
+              id: "DOC-003",
+              name: "Term Sheet",
+              type: "Commercial Document",
+              uploadedAt: "2024-01-25",
+              processed: false,
+            },
+          ],
+          createdAt: "2024-01-25",
+          updatedAt: "2024-01-25",
+          esgScore: 68,
+          sustainabilityLinked: false,
+        },
+        {
+          id: "LOAN-003",
+          borrower: "Green Energy Solutions",
+          lender: "Bank of America",
+          amount: 500000000,
+          currency: "USD",
+          interestRate: 4.25,
+          term: 84,
+          maturityDate: "2031-03-31",
+          facilityType: "Project Finance",
+          status: "approved",
+          purpose: "Renewable energy project development",
+          riskRating: "A",
+          covenants: [
+            {
+              type: "financial",
+              description: "Project DSCR ≥ 1.35x",
+              status: "compliant",
+            },
+            {
+              type: "operational",
+              description: "Environmental compliance",
+              status: "compliant",
+            },
+          ],
+          documents: [
+            {
+              id: "DOC-004",
+              name: "Project Finance Agreement",
+              type: "Legal Document",
+              uploadedAt: "2024-01-10",
+              processed: true,
+            },
+            {
+              id: "DOC-005",
+              name: "Environmental Impact Assessment",
+              type: "Regulatory Document",
+              uploadedAt: "2024-01-12",
+              processed: true,
+            },
+          ],
+          createdAt: "2024-01-10",
+          updatedAt: "2024-01-15",
+          esgScore: 92,
+          sustainabilityLinked: true,
+        },
+      ];
+
+      setLoans(mockLoans);
+      setIsLoading(false);
+    };
+
+    loadMockData();
+  }, []);
+
+  // Calculate stats
   const stats = {
-    total: 0,
-    active: 0,
-    totalValue: 0,
-    documentsProcessed: 0,
+    total: loans.length,
+    active: loans.filter((loan) => loan.status === "active").length,
+    totalValue: loans.reduce((sum, loan) => sum + loan.amount, 0),
+    documentsProcessed: loans.reduce(
+      (sum, loan) => sum + loan.documents.filter((doc) => doc.processed).length,
+      0
+    ),
   };
 
   const formatCurrency = (amount: number) => {
@@ -87,6 +249,86 @@ export default function DigitalLoansPage() {
     typeFilter !== "all" ||
     sortBy !== "newest";
 
+  // Filter and sort loans
+  const filteredLoans = loans
+    .filter((loan) => {
+      const matchesSearch =
+        !searchQuery ||
+        loan.borrower.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        loan.facilityType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        loan.purpose.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "all" || loan.status === statusFilter;
+      const matchesType =
+        typeFilter === "all" ||
+        loan.facilityType.toLowerCase().includes(typeFilter.toLowerCase());
+
+      return matchesSearch && matchesStatus && matchesType;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "oldest":
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+        case "amount-high":
+          return b.amount - a.amount;
+        case "amount-low":
+          return a.amount - b.amount;
+        default: // newest
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+      }
+    });
+
+  const handleViewLoan = (loan: LoanData) => {
+    // Navigation handled by Link in LoanCard
+  };
+
+  const handleCreateLoan = (loanData: {
+    borrowerName: string;
+    facilityType: string;
+    purpose: string;
+    amount: number;
+    currency: string;
+    interestRate: number;
+    term: number;
+    maturityDate: string;
+    jurisdiction: string;
+    sustainabilityLinked: boolean;
+    lenderName?: string;
+    riskRating?: string;
+    covenantType?: string;
+    specialConditions?: string;
+  }) => {
+    // In a real app, this would make an API call
+    const newLoan: LoanData = {
+      id: `LOAN-${Date.now()}`,
+      borrower: loanData.borrowerName,
+      lender: loanData.lenderName || "TBD",
+      amount: loanData.amount,
+      currency: loanData.currency,
+      interestRate: loanData.interestRate,
+      term: loanData.term,
+      maturityDate: loanData.maturityDate,
+      facilityType: loanData.facilityType,
+      status: "draft",
+      purpose: loanData.purpose,
+      riskRating: (loanData.riskRating as LoanData["riskRating"]) || "BBB",
+      covenants: [],
+      documents: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      esgScore: loanData.sustainabilityLinked ? 70 : undefined,
+      sustainabilityLinked: loanData.sustainabilityLinked,
+    };
+
+    setLoans((prev) => [newLoan, ...prev]);
+    toast.success("Loan request created successfully!");
+  };
+
   return (
     <SidebarProvider
       style={
@@ -109,11 +351,8 @@ export default function DigitalLoansPage() {
                     Digital Loans
                   </h1>
                   <p className="text-muted-foreground">
-                    {user?.role === "borrower"
-                      ? "Create loan requests and manage your documents"
-                      : user?.role === "lender"
-                      ? "Browse loan opportunities and analyze documents"
-                      : "Monitor all platform loan activities"}
+                    Standardized loan data platform for interoperability and
+                    comparison
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -124,18 +363,54 @@ export default function DigitalLoansPage() {
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Document
                   </Button>
-                  {user?.role === "borrower" && (
-                    <Button onClick={() => setCreateLoanModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Loan Request
+                  <Button onClick={() => setCreateLoanModalOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Loan Request
+                  </Button>
+                </div>
+              </div>
+
+              {/* Quick Navigation Buttons */}
+              <div className="px-4 lg:px-6">
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg border">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Zap className="h-4 w-4" />
+                    Quick Access:
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link href="/dashboard/loans/analytics">
+                      <Button variant="outline" size="sm">
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Analytics
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard/loans/compare">
+                      <Button variant="outline" size="sm">
+                        <TrendingUp className="h-4 w-4 mr-2" />
+                        Compare
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard/loans/standards">
+                      <Button variant="outline" size="sm">
+                        <Database className="h-4 w-4 mr-2" />
+                        Standards
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUploadDocModalOpen(true)}
+                    >
+                      <FileSearch className="h-4 w-4 mr-2" />
+                      AI Extract
                     </Button>
-                  )}
+                  </div>
                 </div>
               </div>
 
               {/* Stats Cards */}
               <div className="px-4 lg:px-6">
-                <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
                   <Card className="@container/card">
                     <CardHeader>
                       <CardDescription>Total Loans</CardDescription>
@@ -151,10 +426,10 @@ export default function DigitalLoansPage() {
                     </CardHeader>
                     <CardFooter className="flex-col items-start gap-1.5 text-sm">
                       <div className="line-clamp-1 flex gap-2 font-medium">
-                        All loan requests <FileText className="size-4" />
+                        Standardized loans <Database className="size-4" />
                       </div>
                       <div className="text-muted-foreground">
-                        Total loans created
+                        Digital loan records
                       </div>
                     </CardFooter>
                   </Card>
@@ -174,7 +449,7 @@ export default function DigitalLoansPage() {
                     </CardHeader>
                     <CardFooter className="flex-col items-start gap-1.5 text-sm">
                       <div className="line-clamp-1 flex gap-2 font-medium">
-                        Currently active <Clock className="size-4" />
+                        Currently active <TrendingUp className="size-4" />
                       </div>
                       <div className="text-muted-foreground">
                         Loans in progress
@@ -197,7 +472,7 @@ export default function DigitalLoansPage() {
                     </CardHeader>
                     <CardFooter className="flex-col items-start gap-1.5 text-sm">
                       <div className="line-clamp-1 flex gap-2 font-medium">
-                        Across all loans <DollarSign className="size-4" />
+                        Portfolio value <BarChart3 className="size-4" />
                       </div>
                       <div className="text-muted-foreground">
                         Combined loan volume
@@ -220,7 +495,7 @@ export default function DigitalLoansPage() {
                     </CardHeader>
                     <CardFooter className="flex-col items-start gap-1.5 text-sm">
                       <div className="line-clamp-1 flex gap-2 font-medium">
-                        Digitized documents <FileSearch className="size-4" />
+                        Digitized documents <Zap className="size-4" />
                       </div>
                       <div className="text-muted-foreground">
                         AI extraction complete
@@ -236,9 +511,16 @@ export default function DigitalLoansPage() {
                   <CardHeader>
                     <div className="flex flex-col space-y-4">
                       <div className="flex items-center justify-between">
-                        <CardTitle>All Loans</CardTitle>
+                        <CardTitle>Loan Portfolio</CardTitle>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{loans.length} loans</Badge>
+                          <Badge variant="outline">
+                            {filteredLoans.length} loans
+                          </Badge>
+                          {isLoading && (
+                            <Badge variant="outline" className="animate-pulse">
+                              Loading...
+                            </Badge>
+                          )}
                         </div>
                       </div>
 
@@ -287,14 +569,14 @@ export default function DigitalLoansPage() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all">All Types</SelectItem>
-                              <SelectItem value="term_loan">
-                                Term Loan
+                              <SelectItem value="term">Term Loan</SelectItem>
+                              <SelectItem value="revolving">
+                                Revolving Credit
                               </SelectItem>
-                              <SelectItem value="credit_line">
-                                Credit Line
+                              <SelectItem value="project">
+                                Project Finance
                               </SelectItem>
-                              <SelectItem value="mortgage">Mortgage</SelectItem>
-                              <SelectItem value="bridge_loan">
+                              <SelectItem value="bridge">
                                 Bridge Loan
                               </SelectItem>
                             </SelectContent>
@@ -335,18 +617,34 @@ export default function DigitalLoansPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {loans.length === 0 ? (
+                    {isLoading ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[...Array(6)].map((_, i) => (
+                          <Card key={i} className="animate-pulse">
+                            <CardContent className="p-6">
+                              <div className="space-y-3">
+                                <div className="h-4 bg-muted rounded w-3/4"></div>
+                                <div className="h-3 bg-muted rounded w-1/2"></div>
+                                <div className="h-8 bg-muted rounded w-full"></div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : filteredLoans.length === 0 ? (
                       <div className="text-center py-12">
                         <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                         <h3 className="text-lg font-semibold mb-2">
-                          No Loans Found
+                          {hasActiveFilters
+                            ? "No Matching Loans"
+                            : "No Loans Found"}
                         </h3>
                         <p className="text-muted-foreground mb-4">
-                          {user?.role === "borrower"
-                            ? "Create your first loan request to get started with digital lending."
-                            : "No loan opportunities available at the moment."}
+                          {hasActiveFilters
+                            ? "Try adjusting your search criteria or filters."
+                            : "Create your first loan request to get started with digital lending."}
                         </p>
-                        {user?.role === "borrower" && (
+                        {!hasActiveFilters && (
                           <Button onClick={() => setCreateLoanModalOpen(true)}>
                             <Plus className="h-4 w-4 mr-2" />
                             Create First Loan Request
@@ -354,114 +652,30 @@ export default function DigitalLoansPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        {/* Loan list will go here */}
-                        <p className="text-muted-foreground">
-                          Loan list component will be implemented here
-                        </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredLoans.map((loan) => (
+                          <LoanCard
+                            key={loan.id}
+                            loan={loan}
+                            onView={handleViewLoan}
+                            onEdit={() =>
+                              toast.info("Edit functionality coming soon")
+                            }
+                            onDownload={() =>
+                              toast.info("Download functionality coming soon")
+                            }
+                            onShare={() =>
+                              toast.info("Share functionality coming soon")
+                            }
+                            onArchive={() =>
+                              toast.info("Archive functionality coming soon")
+                            }
+                          />
+                        ))}
                       </div>
                     )}
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Feature Categories */}
-              <div className="px-4 lg:px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <FileSearch className="h-5 w-5 text-blue-500" />
-                        Document AI
-                      </CardTitle>
-                      <CardDescription>
-                        Extract structured data from loan documents
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setUploadDocModalOpen(true)}
-                      >
-                        Upload & Extract
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <FileText className="h-5 w-5 text-purple-500" />
-                        Document Creation
-                      </CardTitle>
-                      <CardDescription>
-                        Speed up document creation and negotiation
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          (window.location.href = "/dashboard/documents")
-                        }
-                      >
-                        Create Document
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <ClipboardCheck className="h-5 w-5 text-orange-500" />
-                        Compliance
-                      </CardTitle>
-                      <CardDescription>
-                        Track covenants and obligations automatically
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          (window.location.href = "/dashboard/compliance")
-                        }
-                      >
-                        View Compliance
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <Leaf className="h-5 w-5 text-emerald-500" />
-                        ESG Tracking
-                      </CardTitle>
-                      <CardDescription>
-                        Monitor sustainability and governance metrics
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          (window.location.href = "/dashboard/esg")
-                        }
-                      >
-                        ESG Dashboard
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
               </div>
             </div>
           </div>
@@ -474,22 +688,16 @@ export default function DigitalLoansPage() {
         onOpenChange={setUploadDocModalOpen}
         onSuccess={(extractedData) => {
           console.log("Extracted data:", extractedData);
-          toast.success("Document processed successfully!");
+          toast.success("Document processed and data standardized!");
           setUploadDocModalOpen(false);
         }}
       />
 
-      {createLoanModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-lg font-semibold mb-4">Create Loan Request</h2>
-            <p className="text-muted-foreground mb-4">
-              Modal content will be implemented here
-            </p>
-            <Button onClick={() => setCreateLoanModalOpen(false)}>Close</Button>
-          </div>
-        </div>
-      )}
+      <CreateLoanModal
+        open={createLoanModalOpen}
+        onOpenChange={setCreateLoanModalOpen}
+        onSuccess={handleCreateLoan}
+      />
     </SidebarProvider>
   );
 }
