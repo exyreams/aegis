@@ -45,7 +45,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: DigitalLoans,
     },
     {
-      title: "Document Creation",
+      title: "Loan Documents",
       url: "/dashboard/documents",
       icon: Documents,
     },

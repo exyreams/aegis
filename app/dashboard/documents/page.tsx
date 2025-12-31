@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/navigation";
 import { SiteHeader } from "@/components/layout";
 import { SidebarInset, SidebarProvider } from "@/components/ui/Sidebar";
@@ -41,9 +42,13 @@ import {
   Search,
   X,
   DollarSign,
+  FileSearch,
+  GitBranch,
+  Lightbulb,
 } from "lucide-react";
 
 export default function DocumentsPage() {
+  const router = useRouter();
   const { auth } = useAuth();
   const user = auth.user;
 
@@ -331,7 +336,16 @@ export default function DocumentsPage() {
 
                 {/* AI Features */}
                 <div className="px-4 lg:px-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold mb-2">
+                      AI-Powered Document Tools
+                    </h2>
+                    <p className="text-muted-foreground">
+                      Speed up loan agreement creation and negotiation with
+                      advanced AI assistance
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <Card className="hover:border-primary transition-colors">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -339,7 +353,7 @@ export default function DocumentsPage() {
                           Smart Templates
                         </CardTitle>
                         <CardDescription>
-                          Generate documents from intelligent templates
+                          Generate documents from intelligent templates with AI
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -349,7 +363,7 @@ export default function DocumentsPage() {
                           className="w-full"
                           onClick={() => setGenerateDocModalOpen(true)}
                         >
-                          Browse Templates
+                          Generate Document
                         </Button>
                       </CardContent>
                     </Card>
@@ -357,15 +371,46 @@ export default function DocumentsPage() {
                     <Card className="hover:border-primary transition-colors">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
-                          <Edit3 className="h-5 w-5 text-blue-500" />
-                          AI Negotiation
+                          <FileSearch className="h-5 w-5 text-blue-500" />
+                          AI Analysis
                         </CardTitle>
                         <CardDescription>
-                          Spot inconsistencies and suggest improvements
+                          Detect inconsistencies and spot risks automatically
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <Button variant="outline" size="sm" className="w-full">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() =>
+                            router.push("/dashboard/documents/analyze")
+                          }
+                        >
+                          Analyze Documents
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-primary transition-colors">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base">
+                          <Edit3 className="h-5 w-5 text-green-500" />
+                          Smart Negotiation
+                        </CardTitle>
+                        <CardDescription>
+                          Track changes and collaborate on terms in real-time
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() =>
+                            router.push("/dashboard/documents/negotiate")
+                          }
+                        >
                           Start Negotiation
                         </Button>
                       </CardContent>
@@ -374,20 +419,109 @@ export default function DocumentsPage() {
                     <Card className="hover:border-primary transition-colors">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
-                          <DollarSign className="h-5 w-5 text-emerald-500" />
+                          <GitBranch className="h-5 w-5 text-orange-500" />
                           Version Control
                         </CardTitle>
                         <CardDescription>
-                          Track changes and manage document versions
+                          Track changes and compare document versions
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <Button variant="outline" size="sm" className="w-full">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() =>
+                            router.push("/dashboard/documents/versions")
+                          }
+                        >
                           View History
                         </Button>
                       </CardContent>
                     </Card>
+
+                    <Card className="hover:border-primary transition-colors">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base">
+                          <Lightbulb className="h-5 w-5 text-yellow-500" />
+                          Smart Suggestions
+                        </CardTitle>
+                        <CardDescription>
+                          AI-powered clause recommendations and improvements
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() =>
+                            router.push("/dashboard/documents/suggestions")
+                          }
+                        >
+                          Get Suggestions
+                        </Button>
+                      </CardContent>
+                    </Card>
                   </div>
+                </div>
+
+                {/* New AI Components Info */}
+                <div className="px-4 lg:px-6">
+                  <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                          <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold mb-2">
+                            Enhanced AI Document Management
+                          </h3>
+                          <p className="text-muted-foreground mb-3">
+                            New AI-powered components have been added to enhance
+                            your document workflow:
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span>
+                                <strong>DocumentAnalyzer:</strong> AI-powered
+                                inconsistency detection
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span>
+                                <strong>NegotiationTracker:</strong> Real-time
+                                collaboration tools
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              <span>
+                                <strong>SmartClauseSuggestions:</strong> AI
+                                clause recommendations
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                              <span>
+                                <strong>VersionComparison:</strong> Advanced
+                                diff and history
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-3">
+                            These components are available when viewing
+                            individual documents and provide advanced AI
+                            assistance for loan agreement creation and
+                            negotiation.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
