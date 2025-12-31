@@ -12,6 +12,7 @@ import {
   Database,
   ArrowRight,
   Globe,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -72,7 +73,7 @@ export function FeaturesSection() {
       className="py-24 bg-background text-foreground relative overflow-hidden"
     >
       {/* Background Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] opacity-20" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] opacity-20" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
@@ -83,7 +84,7 @@ export function FeaturesSection() {
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">
             Complete{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-blue-600">
               Loan Ecosystem
             </span>
           </h2>
@@ -152,7 +153,7 @@ export function FeaturesSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start min-h-[500px]">
           {/* Left: Description */}
           <div className="space-y-8 pt-4">
-            {activeTab === "privacy" && (
+            {activeTab === "digital" && (
               <div className="animate-fade-in">
                 <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
                   <Shield className="h-6 w-6 text-primary" />
@@ -181,7 +182,7 @@ export function FeaturesSection() {
               </div>
             )}
 
-            {activeTab === "covenants" && (
+            {activeTab === "creation" && (
               <div className="animate-fade-in">
                 <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
                   <FileCode className="h-6 w-6 text-blue-500" />
@@ -210,7 +211,7 @@ export function FeaturesSection() {
               </div>
             )}
 
-            {activeTab === "syndication" && (
+            {activeTab === "trading" && (
               <div className="animate-fade-in">
                 <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
                   <Network className="h-6 w-6 text-indigo-500" />
@@ -239,6 +240,63 @@ export function FeaturesSection() {
               </div>
             )}
 
+            {activeTab === "compliance" && (
+              <div className="animate-fade-in">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
+                  <CheckCircle2 className="h-6 w-6 text-green-500" />
+                  Automated Compliance
+                </h3>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  Monitor covenant compliance in real-time with automated alerts
+                  and reporting. Track financial ratios, operational
+                  requirements, and regulatory obligations across your entire
+                  loan portfolio.
+                </p>
+                <ul className="space-y-4 font-mono text-sm text-foreground/80">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>Real-time covenant monitoring</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>Automated breach detection</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>Regulatory reporting</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {activeTab === "esg" && (
+              <div className="animate-fade-in">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
+                  <Globe className="h-6 w-6 text-emerald-500" />
+                  ESG Integration
+                </h3>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  Track environmental, social, and governance metrics across
+                  your loan portfolio. Automated ESG scoring, sustainability
+                  reporting, and impact measurement for responsible lending.
+                </p>
+                <ul className="space-y-4 font-mono text-sm text-foreground/80">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span>ESG data collection</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span>Sustainability scoring</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span>Impact reporting</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
             <div className="pt-8">
               <Button
                 variant="outline"
@@ -252,7 +310,7 @@ export function FeaturesSection() {
 
           {/* Right: Visualization */}
           <div className="relative bg-card rounded-xl border border-border p-1 shadow-2xl">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-500 to-indigo-500 rounded-t-xl" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary via-blue-500 to-indigo-500 rounded-t-xl" />
 
             {/* Code Window / Diagram Container */}
             <div className="bg-muted/30 rounded-lg overflow-hidden min-h-[400px] flex flex-col">
@@ -264,17 +322,21 @@ export function FeaturesSection() {
                   <div className="w-3 h-3 rounded-full bg-green-500/50" />
                 </div>
                 <div className="text-xs font-mono text-muted-foreground">
-                  {activeTab === "privacy"
+                  {activeTab === "digital"
                     ? "loan_structure.json"
-                    : activeTab === "covenants"
+                    : activeTab === "creation"
                     ? "extracted_data.json"
-                    : "api_integration.json"}
+                    : activeTab === "trading"
+                    ? "api_integration.json"
+                    : activeTab === "compliance"
+                    ? "compliance_monitor.json"
+                    : "esg_metrics.json"}
                 </div>
               </div>
 
               {/* Content Area */}
               <div className="p-6 flex-1 relative">
-                {activeTab === "privacy" && (
+                {activeTab === "digital" && (
                   <div className="flex flex-col items-center justify-center h-full space-y-8 animate-fade-in">
                     {/* Diagram */}
                     <div className="relative w-full max-w-md">
@@ -287,7 +349,7 @@ export function FeaturesSection() {
                             Borrower_Node
                           </span>
                         </div>
-                        <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-blue-500/50 mx-4 relative">
+                        <div className="h-px flex-1 bg-linear-to-r from-primary/50 to-blue-500/50 mx-4 relative">
                           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2">
                             <Lock className="h-4 w-4 text-muted-foreground" />
                           </div>
@@ -306,11 +368,10 @@ export function FeaturesSection() {
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-24 bg-muted/50 border border-border rounded-lg backdrop-blur-sm flex items-center justify-center">
                         <div className="text-center">
                           <div className="text-xs font-mono text-muted-foreground mb-1">
-                            CANTON_PRIVACY_LAYER
+                            DIGITAL_LOAN_LAYER
                           </div>
                           <div className="flex items-center gap-2 text-xs text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20">
-                            <CheckCircle2 className="h-3 w-3" />{" "}
-                            ZK_PROOF_VERIFIED
+                            <CheckCircle2 className="h-3 w-3" /> DATA_EXTRACTED
                           </div>
                         </div>
                       </div>
@@ -318,7 +379,7 @@ export function FeaturesSection() {
                   </div>
                 )}
 
-                {activeTab === "covenants" && (
+                {activeTab === "creation" && (
                   <div className="font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto animate-fade-in">
                     <pre>
                       <code className="language-json">
@@ -353,7 +414,7 @@ export function FeaturesSection() {
                   </div>
                 )}
 
-                {activeTab === "syndication" && (
+                {activeTab === "trading" && (
                   <div className="flex items-center justify-center h-full animate-fade-in">
                     <div className="relative w-64 h-64">
                       {/* Central Node */}
@@ -383,6 +444,95 @@ export function FeaturesSection() {
 
                       {/* Pulse Effect */}
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full border border-indigo-500/20 rounded-full animate-ping opacity-20" />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "compliance" && (
+                  <div className="flex items-center justify-center h-full animate-fade-in">
+                    <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                      <div className="bg-green-500/10 border border-green-500 rounded-lg p-4 text-center">
+                        <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                        <div className="text-xs font-mono text-green-500">
+                          COMPLIANT
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Debt/EBITDA
+                        </div>
+                      </div>
+                      <div className="bg-green-500/10 border border-green-500 rounded-lg p-4 text-center">
+                        <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                        <div className="text-xs font-mono text-green-500">
+                          COMPLIANT
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Min Liquidity
+                        </div>
+                      </div>
+                      <div className="bg-yellow-500/10 border border-yellow-500 rounded-lg p-4 text-center">
+                        <AlertCircle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                        <div className="text-xs font-mono text-yellow-500">
+                          WARNING
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Interest Cover
+                        </div>
+                      </div>
+                      <div className="bg-green-500/10 border border-green-500 rounded-lg p-4 text-center">
+                        <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                        <div className="text-xs font-mono text-green-500">
+                          COMPLIANT
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Capex Limit
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "esg" && (
+                  <div className="flex items-center justify-center h-full animate-fade-in">
+                    <div className="space-y-4 w-full max-w-sm">
+                      <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500 rounded-lg">
+                        <div>
+                          <div className="text-sm font-mono text-emerald-500">
+                            Carbon Footprint
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            -15% YoY
+                          </div>
+                        </div>
+                        <div className="text-2xl font-bold text-emerald-500">
+                          A+
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500 rounded-lg">
+                        <div>
+                          <div className="text-sm font-mono text-blue-500">
+                            Social Impact
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Community Score
+                          </div>
+                        </div>
+                        <div className="text-2xl font-bold text-blue-500">
+                          B+
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500 rounded-lg">
+                        <div>
+                          <div className="text-sm font-mono text-purple-500">
+                            Governance
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Board Diversity
+                          </div>
+                        </div>
+                        <div className="text-2xl font-bold text-purple-500">
+                          A
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
