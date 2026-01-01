@@ -77,7 +77,7 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer bg-gray-200 hover:bg-black/10 dark:bg-black/50 dark:hover:bg-gray-100/10"
             >
               {renderAvatar(32, "size-8 rounded-lg")}
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">

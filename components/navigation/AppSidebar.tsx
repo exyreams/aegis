@@ -9,11 +9,9 @@ import {
   ESG,
   DigitalLoans,
   SecondaryMarket,
-  Settings,
 } from "@/components/icons";
 
 import { NavMain } from "@/components/navigation/NavMain";
-import { NavSecondary } from "@/components/navigation/NavSecondary";
 import { NavUser } from "@/components/navigation/NavUser";
 import { NavUserSkeleton } from "@/components/navigation/NavUserSkeleton";
 import { Logo } from "@/components/ui/Logo";
@@ -59,42 +57,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/compliance",
       icon: Compliance,
     },
+  ];
+
+  // ESG section as a separate collapsible group
+  const esgItems = [
     {
-      title: "ESG Reporting",
+      title: "Dashboard",
       url: "/dashboard/esg",
       icon: ESG,
     },
     {
-      title: "ESG Compliance",
-      url: "/dashboard/esg/compliance",
-      icon: Compliance,
-      isSubItem: true,
-    },
-    {
-      title: "ESG Reports",
-      url: "/dashboard/esg/reports",
-      icon: Documents,
-      isSubItem: true,
-    },
-    {
-      title: "ESG Benchmarks",
+      title: "Benchmarks",
       url: "/dashboard/esg/benchmarks",
       icon: ESG,
-      isSubItem: true,
     },
     {
-      title: "ESG Certifications",
+      title: "Certifications",
       url: "/dashboard/esg/certifications",
       icon: ESG,
-      isSubItem: true,
     },
-  ];
-
-  const navSecondary = [
     {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: Settings,
+      title: "Compliance",
+      url: "/dashboard/esg/compliance",
+      icon: Compliance,
+    },
+    {
+      title: "Reports",
+      url: "/dashboard/esg/reports",
+      icon: Documents,
     },
   ];
 
@@ -125,8 +115,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
-        <NavSecondary items={navSecondary} className="mt-auto" />
+        <NavMain items={navMain} esgItems={esgItems} />
       </SidebarContent>
       <SidebarFooter>
         {auth.loading || !userData ? (
