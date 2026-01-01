@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { ComponentType } from "react";
 import { ChevronDown } from "lucide-react";
-import { ESG } from "../icons";
+import { ESG, Documents, DigitalLoans, SecondaryMarket } from "../icons";
 
 import {
   SidebarGroup,
@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 export function NavMain({
   items,
   esgItems,
+  documentsItems,
+  loansItems,
 }: {
   items: {
     title?: string;
@@ -32,13 +34,31 @@ export function NavMain({
     url?: string;
     icon?: ComponentType<{ className?: string; size?: number }>;
   }[];
+  documentsItems?: {
+    title?: string;
+    url?: string;
+    icon?: ComponentType<{ className?: string; size?: number }>;
+  }[];
+  loansItems?: {
+    title?: string;
+    url?: string;
+    icon?: ComponentType<{ className?: string; size?: number }>;
+  }[];
 }) {
   const pathname = usePathname();
   const [isESGExpanded, setIsESGExpanded] = useState(
     pathname.startsWith("/dashboard/esg")
   );
+  const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(
+    pathname.startsWith("/dashboard/documents")
+  );
+  const [isLoansExpanded, setIsLoansExpanded] = useState(
+    pathname.startsWith("/dashboard/loans")
+  );
 
   const isESGActive = pathname.startsWith("/dashboard/esg");
+  const isDocumentsActive = pathname.startsWith("/dashboard/documents");
+  const isLoansActive = pathname.startsWith("/dashboard/loans");
 
   return (
     <SidebarGroup>
@@ -78,6 +98,92 @@ export function NavMain({
             );
           })}
 
+          {/* Documents Collapsible Section */}
+          {documentsItems && documentsItems.length > 0 && (
+            <>
+              {/* --- Documents Header --- */}
+              <SidebarMenuItem>
+                <div className="relative">
+                  <SidebarMenuButton
+                    onClick={() => setIsDocumentsExpanded(!isDocumentsExpanded)}
+                    className={cn(
+                      "w-full justify-between transition-all duration-300 cursor-pointer",
+                      "hover:bg-blue-50 dark:hover:bg-blue-950/30",
+                      isDocumentsActive
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "hover:text-blue-600 dark:hover:text-blue-400"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Documents className="h-3.5 w-3.5" />
+                      <span className="font-semibold tracking-wide">
+                        Documents
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        "transition-transform duration-300 ease-in-out",
+                        isDocumentsExpanded ? "rotate-180" : "rotate-0"
+                      )}
+                    >
+                      <ChevronDown className="h-4 w-4 opacity-70" />
+                    </div>
+                  </SidebarMenuButton>
+                </div>
+              </SidebarMenuItem>
+
+              {/* --- Documents Sub-Items --- */}
+              {isDocumentsExpanded && (
+                <div className="relative overflow-hidden ml-2 pl-2">
+                  {/* Vine connector line */}
+                  <div className="absolute left-2 top-2 bottom-0 w-px bg-linear-to-b from-blue-500/30 via-blue-500/10 to-transparent animate-in fade-in" />
+
+                  {documentsItems.map((item) => {
+                    let isActive = false;
+                    if (item.url === "/dashboard/documents") {
+                      isActive = pathname === "/dashboard/documents";
+                    } else if (item.url) {
+                      isActive = pathname.startsWith(item.url);
+                    }
+
+                    return (
+                      <SidebarMenuItem
+                        key={item.title}
+                        className="relative animate-in slide-in-from-left-2 duration-300 pl-4"
+                      >
+                        <SidebarMenuButton
+                          asChild
+                          tooltip={item.title}
+                          isActive={isActive}
+                          className={cn(
+                            "h-8 text-sm transition-all duration-300",
+                            isActive
+                              ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 font-medium"
+                              : "hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-400"
+                          )}
+                        >
+                          <Link href={item.url || "#"}>
+                            {item.icon && (
+                              <item.icon
+                                className={cn(
+                                  "h-4 w-4 mr-2 transition-colors",
+                                  isActive
+                                    ? "text-blue-500"
+                                    : "text-muted-foreground group-hover:text-blue-500"
+                                )}
+                              />
+                            )}
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
           {/* ESG Collapsible Section */}
           {esgItems && esgItems.length > 0 && (
             <>
@@ -115,7 +221,7 @@ export function NavMain({
               {isESGExpanded && (
                 <div className="relative overflow-hidden ml-2 pl-2">
                   {/* Vine connector line */}
-                  <div className="absolute left-[19px] top-2 bottom-0 w-px bg-linear-to-b from-emerald-500/80 via-emerald-500/20 to-transparent animate-in fade-in" />
+                  <div className="absolute left-2 top-2 bottom-0 w-px bg-linear-to-b from-emerald-500/80 via-emerald-500/20 to-transparent animate-in fade-in" />
 
                   {esgItems.map((item) => {
                     let isActive = false;
@@ -162,6 +268,104 @@ export function NavMain({
               )}
             </>
           )}
+
+          {/* Loans Collapsible Section */}
+          {loansItems && loansItems.length > 0 && (
+            <>
+              {/* --- Loans Header --- */}
+              <SidebarMenuItem>
+                <div className="relative">
+                  <SidebarMenuButton
+                    onClick={() => setIsLoansExpanded(!isLoansExpanded)}
+                    className={cn(
+                      "w-full justify-between transition-all duration-300 cursor-pointer",
+                      "hover:bg-purple-50 dark:hover:bg-purple-950/30",
+                      isLoansActive
+                        ? "text-purple-600 dark:text-purple-400"
+                        : "hover:text-purple-600 dark:hover:text-purple-400"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <DigitalLoans className="h-3.5 w-3.5" />
+                      <span className="font-semibold tracking-wide">Loans</span>
+                    </div>
+                    <div
+                      className={cn(
+                        "transition-transform duration-300 ease-in-out",
+                        isLoansExpanded ? "rotate-180" : "rotate-0"
+                      )}
+                    >
+                      <ChevronDown className="h-4 w-4 opacity-70" />
+                    </div>
+                  </SidebarMenuButton>
+                </div>
+              </SidebarMenuItem>
+
+              {/* --- Loans Sub-Items --- */}
+              {isLoansExpanded && (
+                <div className="relative overflow-hidden ml-2 pl-2">
+                  {/* Vine connector line */}
+                  <div className="absolute left-2 top-2 bottom-0 w-px bg-linear-to-b from-purple-500/30 via-purple-500/10 to-transparent animate-in fade-in" />
+
+                  {loansItems.map((item) => {
+                    let isActive = false;
+                    if (item.url === "/dashboard/loans") {
+                      isActive = pathname === "/dashboard/loans";
+                    } else if (item.url) {
+                      isActive = pathname.startsWith(item.url);
+                    }
+
+                    return (
+                      <SidebarMenuItem
+                        key={item.title}
+                        className="relative animate-in slide-in-from-left-2 duration-300 pl-4"
+                      >
+                        <SidebarMenuButton
+                          asChild
+                          tooltip={item.title}
+                          isActive={isActive}
+                          className={cn(
+                            "h-8 text-sm transition-all duration-300",
+                            isActive
+                              ? "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 font-medium"
+                              : "hover:bg-purple-50 dark:hover:bg-purple-950/20 hover:text-purple-600 dark:hover:text-purple-400"
+                          )}
+                        >
+                          <Link href={item.url || "#"}>
+                            {item.icon && (
+                              <item.icon
+                                className={cn(
+                                  "h-4 w-4 mr-2 transition-colors",
+                                  isActive
+                                    ? "text-purple-500"
+                                    : "text-muted-foreground group-hover:text-purple-500"
+                                )}
+                              />
+                            )}
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Secondary Market - at the end */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Secondary Market"
+              isActive={pathname.startsWith("/dashboard/secondary-market")}
+            >
+              <Link href="/dashboard/secondary-market">
+                <SecondaryMarket />
+                <span>Secondary Market</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

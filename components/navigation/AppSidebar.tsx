@@ -8,7 +8,6 @@ import {
   Documents,
   ESG,
   DigitalLoans,
-  SecondaryMarket,
 } from "@/components/icons";
 
 import { NavMain } from "@/components/navigation/NavMain";
@@ -36,21 +35,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Dashboard",
       url: "/dashboard",
       icon: Dashboard,
-    },
-    {
-      title: "Digital Loans",
-      url: "/dashboard/loans",
-      icon: DigitalLoans,
-    },
-    {
-      title: "Loan Documents",
-      url: "/dashboard/documents",
-      icon: Documents,
-    },
-    {
-      title: "Secondary Market",
-      url: "/dashboard/secondary-market",
-      icon: SecondaryMarket,
     },
     {
       title: "Compliance",
@@ -88,6 +72,59 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
+  // Documents section as a separate collapsible group
+  const documentsItems = [
+    {
+      title: "Dashboard",
+      url: "/dashboard/documents",
+      icon: Documents,
+    },
+    {
+      title: "Analyze",
+      url: "/dashboard/documents/analyze",
+      icon: Documents,
+    },
+    {
+      title: "Negotiate",
+      url: "/dashboard/documents/negotiate",
+      icon: Documents,
+    },
+    {
+      title: "Suggestions",
+      url: "/dashboard/documents/suggestions",
+      icon: Documents,
+    },
+    {
+      title: "Version Control",
+      url: "/dashboard/documents/versions",
+      icon: Documents,
+    },
+  ];
+
+  // Loans section as a separate collapsible group
+  const loansItems = [
+    {
+      title: "Dashboard",
+      url: "/dashboard/loans",
+      icon: DigitalLoans,
+    },
+    {
+      title: "Analytics",
+      url: "/dashboard/loans/analytics",
+      icon: DigitalLoans,
+    },
+    {
+      title: "Compare",
+      url: "/dashboard/loans/compare",
+      icon: DigitalLoans,
+    },
+    {
+      title: "Standard",
+      url: "/dashboard/loans/standard",
+      icon: DigitalLoans,
+    },
+  ];
+
   // User data from authenticated user (only when available)
   const userData = auth.user
     ? {
@@ -115,7 +152,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} esgItems={esgItems} />
+        <NavMain
+          items={navMain}
+          esgItems={esgItems}
+          documentsItems={documentsItems}
+          loansItems={loansItems}
+        />
       </SidebarContent>
       <SidebarFooter>
         {auth.loading || !userData ? (
