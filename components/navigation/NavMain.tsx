@@ -133,16 +133,41 @@ export function NavMain({
               isActive = pathname.startsWith(item.url);
             }
 
+            // Compliance gets amber color theme
+            const isCompliance = item.url === "/dashboard/compliance";
+            const complianceClasses = isCompliance
+              ? cn(
+                  "group/compliance transition-all duration-300",
+                  "hover:bg-amber-50 dark:hover:bg-amber-950/30",
+                  isActive
+                    ? "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"
+                    : "hover:text-amber-600 dark:hover:text-amber-400"
+                )
+              : "";
+
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   asChild
                   tooltip={item.title}
                   isActive={isActive}
-                  className={item.isSubItem ? "ml-6 text-sm" : ""}
+                  className={cn(
+                    item.isSubItem ? "ml-6 text-sm" : "",
+                    complianceClasses
+                  )}
                 >
                   <Link href={item.url || "#"}>
-                    {item.icon && <item.icon />}
+                    {item.icon && (
+                      <item.icon
+                        className={cn(
+                          isCompliance && "transition-colors",
+                          isCompliance && isActive && "text-amber-500",
+                          isCompliance &&
+                            !isActive &&
+                            "text-muted-foreground group-hover/compliance:text-amber-500"
+                        )}
+                      />
+                    )}
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -446,15 +471,29 @@ export function NavMain({
             </>
           )}
 
-          {/* Secondary Market - at the end */}
+          {/* Secondary Market - at the end with cyan theme */}
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               tooltip="Secondary Market"
               isActive={pathname.startsWith("/dashboard/secondary-market")}
+              className={cn(
+                "group/market transition-all duration-300",
+                "hover:bg-cyan-50 dark:hover:bg-cyan-950/30",
+                pathname.startsWith("/dashboard/secondary-market")
+                  ? "bg-cyan-50 dark:bg-cyan-950/30 text-cyan-600 dark:text-cyan-400"
+                  : "hover:text-cyan-600 dark:hover:text-cyan-400"
+              )}
             >
               <Link href="/dashboard/secondary-market">
-                <SecondaryMarket />
+                <SecondaryMarket
+                  className={cn(
+                    "transition-colors",
+                    pathname.startsWith("/dashboard/secondary-market")
+                      ? "text-cyan-500"
+                      : "text-muted-foreground group-hover/market:text-cyan-500"
+                  )}
+                />
                 <span>Secondary Market</span>
               </Link>
             </SidebarMenuButton>
