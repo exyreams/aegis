@@ -1,18 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { AppSidebar } from "@/components/navigation";
 import { SiteHeader } from "@/components/layout";
 import { SidebarInset, SidebarProvider } from "@/components/ui/Sidebar";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardAction,
-  CardFooter,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -24,762 +21,450 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { LoanMarketplace } from "@/components/secondary-market/LoanMarketplace";
+import { DueDiligenceEngine } from "@/components/secondary-market/DueDiligenceEngine";
+import { TradingDashboard } from "@/components/secondary-market/TradingDashboard";
+import { MarketAnalytics } from "@/components/secondary-market/MarketAnalytics";
 import {
-  Plus,
   TrendingUp,
-  ShoppingCart,
   DollarSign,
-  Search,
-  X,
-  Building2,
   Users,
-  Clock,
-  Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  Percent,
-  Calendar,
-  FileText,
-  Eye,
-  Handshake,
+  Activity,
+  Search,
+  Filter,
+  BarChart3,
+  ShoppingCart,
+  Zap,
+  FileSearch,
 } from "lucide-react";
-import type { LoanListing, LoanOffer } from "@/types/api";
+
+interface MarketStats {
+  totalVolume: number;
+  activeListings: number;
+  avgDueDiligenceTime: number;
+  avgTransactionCost: number;
+  completedTrades: number;
+  avgYield: number;
+}
+
+interface LoanListing {
+  id: string;
+  borrower: string;
+  originalLender: string;
+  loanAmount: number;
+  outstandingAmount: number;
+  interestRate: number;
+  maturityDate: string;
+  creditRating: string;
+  industry: string;
+  askingPrice: number;
+  yieldToMaturity: number;
+  dueDiligenceScore: number;
+  listingDate: string;
+  status: "active" | "under_review" | "sold" | "withdrawn";
+  riskLevel: "low" | "medium" | "high";
+}
 
 export default function SecondaryMarketPage() {
   const { auth } = useAuth();
   const user = auth.user;
 
-  // Mock data - replace with actual API calls
-  const [listings] = useState<LoanListing[]>([
-    {
-      listingId: "LST-001",
-      seller: "AEGIS-INST-T1-ABC123",
-      loanId: "LOAN-2024-001",
-      askingPrice: "950000",
-      status: "active",
-      loanDetails: {
-        originalAmount: "1000000",
-        outstandingAmount: "850000",
-        interestRate: "5.25",
-        maturityDate: "2026-12-31",
-        borrower: "TechCorp Industries",
-      },
-      listedAt: "2024-12-28T10:00:00Z",
-      updatedAt: "2024-12-28T10:00:00Z",
-    },
-    {
-      listingId: "LST-002",
-      seller: "AEGIS-REGNL-DEF456",
-      loanId: "LOAN-2024-002",
-      askingPrice: "2400000",
-      status: "active",
-      loanDetails: {
-        originalAmount: "2500000",
-        outstandingAmount: "2200000",
-        interestRate: "4.75",
-        maturityDate: "2027-06-30",
-        borrower: "GreenEnergy Solutions",
-      },
-      listedAt: "2024-12-27T14:30:00Z",
-      updatedAt: "2024-12-27T14:30:00Z",
-    },
-  ]);
-
-  const [offers] = useState<LoanOffer[]>([
-    {
-      offerId: "OFF-001",
-      buyer: "AEGIS-INVST-FUND-GHI789",
-      listingId: "LST-001",
-      offerPrice: "920000",
-      terms: "Standard terms with 30-day settlement",
-      status: "pending",
-      validUntil: "2025-01-15T23:59:59Z",
-      createdAt: "2024-12-29T09:15:00Z",
-      updatedAt: "2024-12-29T09:15:00Z",
-    },
-  ]);
-
-  // Search and filter states
+  const [activeTab, setActiveTab] = useState<
+    "marketplace" | "due_diligence" | "trading" | "analytics"
+  >("marketplace");
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("newest");
+  const [industryFilter, setIndustryFilter] = useState<string>("all");
+  const [riskFilter, setRiskFilter] = useState<string>("all");
 
-  // Current date for calculations
-  const currentDate = useMemo(() => new Date(), []);
-
-  // Stats calculations
-  const stats = {
-    totalListings: listings.length,
-    activeListings: listings.filter((l) => l.status === "active").length,
-    totalVolume: listings.reduce(
-      (sum, l) => sum + parseFloat(l.askingPrice),
-      0
-    ),
-    avgYield: listings.length
-      ? (
-          listings.reduce((sum, l) => {
-            const yield_ =
-              (parseFloat(l.loanDetails.interestRate) *
-                parseFloat(l.loanDetails.outstandingAmount)) /
-              parseFloat(l.askingPrice);
-            return sum + yield_;
-          }, 0) / listings.length
-        ).toFixed(2)
-      : "0.00",
+  // Mock market statistics
+  const marketStats: MarketStats = {
+    totalVolume: 2400000000, // $2.4B
+    activeListings: 156,
+    avgDueDiligenceTime: 2.5, // days
+    avgTransactionCost: 15000, // $15K
+    completedTrades: 89,
+    avgYield: 8.2, // %
   };
 
-  const formatCurrency = (amount: string | number) => {
-    const num = typeof amount === "string" ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(num);
-  };
+  // Mock loan listings
+  const loanListings: LoanListing[] = [
+    {
+      id: "1",
+      borrower: "TechCorp Industries",
+      originalLender: "First National Bank",
+      loanAmount: 50000000,
+      outstandingAmount: 42000000,
+      interestRate: 7.5,
+      maturityDate: "2027-01-15",
+      creditRating: "A-",
+      industry: "Technology",
+      askingPrice: 41500000,
+      yieldToMaturity: 8.2,
+      dueDiligenceScore: 92,
+      listingDate: "2025-01-01",
+      status: "active",
+      riskLevel: "low",
+    },
+    {
+      id: "2",
+      borrower: "Green Energy Solutions",
+      originalLender: "Sustainable Capital",
+      loanAmount: 25000000,
+      outstandingAmount: 23500000,
+      interestRate: 6.8,
+      maturityDate: "2026-06-30",
+      creditRating: "BBB+",
+      industry: "Energy",
+      askingPrice: 23200000,
+      yieldToMaturity: 7.8,
+      dueDiligenceScore: 88,
+      listingDate: "2024-12-28",
+      status: "under_review",
+      riskLevel: "medium",
+    },
+    {
+      id: "3",
+      borrower: "Manufacturing Corp",
+      originalLender: "Industrial Bank",
+      loanAmount: 15000000,
+      outstandingAmount: 12800000,
+      interestRate: 9.2,
+      maturityDate: "2025-12-15",
+      creditRating: "B+",
+      industry: "Manufacturing",
+      askingPrice: 12200000,
+      yieldToMaturity: 11.5,
+      dueDiligenceScore: 74,
+      listingDate: "2025-01-02",
+      status: "active",
+      riskLevel: "high",
+    },
+  ];
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  // Mock market trend data
+  const marketTrends = [
+    { month: "Jul", volume: 180, avgYield: 7.8 },
+    { month: "Aug", volume: 220, avgYield: 8.1 },
+    { month: "Sep", volume: 195, avgYield: 7.9 },
+    { month: "Oct", volume: 240, avgYield: 8.3 },
+    { month: "Nov", volume: 210, avgYield: 8.0 },
+    { month: "Dec", volume: 280, avgYield: 8.2 },
+  ];
 
-  const calculateYield = (listing: LoanListing) => {
-    const interestRate = parseFloat(listing.loanDetails.interestRate);
-    const askingPrice = parseFloat(listing.askingPrice);
-    const outstandingAmount = parseFloat(listing.loanDetails.outstandingAmount);
+  const industryDistribution = [
+    { name: "Technology", value: 35, color: "#3b82f6" },
+    { name: "Energy", value: 25, color: "#10b981" },
+    { name: "Manufacturing", value: 20, color: "#f59e0b" },
+    { name: "Healthcare", value: 12, color: "#ef4444" },
+    { name: "Other", value: 8, color: "#8b5cf6" },
+  ];
 
-    if (askingPrice === 0) return "0.00";
-
-    const effectiveYield = (interestRate * outstandingAmount) / askingPrice;
-    return effectiveYield.toFixed(2);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
-      case "accepted":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-      case "rejected":
-        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
-      case "expired":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-      case "sold":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
+  const filteredListings = loanListings.filter((listing) => {
+    if (
+      searchQuery &&
+      !listing.borrower.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
+      return false;
     }
-  };
-
-  const clearFilters = () => {
-    setSearchQuery("");
-    setStatusFilter("all");
-    setSortBy("newest");
-  };
-
-  const hasActiveFilters =
-    searchQuery || statusFilter !== "all" || sortBy !== "newest";
+    if (
+      industryFilter !== "all" &&
+      listing.industry.toLowerCase() !== industryFilter
+    ) {
+      return false;
+    }
+    if (riskFilter !== "all" && listing.riskLevel !== riskFilter) {
+      return false;
+    }
+    return true;
+  });
 
   return (
-    <ProtectedRoute>
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "calc(var(--spacing) * 72)",
-            "--header-height": "calc(var(--spacing) * 12)",
-          } as React.CSSProperties
-        }
-      >
-        <AppSidebar variant="inset" />
-        <SidebarInset>
-          <SiteHeader />
-          <div className="flex flex-1 flex-col">
-            <div className="@container/main flex flex-1 flex-col gap-2">
-              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 lg:px-6">
-                  <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                      Secondary Market
-                    </h1>
-                    <p className="text-muted-foreground">
-                      {user?.role === "borrower"
-                        ? "Monitor your loan positions in the secondary market"
-                        : user?.role === "lender"
-                        ? "Trade loan positions and discover investment opportunities"
-                        : "Oversee all secondary market trading activities"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => alert("Make offer modal coming soon!")}
-                    >
-                      <Handshake className="h-4 w-4 mr-2" />
-                      Make Offer
-                    </Button>
-                    <Button
-                      onClick={() => alert("Create listing modal coming soon!")}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      List Position
-                    </Button>
-                  </div>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 lg:px-6">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    Secondary Loan Market
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {user?.role === "lender"
+                      ? "Trade loan positions with automated due diligence and transparent pricing"
+                      : "Discover investment opportunities in the secondary loan market"}
+                  </p>
                 </div>
-
-                {/* Stats Cards */}
-                <div className="px-4 lg:px-6">
-                  <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-                    <Card className="@container/card">
-                      <CardHeader>
-                        <CardDescription>Active Listings</CardDescription>
-                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                          {stats.activeListings}
-                        </CardTitle>
-                        <CardAction>
-                          <Badge variant="outline">
-                            <ShoppingCart className="h-3 w-3 mr-1" />
-                            Available
-                          </Badge>
-                        </CardAction>
-                      </CardHeader>
-                      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                        <div className="line-clamp-1 flex gap-2 font-medium">
-                          Ready to trade <ArrowUpRight className="size-4" />
-                        </div>
-                        <div className="text-muted-foreground">
-                          Out of {stats.totalListings} total
-                        </div>
-                      </CardFooter>
-                    </Card>
-
-                    <Card className="@container/card">
-                      <CardHeader>
-                        <CardDescription>Total Volume</CardDescription>
-                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                          {formatCurrency(stats.totalVolume)}
-                        </CardTitle>
-                        <CardAction>
-                          <Badge variant="outline">
-                            <DollarSign className="h-3 w-3 mr-1" />
-                            USD
-                          </Badge>
-                        </CardAction>
-                      </CardHeader>
-                      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                        <div className="line-clamp-1 flex gap-2 font-medium">
-                          Market value <TrendingUp className="size-4" />
-                        </div>
-                        <div className="text-muted-foreground">
-                          Available for trading
-                        </div>
-                      </CardFooter>
-                    </Card>
-
-                    <Card className="@container/card">
-                      <CardHeader>
-                        <CardDescription>Average Yield</CardDescription>
-                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                          {stats.avgYield}%
-                        </CardTitle>
-                        <CardAction>
-                          <Badge variant="outline">
-                            <Percent className="h-3 w-3 mr-1" />
-                            Effective
-                          </Badge>
-                        </CardAction>
-                      </CardHeader>
-                      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                        <div className="line-clamp-1 flex gap-2 font-medium">
-                          Expected return <Target className="size-4" />
-                        </div>
-                        <div className="text-muted-foreground">
-                          Weighted average
-                        </div>
-                      </CardFooter>
-                    </Card>
-
-                    <Card className="@container/card">
-                      <CardHeader>
-                        <CardDescription>Active Offers</CardDescription>
-                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                          {offers.filter((o) => o.status === "pending").length}
-                        </CardTitle>
-                        <CardAction>
-                          <Badge variant="outline">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Pending
-                          </Badge>
-                        </CardAction>
-                      </CardHeader>
-                      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                        <div className="line-clamp-1 flex gap-2 font-medium">
-                          Under review <ArrowDownRight className="size-4" />
-                        </div>
-                        <div className="text-muted-foreground">
-                          Awaiting response
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline">
+                    <FileSearch className="h-4 w-4 mr-2" />
+                    Due Diligence
+                  </Button>
+                  <Button>
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    List Loan
+                  </Button>
                 </div>
+              </div>
 
-                {/* Main Content */}
-                <div className="px-4 lg:px-6">
-                  <Tabs defaultValue="listings" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="listings">Loan Listings</TabsTrigger>
-                      <TabsTrigger value="offers">My Offers</TabsTrigger>
-                    </TabsList>
+              {/* Market Statistics */}
+              <div className="px-4 lg:px-6">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Total Volume</CardDescription>
+                      <CardTitle className="text-2xl font-bold">
+                        ${(marketStats.totalVolume / 1000000000).toFixed(1)}B
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <TrendingUp className="h-4 w-4 mr-1" />
+                        +12% this month
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                    <TabsContent value="listings" className="space-y-4">
-                      <Card>
-                        <CardHeader>
-                          <div className="flex flex-col space-y-4">
-                            <div className="flex items-center justify-between">
-                              <CardTitle>Available Positions</CardTitle>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">
-                                  {stats.activeListings} active listings
-                                </Badge>
-                              </div>
-                            </div>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Active Listings</CardDescription>
+                      <CardTitle className="text-2xl font-bold">
+                        {marketStats.activeListings}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Activity className="h-4 w-4 mr-1" />
+                        Available now
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                            {/* Search and Filter Controls */}
-                            <div className="flex flex-col lg:flex-row gap-3 w-full">
-                              <div className="flex-1 min-w-0">
-                                <div className="relative w-full">
-                                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                  <Input
-                                    placeholder="Search by loan ID, borrower, or seller..."
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                      setSearchQuery(e.target.value)
-                                    }
-                                    className="pl-10 w-full"
-                                  />
-                                </div>
-                              </div>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Avg DD Time</CardDescription>
+                      <CardTitle className="text-2xl font-bold text-green-600">
+                        {marketStats.avgDueDiligenceTime}d
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Zap className="h-4 w-4 mr-1" />
+                        85% faster
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                              <div className="flex gap-2 flex-wrap lg:flex-nowrap">
-                                <Select
-                                  value={statusFilter}
-                                  onValueChange={setStatusFilter}
-                                >
-                                  <SelectTrigger className="w-full lg:w-40">
-                                    <SelectValue placeholder="Status" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="all">
-                                      All Status
-                                    </SelectItem>
-                                    <SelectItem value="active">
-                                      Active
-                                    </SelectItem>
-                                    <SelectItem value="pending">
-                                      Pending
-                                    </SelectItem>
-                                    <SelectItem value="sold">Sold</SelectItem>
-                                    <SelectItem value="expired">
-                                      Expired
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Avg Cost</CardDescription>
+                      <CardTitle className="text-2xl font-bold text-green-600">
+                        ${(marketStats.avgTransactionCost / 1000).toFixed(0)}K
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <DollarSign className="h-4 w-4 mr-1" />
+                        90% reduction
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                                <Select
-                                  value={sortBy}
-                                  onValueChange={setSortBy}
-                                >
-                                  <SelectTrigger className="w-full lg:w-36">
-                                    <SelectValue placeholder="Sort by" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="newest">
-                                      Newest First
-                                    </SelectItem>
-                                    <SelectItem value="oldest">
-                                      Oldest First
-                                    </SelectItem>
-                                    <SelectItem value="price-high">
-                                      Price: High to Low
-                                    </SelectItem>
-                                    <SelectItem value="price-low">
-                                      Price: Low to High
-                                    </SelectItem>
-                                    <SelectItem value="yield-high">
-                                      Yield: High to Low
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Completed Trades</CardDescription>
+                      <CardTitle className="text-2xl font-bold">
+                        {marketStats.completedTrades}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Users className="h-4 w-4 mr-1" />
+                        This quarter
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                                {hasActiveFilters && (
-                                  <Button
-                                    variant="outline"
-                                    onClick={clearFilters}
-                                    size="sm"
-                                  >
-                                    <X className="h-4 w-4 mr-2" />
-                                    Clear
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            {listings.map((listing) => (
-                              <Card
-                                key={listing.listingId}
-                                className="hover:border-primary/50 transition-colors"
-                              >
-                                <CardHeader>
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <div className="p-2 bg-primary/10 rounded-lg">
-                                        <Building2 className="h-5 w-5 text-primary" />
-                                      </div>
-                                      <div>
-                                        <CardTitle className="text-lg">
-                                          {listing.loanDetails.borrower}
-                                        </CardTitle>
-                                        <CardDescription>
-                                          Loan ID: {listing.loanId} • Listed by{" "}
-                                          {listing.seller}
-                                        </CardDescription>
-                                      </div>
-                                    </div>
-                                    <Badge
-                                      className={getStatusColor(listing.status)}
-                                    >
-                                      {listing.status}
-                                    </Badge>
-                                  </div>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Asking Price
-                                      </p>
-                                      <p className="text-2xl font-bold text-primary">
-                                        {formatCurrency(listing.askingPrice)}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Outstanding
-                                      </p>
-                                      <p className="text-lg font-semibold">
-                                        {formatCurrency(
-                                          listing.loanDetails.outstandingAmount
-                                        )}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Interest Rate
-                                      </p>
-                                      <p className="text-lg font-semibold">
-                                        {listing.loanDetails.interestRate}%
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Effective Yield
-                                      </p>
-                                      <p className="text-lg font-bold text-green-600">
-                                        {calculateYield(listing)}%
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                                    <div>
-                                      <p className="font-medium text-muted-foreground">
-                                        Original Amount
-                                      </p>
-                                      <p>
-                                        {formatCurrency(
-                                          listing.loanDetails.originalAmount
-                                        )}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="font-medium text-muted-foreground">
-                                        Maturity Date
-                                      </p>
-                                      <p>
-                                        {formatDate(
-                                          listing.loanDetails.maturityDate
-                                        )}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="font-medium text-muted-foreground">
-                                        Listed Date
-                                      </p>
-                                      <p>{formatDate(listing.listedAt)}</p>
-                                    </div>
-                                    <div>
-                                      <p className="font-medium text-muted-foreground">
-                                        Listing ID
-                                      </p>
-                                      <p className="font-mono text-xs">
-                                        {listing.listingId}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Button size="sm">
-                                      <Handshake className="h-4 w-4 mr-2" />
-                                      Make Offer
-                                    </Button>
-                                    <Button variant="outline" size="sm">
-                                      <Eye className="h-4 w-4 mr-2" />
-                                      View Details
-                                    </Button>
-                                    <Button variant="outline" size="sm">
-                                      <FileText className="h-4 w-4 mr-2" />
-                                      Due Diligence
-                                    </Button>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-
-                            {listings.length === 0 && (
-                              <div className="text-center py-12">
-                                <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">
-                                  No listings found
-                                </h3>
-                                <p className="text-muted-foreground mb-4">
-                                  There are currently no loan positions
-                                  available for trading.
-                                </p>
-                                <Button
-                                  onClick={() =>
-                                    alert("Create listing modal coming soon!")
-                                  }
-                                >
-                                  <Plus className="h-4 w-4 mr-2" />
-                                  Create First Listing
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-
-                    <TabsContent value="offers" className="space-y-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>My Offers</CardTitle>
-                          <CardDescription>
-                            Track your offers and their status
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            {offers.map((offer) => (
-                              <Card
-                                key={offer.offerId}
-                                className="hover:border-primary/50 transition-colors"
-                              >
-                                <CardHeader>
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                                        <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                      </div>
-                                      <div>
-                                        <CardTitle className="text-lg">
-                                          Offer {offer.offerId}
-                                        </CardTitle>
-                                        <CardDescription>
-                                          For listing {offer.listingId} • Valid
-                                          until {formatDate(offer.validUntil)}
-                                        </CardDescription>
-                                      </div>
-                                    </div>
-                                    <Badge
-                                      className={getStatusColor(offer.status)}
-                                    >
-                                      {offer.status}
-                                    </Badge>
-                                  </div>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Offer Price
-                                      </p>
-                                      <p className="text-2xl font-bold text-blue-600">
-                                        {formatCurrency(offer.offerPrice)}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Status
-                                      </p>
-                                      <p className="text-lg font-semibold capitalize">
-                                        {offer.status}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Valid Until
-                                      </p>
-                                      <p className="text-lg">
-                                        {formatDate(offer.validUntil)}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">
-                                        Days Remaining
-                                      </p>
-                                      <p className="text-lg font-semibold">
-                                        {Math.max(
-                                          0,
-                                          Math.ceil(
-                                            (new Date(
-                                              offer.validUntil
-                                            ).getTime() -
-                                              currentDate.getTime()) /
-                                              (1000 * 60 * 60 * 24)
-                                          )
-                                        )}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {offer.terms && (
-                                    <div className="mb-4">
-                                      <p className="text-sm font-medium text-muted-foreground mb-2">
-                                        Terms & Conditions
-                                      </p>
-                                      <p className="text-sm bg-muted/50 p-3 rounded-lg">
-                                        {offer.terms}
-                                      </p>
-                                    </div>
-                                  )}
-
-                                  <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
-                                      <Eye className="h-4 w-4 mr-2" />
-                                      View Listing
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      disabled={offer.status !== "pending"}
-                                    >
-                                      <X className="h-4 w-4 mr-2" />
-                                      Withdraw
-                                    </Button>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-
-                            {offers.length === 0 && (
-                              <div className="text-center py-12">
-                                <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">
-                                  No offers yet
-                                </h3>
-                                <p className="text-muted-foreground mb-4">
-                                  You haven&apos;t made any offers on loan
-                                  positions.
-                                </p>
-                                <Button
-                                  onClick={() =>
-                                    alert("Make offer modal coming soon!")
-                                  }
-                                >
-                                  <Handshake className="h-4 w-4 mr-2" />
-                                  Make Your First Offer
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Avg Yield</CardDescription>
+                      <CardTitle className="text-2xl font-bold text-blue-600">
+                        {marketStats.avgYield}%
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <TrendingUp className="h-4 w-4 mr-1" />
+                        Market rate
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
+              </div>
 
-                {/* Market Insights */}
-                <div className="px-4 lg:px-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Card className="hover:border-primary transition-colors">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base">
-                          <TrendingUp className="h-5 w-5 text-green-500" />
-                          Market Analytics
-                        </CardTitle>
-                        <CardDescription>
-                          View market trends and pricing insights
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Button variant="outline" size="sm" className="w-full">
-                          View Analytics
+              {/* Main Content */}
+              <div className="px-4 lg:px-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex flex-col space-y-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle>Loan Trading Platform</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {filteredListings.length} listings
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Tab Navigation */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant={
+                            activeTab === "marketplace" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("marketplace")}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Marketplace
                         </Button>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="hover:border-primary transition-colors">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base">
-                          <Users className="h-5 w-5 text-blue-500" />
+                        <Button
+                          variant={
+                            activeTab === "due_diligence"
+                              ? "default"
+                              : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("due_diligence")}
+                        >
+                          <FileSearch className="h-4 w-4 mr-2" />
                           Due Diligence
-                        </CardTitle>
-                        <CardDescription>
-                          Automated compliance and risk assessment
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Button variant="outline" size="sm" className="w-full">
-                          Start Review
                         </Button>
-                      </CardContent>
-                    </Card>
+                        <Button
+                          variant={
+                            activeTab === "trading" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("trading")}
+                        >
+                          <Activity className="h-4 w-4 mr-2" />
+                          Trading
+                        </Button>
+                        <Button
+                          variant={
+                            activeTab === "analytics" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("analytics")}
+                        >
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Analytics
+                        </Button>
+                      </div>
 
-                    <Card className="hover:border-primary transition-colors">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base">
-                          <Calendar className="h-5 w-5 text-purple-500" />
-                          Settlement
-                        </CardTitle>
-                        <CardDescription>
-                          Streamlined trade settlement and documentation
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Trades
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                      {/* Search and Filters - Only show for marketplace */}
+                      {activeTab === "marketplace" && (
+                        <div className="flex flex-col lg:flex-row gap-3 w-full">
+                          <div className="flex-1 min-w-0">
+                            <div className="relative w-full">
+                              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Search by borrower, industry, or loan details..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 w-full"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 flex-wrap lg:flex-nowrap">
+                            <Select
+                              value={industryFilter}
+                              onValueChange={setIndustryFilter}
+                            >
+                              <SelectTrigger className="w-full lg:w-40">
+                                <SelectValue placeholder="Industry" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">
+                                  All Industries
+                                </SelectItem>
+                                <SelectItem value="technology">
+                                  Technology
+                                </SelectItem>
+                                <SelectItem value="energy">Energy</SelectItem>
+                                <SelectItem value="manufacturing">
+                                  Manufacturing
+                                </SelectItem>
+                                <SelectItem value="healthcare">
+                                  Healthcare
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Select
+                              value={riskFilter}
+                              onValueChange={setRiskFilter}
+                            >
+                              <SelectTrigger className="w-full lg:w-32">
+                                <SelectValue placeholder="Risk" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All Risk</SelectItem>
+                                <SelectItem value="low">Low Risk</SelectItem>
+                                <SelectItem value="medium">
+                                  Medium Risk
+                                </SelectItem>
+                                <SelectItem value="high">High Risk</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Button variant="outline" size="sm">
+                              <Filter className="h-4 w-4 mr-2" />
+                              More Filters
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {activeTab === "marketplace" && (
+                      <LoanMarketplace
+                        listings={filteredListings}
+                        onViewDetails={(id) => console.log("View details:", id)}
+                        onStartDueDiligence={(id) =>
+                          console.log("Start DD:", id)
+                        }
+                      />
+                    )}
+                    {activeTab === "due_diligence" && <DueDiligenceEngine />}
+                    {activeTab === "trading" && <TradingDashboard />}
+                    {activeTab === "analytics" && (
+                      <MarketAnalytics
+                        trends={marketTrends}
+                        industryData={industryDistribution}
+                        stats={marketStats}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </ProtectedRoute>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

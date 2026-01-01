@@ -11,4 +11,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import {
   Select,
   SelectContent,
-  SelectI
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";

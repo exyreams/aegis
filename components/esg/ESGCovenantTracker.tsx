@@ -67,13 +67,21 @@ interface LoanAgreement {
 export function ESGCovenantTracker() {
   const [selectedLoan, setSelectedLoan] = useState<string>("1");
   const [isAddCovenantOpen, setIsAddCovenantOpen] = useState(false);
-  const [newCovenant, setNewCovenant] = useState({
-    type: "environmental" as const,
+  const [newCovenant, setNewCovenant] = useState<{
+    type: "environmental" | "social" | "governance";
+    description: string;
+    metric: string;
+    targetValue: number;
+    unit: string;
+    testFrequency: "monthly" | "quarterly" | "annually";
+    penalty: string;
+  }>({
+    type: "environmental",
     description: "",
     metric: "",
     targetValue: 0,
     unit: "",
-    testFrequency: "quarterly" as const,
+    testFrequency: "quarterly",
     penalty: "",
   });
 

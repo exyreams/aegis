@@ -35,7 +35,7 @@ const addMetricSchema = z.object({
   targetValue: z.number().min(0, "Target value must be positive"),
   unit: z.string().min(1, "Unit is required"),
   dataSource: z.string().min(1, "Data source is required"),
-  verified: z.boolean().default(false),
+  verified: z.boolean(),
 });
 
 type AddMetricFormData = z.infer<typeof addMetricSchema>;
