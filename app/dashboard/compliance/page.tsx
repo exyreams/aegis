@@ -10,12 +10,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardAction,
-  CardFooter,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Input } from "@/components/ui/Input";
 import {
   Select,
   SelectContent,
@@ -24,51 +21,161 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { CovenantMonitor } from "@/components/compliance/CovenantMonitor";
+import { InformationDistribution } from "@/components/compliance/InformationDistribution";
+import { BorrowerObligations } from "@/components/compliance/BorrowerObligations";
 import {
-  Plus,
-  Search,
-  X,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import {
   Shield,
-  FileCheck,
-  Bell,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  FileText,
   Calendar,
-  TrendingUp,
-  AlertCircle,
+  Target,
+  BarChart3,
+  Share2,
 } from "lucide-react";
+
+interface LoanCompliance {
+  id: string;
+  borrower: string;
+  loanAmount: number;
+  startDate: string;
+  maturityDate: string;
+  totalCovenants: number;
+  compliantCovenants: number;
+  atRiskCovenants: number;
+  breachedCovenants: number;
+  overallStatus: "compliant" | "at_risk" | "breach" | "critical";
+  lastReported: string;
+  nextReporting: string;
+}
 
 export default function CompliancePage() {
   const { auth } = useAuth();
   const user = auth.user;
 
-  // Modal states
-  const [addCovenantModalOpen, setAddCovenantModalOpen] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "covenants" | "obligations" | "distribution"
+  >("overview");
 
-  // Search and filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  // Mock loan compliance data
+  const loanCompliance: LoanCompliance[] = [
+    {
+      id: "1",
+      borrower: "GreenTech Industries",
+      loanAmount: 50000000,
+      startDate: "2024-01-15",
+      maturityDate: "2027-01-15",
+      totalCovenants: 12,
+      compliantCovenants: 9,
+      atRiskCovenants: 2,
+      breachedCovenants: 1,
+      overallStatus: "at_risk",
+      lastReported: "2024-12-15",
+      nextReporting: "2025-03-15",
+    },
+    {
+      id: "2",
+      borrower: "Sustainable Energy Corp",
+      loanAmount: 75000000,
+      startDate: "2024-06-01",
+      maturityDate: "2029-06-01",
+      totalCovenants: 15,
+      compliantCovenants: 14,
+      atRiskCovenants: 1,
+      breachedCovenants: 0,
+      overallStatus: "compliant",
+      lastReported: "2024-12-20",
+      nextReporting: "2025-03-20",
+    },
+    {
+      id: "3",
+      borrower: "Traditional Manufacturing Co",
+      loanAmount: 25000000,
+      startDate: "2023-09-01",
+      maturityDate: "2026-09-01",
+      totalCovenants: 8,
+      compliantCovenants: 5,
+      atRiskCovenants: 1,
+      breachedCovenants: 2,
+      overallStatus: "breach",
+      lastReported: "2024-12-10",
+      nextReporting: "2025-01-10",
+    },
+  ];
 
-  // Mock data - replace with real API calls later
-  const covenants: any[] = [];
-  const stats = {
-    totalCovenants: 0,
-    compliant: 0,
-    atRisk: 0,
-    breached: 0,
+  const overallStats = {
+    totalLoans: loanCompliance.length,
+    totalValue: loanCompliance.reduce((sum, loan) => sum + loan.loanAmount, 0),
+    compliant: loanCompliance.filter((l) => l.overallStatus === "compliant")
+      .length,
+    atRisk: loanCompliance.filter((l) => l.overallStatus === "at_risk").length,
+    breach: loanCompliance.filter((l) => l.overallStatus === "breach").length,
+    totalCovenants: loanCompliance.reduce(
+      (sum, loan) => sum + loan.totalCovenants,
+      0
+    ),
+    compliantCovenants: loanCompliance.reduce(
+      (sum, loan) => sum + loan.compliantCovenants,
+      0
+    ),
   };
 
-  const clearFilters = () => {
-    setSearchQuery("");
-    setStatusFilter("all");
-    setTypeFilter("all");
+  const complianceData = loanCompliance.map((loan) => ({
+    name: loan.borrower.split(" ")[0],
+    compliant: loan.compliantCovenants,
+    atRisk: loan.atRiskCovenants,
+    breach: loan.breachedCovenants,
+    total: loan.totalCovenants,
+  }));
+
+  const statusDistribution = [
+    { name: "Compliant", value: overallStats.compliant, color: "#10b981" },
+    { name: "At Risk", value: overallStats.atRisk, color: "#f59e0b" },
+    { name: "Breach", value: overallStats.breach, color: "#ef4444" },
+  ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "compliant":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "at_risk":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case "breach":
+      case "critical":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />;
+    }
   };
 
-  const hasActiveFilters =
-    searchQuery || statusFilter !== "all" || typeFilter !== "all";
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "compliant":
+        return "bg-green-100 text-green-800";
+      case "at_risk":
+        return "bg-yellow-100 text-yellow-800";
+      case "breach":
+      case "critical":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <SidebarProvider
@@ -89,135 +196,104 @@ export default function CompliancePage() {
               <div className="flex items-center justify-between px-4 lg:px-6">
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight">
-                    Compliance
+                    Loan Compliance
                   </h1>
                   <p className="text-muted-foreground">
                     {user?.role === "borrower"
-                      ? "Monitor your loan obligations and ensure compliance"
+                      ? "Monitor your loan obligations and compliance requirements"
                       : user?.role === "lender"
-                      ? "Track borrower compliance and covenant performance"
-                      : "Oversee loan compliance monitoring across the platform"}
+                      ? "Track borrower compliance across your loan portfolio"
+                      : "Oversee loan compliance and covenant monitoring platform-wide"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setAddCovenantModalOpen(true)}
-                  >
-                    <Bell className="h-4 w-4 mr-2" />
-                    Set Alert
+                  <Select value={selectedLoan} onValueChange={setSelectedLoan}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Select loan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Loans</SelectItem>
+                      {loanCompliance.map((loan) => (
+                        <SelectItem key={loan.id} value={loan.id}>
+                          {loan.borrower}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate Report
                   </Button>
-                  {user?.role !== "borrower" && (
-                    <Button onClick={() => setAddCovenantModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Covenant
-                    </Button>
-                  )}
                 </div>
               </div>
 
-              {/* Stats Cards */}
+              {/* Overview Stats */}
               <div className="px-4 lg:px-6">
-                <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-                  <Card className="@container/card">
-                    <CardHeader>
-                      <CardDescription>Total Covenants</CardDescription>
-                      <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        {stats.totalCovenants}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Total Portfolio</CardDescription>
+                      <CardTitle className="text-3xl font-bold">
+                        ${(overallStats.totalValue / 1000000).toFixed(0)}M
                       </CardTitle>
-                      <CardAction>
-                        <Badge variant="outline">
-                          <FileCheck className="h-3 w-3 mr-1" />
-                          Active
-                        </Badge>
-                      </CardAction>
                     </CardHeader>
-                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                      <div className="line-clamp-1 flex gap-2 font-medium">
-                        Monitored obligations <FileCheck className="size-4" />
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Target className="h-4 w-4 mr-1" />
+                        {overallStats.totalLoans} active loans
                       </div>
-                      <div className="text-muted-foreground">
-                        Across all loans
-                      </div>
-                    </CardFooter>
+                    </CardContent>
                   </Card>
 
-                  <Card className="@container/card">
-                    <CardHeader>
-                      <CardDescription>Compliant</CardDescription>
-                      <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-green-600">
-                        {stats.compliant}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Compliance Rate</CardDescription>
+                      <CardTitle className="text-3xl font-bold text-green-600">
+                        {Math.round(
+                          (overallStats.compliantCovenants /
+                            overallStats.totalCovenants) *
+                            100
+                        )}
+                        %
                       </CardTitle>
-                      <CardAction>
-                        <Badge
-                          variant="outline"
-                          className="text-green-600 border-green-200"
-                        >
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Good
-                        </Badge>
-                      </CardAction>
                     </CardHeader>
-                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                      <div className="line-clamp-1 flex gap-2 font-medium">
-                        Meeting requirements <CheckCircle2 className="size-4" />
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        {overallStats.compliantCovenants} of{" "}
+                        {overallStats.totalCovenants} covenants
                       </div>
-                      <div className="text-muted-foreground">
-                        No action needed
-                      </div>
-                    </CardFooter>
+                    </CardContent>
                   </Card>
 
-                  <Card className="@container/card">
-                    <CardHeader>
-                      <CardDescription>At Risk</CardDescription>
-                      <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-orange-600">
-                        {stats.atRisk}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Compliant Loans</CardDescription>
+                      <CardTitle className="text-3xl font-bold text-green-600">
+                        {overallStats.compliant}
                       </CardTitle>
-                      <CardAction>
-                        <Badge
-                          variant="outline"
-                          className="text-orange-600 border-orange-200"
-                        >
-                          <Clock className="h-3 w-3 mr-1" />
-                          Warning
-                        </Badge>
-                      </CardAction>
                     </CardHeader>
-                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                      <div className="line-clamp-1 flex gap-2 font-medium">
-                        Approaching limits <Clock className="size-4" />
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Shield className="h-4 w-4 mr-1" />
+                        Fully compliant
                       </div>
-                      <div className="text-muted-foreground">
-                        Requires attention
-                      </div>
-                    </CardFooter>
+                    </CardContent>
                   </Card>
 
-                  <Card className="@container/card">
-                    <CardHeader>
-                      <CardDescription>Breached</CardDescription>
-                      <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-red-600">
-                        {stats.breached}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Needs Attention</CardDescription>
+                      <CardTitle className="text-3xl font-bold text-red-600">
+                        {overallStats.breach}
                       </CardTitle>
-                      <CardAction>
-                        <Badge
-                          variant="outline"
-                          className="text-red-600 border-red-200"
-                        >
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                          Critical
-                        </Badge>
-                      </CardAction>
                     </CardHeader>
-                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                      <div className="line-clamp-1 flex gap-2 font-medium">
-                        Covenant violations <AlertTriangle className="size-4" />
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Covenant breaches
                       </div>
-                      <div className="text-muted-foreground">
-                        Immediate action required
-                      </div>
-                    </CardFooter>
+                    </CardContent>
                   </Card>
                 </div>
               </div>
@@ -228,194 +304,244 @@ export default function CompliancePage() {
                   <CardHeader>
                     <div className="flex flex-col space-y-4">
                       <div className="flex items-center justify-between">
-                        <CardTitle>Covenant Monitoring</CardTitle>
+                        <CardTitle>Compliance Management</CardTitle>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">
-                            {covenants.length} covenants
+                            {overallStats.totalCovenants} covenants
                           </Badge>
                         </div>
                       </div>
 
-                      {/* Search and Filter Controls */}
-                      <div className="flex flex-col lg:flex-row gap-3 w-full">
-                        <div className="flex-1 min-w-0">
-                          <div className="relative w-full">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Search by covenant description, loan, or borrower..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="pl-10 w-full"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 flex-wrap lg:flex-nowrap">
-                          <Select
-                            value={statusFilter}
-                            onValueChange={setStatusFilter}
-                          >
-                            <SelectTrigger className="w-full lg:w-32">
-                              <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Status</SelectItem>
-                              <SelectItem value="compliant">
-                                Compliant
-                              </SelectItem>
-                              <SelectItem value="at_risk">At Risk</SelectItem>
-                              <SelectItem value="breached">Breached</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={typeFilter}
-                            onValueChange={setTypeFilter}
-                          >
-                            <SelectTrigger className="w-full lg:w-36">
-                              <SelectValue placeholder="Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Types</SelectItem>
-                              <SelectItem value="financial">
-                                Financial
-                              </SelectItem>
-                              <SelectItem value="operational">
-                                Operational
-                              </SelectItem>
-                              <SelectItem value="reporting">
-                                Reporting
-                              </SelectItem>
-                              <SelectItem value="maintenance">
-                                Maintenance
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          {hasActiveFilters && (
-                            <Button
-                              variant="outline"
-                              onClick={clearFilters}
-                              size="sm"
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Clear
-                            </Button>
-                          )}
-                        </div>
+                      {/* Tab Navigation */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant={
+                            activeTab === "overview" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("overview")}
+                        >
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Overview
+                        </Button>
+                        <Button
+                          variant={
+                            activeTab === "covenants" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("covenants")}
+                        >
+                          <Shield className="h-4 w-4 mr-2" />
+                          Covenants
+                        </Button>
+                        <Button
+                          variant={
+                            activeTab === "obligations" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("obligations")}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Obligations
+                        </Button>
+                        <Button
+                          variant={
+                            activeTab === "distribution" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("distribution")}
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Distribution
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {covenants.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">
-                          No Covenants Found
-                        </h3>
-                        <p className="text-muted-foreground mb-4">
-                          {user?.role === "borrower"
-                            ? "Your loan covenants will appear here once they're set up."
-                            : "Add loan covenants to start monitoring compliance."}
-                        </p>
-                        {user?.role !== "borrower" && (
-                          <Button onClick={() => setAddCovenantModalOpen(true)}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add First Covenant
-                          </Button>
-                        )}
+                    {activeTab === "overview" && (
+                      <div className="space-y-6">
+                        {/* Charts */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base">
+                                Covenant Compliance by Loan
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={complianceData}>
+                                  <CartesianGrid strokeDasharray="3 3" />
+                                  <XAxis dataKey="name" />
+                                  <YAxis />
+                                  <Tooltip />
+                                  <Bar
+                                    dataKey="compliant"
+                                    stackId="a"
+                                    fill="#10b981"
+                                    name="Compliant"
+                                  />
+                                  <Bar
+                                    dataKey="atRisk"
+                                    stackId="a"
+                                    fill="#f59e0b"
+                                    name="At Risk"
+                                  />
+                                  <Bar
+                                    dataKey="breach"
+                                    stackId="a"
+                                    fill="#ef4444"
+                                    name="Breach"
+                                  />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base">
+                                Portfolio Status Distribution
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                  <Pie
+                                    data={statusDistribution}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={120}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                  >
+                                    {statusDistribution.map((entry, index) => (
+                                      <Cell
+                                        key={`cell-${index}`}
+                                        fill={entry.color}
+                                      />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip />
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <div className="flex justify-center space-x-4 mt-4">
+                                {statusDistribution.map((entry, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center"
+                                  >
+                                    <div
+                                      className="w-3 h-3 rounded-full mr-2"
+                                      style={{ backgroundColor: entry.color }}
+                                    />
+                                    <span className="text-sm">
+                                      {entry.name}: {entry.value}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Loan Details */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-semibold">
+                            Loan Portfolio
+                          </h3>
+                          {loanCompliance.map((loan) => (
+                            <Card key={loan.id}>
+                              <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <CardTitle className="text-lg">
+                                      {loan.borrower}
+                                    </CardTitle>
+                                    <p className="text-sm text-gray-600">
+                                      ${(loan.loanAmount / 1000000).toFixed(0)}M
+                                      • {loan.startDate} to {loan.maturityDate}
+                                    </p>
+                                  </div>
+                                  <Badge
+                                    className={getStatusColor(
+                                      loan.overallStatus
+                                    )}
+                                  >
+                                    {getStatusIcon(loan.overallStatus)}
+                                    <span className="ml-1 capitalize">
+                                      {loan.overallStatus.replace("_", " ")}
+                                    </span>
+                                  </Badge>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-green-600">
+                                      {loan.compliantCovenants}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Compliant
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-yellow-600">
+                                      {loan.atRiskCovenants}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      At Risk
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-red-600">
+                                      {loan.breachedCovenants}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Breached
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-gray-900">
+                                      {loan.totalCovenants}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Total
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center">
+                                    <Calendar className="h-4 w-4 mr-1 text-gray-500" />
+                                    <span>
+                                      Last reported: {loan.lastReported}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                                    <span>Next due: {loan.nextReporting}</span>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {/* Covenant list will go here */}
-                        <p className="text-muted-foreground">
-                          Covenant monitoring dashboard will be implemented here
-                        </p>
-                      </div>
+                    )}
+                    {activeTab === "covenants" && <CovenantMonitor />}
+                    {activeTab === "obligations" && <BorrowerObligations />}
+                    {activeTab === "distribution" && (
+                      <InformationDistribution />
                     )}
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Compliance Features */}
-              <div className="px-4 lg:px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <Bell className="h-5 w-5 text-blue-500" />
-                        Smart Alerts
-                      </CardTitle>
-                      <CardDescription>
-                        Automated notifications for covenant breaches
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setAddCovenantModalOpen(true)}
-                      >
-                        Configure Alerts
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <TrendingUp className="h-5 w-5 text-emerald-500" />
-                        Trend Analysis
-                      </CardTitle>
-                      <CardDescription>
-                        Track compliance trends over time
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View Trends
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <Calendar className="h-5 w-5 text-purple-500" />
-                        Reporting Schedule
-                      </CardTitle>
-                      <CardDescription>
-                        Automated compliance reporting calendar
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View Schedule
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </SidebarInset>
-
-      {/* Add Covenant Modal */}
-      {addCovenantModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-lg font-semibold mb-4">Add Covenant</h2>
-            <p className="text-muted-foreground mb-4">
-              Covenant setup modal will be implemented here
-            </p>
-            <Button onClick={() => setAddCovenantModalOpen(false)}>
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
     </SidebarProvider>
   );
 }
