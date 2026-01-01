@@ -25,6 +25,13 @@ import {
 } from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { ESGDashboard } from "@/components/esg/ESGDashboard";
+import { AddMetricModal } from "@/components/esg/AddMetricModal";
+import { VerificationWorkflow } from "@/components/esg/VerificationWorkflow";
+import { DataSharingHub } from "@/components/esg/DataSharingHub";
+import { LenderDecisionDashboard } from "@/components/esg/LenderDecisionDashboard";
+import { ESGCovenantTracker } from "@/components/esg/ESGCovenantTracker";
+import type { ESGMetric } from "@/components/esg/ESGMetricCard";
 import {
   Plus,
   Search,
@@ -46,19 +53,106 @@ export default function ESGReportingPage() {
 
   // Modal states
   const [addMetricModalOpen, setAddMetricModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "dashboard" | "verification" | "sharing" | "lending" | "covenants"
+  >("dashboard");
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Mock data - replace with real API calls later
-  const metrics: any[] = [];
+  // Mock ESG metrics data - replace with real API calls later
+  const [metrics, setMetrics] = useState<ESGMetric[]>([
+    {
+      id: "1",
+      name: "Carbon Emissions",
+      category: "environmental",
+      description: "Total CO2 equivalent emissions from operations",
+      currentValue: 850,
+      targetValue: 750,
+      unit: "tonnes CO2e",
+      status: "at_risk",
+      trend: "down",
+      lastUpdated: "2024-12-15",
+      dataSource: "Environmental Management System",
+      verified: true,
+    },
+    {
+      id: "2",
+      name: "Employee Diversity",
+      category: "social",
+      description: "Percentage of diverse employees in leadership roles",
+      currentValue: 35,
+      targetValue: 40,
+      unit: "%",
+      status: "on_track",
+      trend: "up",
+      lastUpdated: "2024-12-10",
+      dataSource: "HR Records",
+      verified: true,
+    },
+    {
+      id: "3",
+      name: "Board Independence",
+      category: "governance",
+      description: "Percentage of independent board members",
+      currentValue: 60,
+      targetValue: 50,
+      unit: "%",
+      status: "achieved",
+      trend: "stable",
+      lastUpdated: "2024-12-01",
+      dataSource: "Board Records",
+      verified: true,
+    },
+    {
+      id: "4",
+      name: "Renewable Energy Usage",
+      category: "environmental",
+      description: "Percentage of energy from renewable sources",
+      currentValue: 25,
+      targetValue: 50,
+      unit: "%",
+      status: "behind",
+      trend: "up",
+      lastUpdated: "2024-12-12",
+      dataSource: "Utility Bills",
+      verified: false,
+    },
+    {
+      id: "5",
+      name: "Employee Training Hours",
+      category: "social",
+      description: "Average training hours per employee annually",
+      currentValue: 42,
+      targetValue: 40,
+      unit: "hours",
+      status: "achieved",
+      trend: "up",
+      lastUpdated: "2024-12-08",
+      dataSource: "Learning Management System",
+      verified: true,
+    },
+  ]);
+
   const stats = {
-    totalMetrics: 0,
-    environmental: 0,
-    social: 0,
-    governance: 0,
+    totalMetrics: metrics.length,
+    environmental: metrics.filter((m) => m.category === "environmental").length,
+    social: metrics.filter((m) => m.category === "social").length,
+    governance: metrics.filter((m) => m.category === "governance").length,
+  };
+
+  const handleAddMetric = (newMetric: ESGMetric) => {
+    setMetrics((prev) => [...prev, newMetric]);
+  };
+
+  const handleEditMetric = (metric: ESGMetric) => {
+    toast.info("Edit metric functionality coming soon!");
+  };
+
+  const handleViewMetricDetails = (metric: ESGMetric) => {
+    toast.info("Metric details view coming soon!");
   };
 
   const clearFilters = () => {
@@ -116,7 +210,7 @@ export default function ESGReportingPage() {
 
               {/* Stats Cards */}
               <div className="px-4 lg:px-6">
-                <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+                <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
                   <Card className="@container/card">
                     <CardHeader>
                       <CardDescription>Total Metrics</CardDescription>
@@ -226,7 +320,7 @@ export default function ESGReportingPage() {
                   <CardHeader>
                     <div className="flex flex-col space-y-4">
                       <div className="flex items-center justify-between">
-                        <CardTitle>ESG Dashboard</CardTitle>
+                        <CardTitle>ESG Management</CardTitle>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">
                             {metrics.length} metrics
@@ -234,96 +328,152 @@ export default function ESGReportingPage() {
                         </div>
                       </div>
 
-                      {/* Search and Filter Controls */}
-                      <div className="flex flex-col lg:flex-row gap-3 w-full">
-                        <div className="flex-1 min-w-0">
-                          <div className="relative w-full">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Search by metric name, target, or description..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="pl-10 w-full"
-                            />
+                      {/* Tab Navigation */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant={
+                            activeTab === "dashboard" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("dashboard")}
+                        >
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Dashboard
+                        </Button>
+                        <Button
+                          variant={
+                            activeTab === "verification" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("verification")}
+                        >
+                          <Shield className="h-4 w-4 mr-2" />
+                          Verification
+                        </Button>
+                        <Button
+                          variant={
+                            activeTab === "sharing" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setActiveTab("sharing")}
+                        >
+                          <Globe className="h-4 w-4 mr-2" />
+                          Data Sharing
+                        </Button>
+                        {user?.role === "lender" && (
+                          <>
+                            <Button
+                              variant={
+                                activeTab === "lending" ? "default" : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setActiveTab("lending")}
+                            >
+                              <Target className="h-4 w-4 mr-2" />
+                              Lending Decisions
+                            </Button>
+                            <Button
+                              variant={
+                                activeTab === "covenants"
+                                  ? "default"
+                                  : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setActiveTab("covenants")}
+                            >
+                              <FileBarChart className="h-4 w-4 mr-2" />
+                              Covenants
+                            </Button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Search and Filter Controls - Only show for dashboard tab */}
+                      {activeTab === "dashboard" && (
+                        <div className="flex flex-col lg:flex-row gap-3 w-full">
+                          <div className="flex-1 min-w-0">
+                            <div className="relative w-full">
+                              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Search by metric name, target, or description..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 w-full"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 flex-wrap lg:flex-nowrap">
+                            <Select
+                              value={categoryFilter}
+                              onValueChange={setCategoryFilter}
+                            >
+                              <SelectTrigger className="w-full lg:w-40">
+                                <SelectValue placeholder="Category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">
+                                  All Categories
+                                </SelectItem>
+                                <SelectItem value="environmental">
+                                  Environmental
+                                </SelectItem>
+                                <SelectItem value="social">Social</SelectItem>
+                                <SelectItem value="governance">
+                                  Governance
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Select
+                              value={statusFilter}
+                              onValueChange={setStatusFilter}
+                            >
+                              <SelectTrigger className="w-full lg:w-32">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="on_track">
+                                  On Track
+                                </SelectItem>
+                                <SelectItem value="at_risk">At Risk</SelectItem>
+                                <SelectItem value="behind">
+                                  Behind Target
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            {hasActiveFilters && (
+                              <Button
+                                variant="outline"
+                                onClick={clearFilters}
+                                size="sm"
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Clear
+                              </Button>
+                            )}
                           </div>
                         </div>
-
-                        <div className="flex gap-2 flex-wrap lg:flex-nowrap">
-                          <Select
-                            value={categoryFilter}
-                            onValueChange={setCategoryFilter}
-                          >
-                            <SelectTrigger className="w-full lg:w-40">
-                              <SelectValue placeholder="Category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">
-                                All Categories
-                              </SelectItem>
-                              <SelectItem value="environmental">
-                                Environmental
-                              </SelectItem>
-                              <SelectItem value="social">Social</SelectItem>
-                              <SelectItem value="governance">
-                                Governance
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={statusFilter}
-                            onValueChange={setStatusFilter}
-                          >
-                            <SelectTrigger className="w-full lg:w-32">
-                              <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Status</SelectItem>
-                              <SelectItem value="on_track">On Track</SelectItem>
-                              <SelectItem value="at_risk">At Risk</SelectItem>
-                              <SelectItem value="behind">
-                                Behind Target
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          {hasActiveFilters && (
-                            <Button
-                              variant="outline"
-                              onClick={clearFilters}
-                              size="sm"
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Clear
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {metrics.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Globe className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">
-                          No ESG Metrics Found
-                        </h3>
-                        <p className="text-muted-foreground mb-4">
-                          Start tracking your sustainability performance by
-                          adding ESG metrics.
-                        </p>
-                        <Button onClick={() => setAddMetricModalOpen(true)}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add First Metric
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {/* ESG metrics dashboard will go here */}
-                        <p className="text-muted-foreground">
-                          ESG metrics dashboard will be implemented here
-                        </p>
-                      </div>
+                    {activeTab === "dashboard" && (
+                      <ESGDashboard
+                        metrics={metrics}
+                        onEditMetric={handleEditMetric}
+                        onViewMetricDetails={handleViewMetricDetails}
+                      />
+                    )}
+                    {activeTab === "verification" && <VerificationWorkflow />}
+                    {activeTab === "sharing" && <DataSharingHub />}
+                    {activeTab === "lending" && user?.role === "lender" && (
+                      <LenderDecisionDashboard />
+                    )}
+                    {activeTab === "covenants" && user?.role === "lender" && (
+                      <ESGCovenantTracker />
                     )}
                   </CardContent>
                 </Card>
@@ -365,8 +515,15 @@ export default function ESGReportingPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button variant="outline" size="sm" className="w-full">
-                        Create Report
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() =>
+                          (window.location.href = "/dashboard/esg/reports")
+                        }
+                      >
+                        View Reports
                       </Button>
                     </CardContent>
                   </Card>
@@ -382,8 +539,16 @@ export default function ESGReportingPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View Ratings
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() =>
+                          (window.location.href =
+                            "/dashboard/esg/certifications")
+                        }
+                      >
+                        View Certifications
                       </Button>
                     </CardContent>
                   </Card>
@@ -399,7 +564,14 @@ export default function ESGReportingPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() =>
+                          (window.location.href = "/dashboard/esg/benchmarks")
+                        }
+                      >
                         View Benchmarks
                       </Button>
                     </CardContent>
@@ -412,17 +584,11 @@ export default function ESGReportingPage() {
       </SidebarInset>
 
       {/* Add Metric Modal */}
-      {addMetricModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-lg font-semibold mb-4">Add ESG Metric</h2>
-            <p className="text-muted-foreground mb-4">
-              ESG metric setup modal will be implemented here
-            </p>
-            <Button onClick={() => setAddMetricModalOpen(false)}>Close</Button>
-          </div>
-        </div>
-      )}
+      <AddMetricModal
+        open={addMetricModalOpen}
+        onOpenChange={setAddMetricModalOpen}
+        onMetricAdded={handleAddMetric}
+      />
     </SidebarProvider>
   );
 }

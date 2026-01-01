@@ -64,6 +64,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/esg",
       icon: ESG,
     },
+    {
+      title: "ESG Compliance",
+      url: "/dashboard/esg/compliance",
+      icon: Compliance,
+      isSubItem: true,
+    },
+    {
+      title: "ESG Reports",
+      url: "/dashboard/esg/reports",
+      icon: Documents,
+      isSubItem: true,
+    },
+    {
+      title: "ESG Benchmarks",
+      url: "/dashboard/esg/benchmarks",
+      icon: ESG,
+      isSubItem: true,
+    },
+    {
+      title: "ESG Certifications",
+      url: "/dashboard/esg/certifications",
+      icon: ESG,
+      isSubItem: true,
+    },
   ];
 
   const navSecondary = [

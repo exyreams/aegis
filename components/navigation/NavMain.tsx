@@ -52,6 +52,7 @@ export function NavMain({
                   asChild
                   tooltip={item.title}
                   isActive={isActive}
+                  className={item.isSubItem ? "ml-6 text-sm" : ""}
                 >
                   <Link href={item.url || "#"}>
                     {item.icon && <item.icon />}
