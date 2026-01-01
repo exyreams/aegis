@@ -112,102 +112,136 @@ export function InformationDistribution() {
   const [isNewEventOpen, setIsNewEventOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<string>("all");
 
-  // Mock information requests
+  // Mock information requests - realistic loan market scenarios
   const [requests] = useState<InformationRequest[]>([
     {
       id: "1",
       loanId: "loan-001",
-      loanName: "TechCorp $50M Term Loan",
-      borrower: "TechCorp Industries",
+      loanName: "Meridian Holdings £75M Senior Secured",
+      borrower: "Meridian Holdings PLC",
       requestType: "financial_statements",
-      title: "Q4 2024 Financial Statements",
+      title: "FY2024 Audited Financial Statements",
       description:
-        "Please provide audited financial statements for Q4 2024 including balance sheet, income statement, and cash flow statement",
-      dueDate: "2025-02-15",
+        "Please provide audited consolidated financial statements for FY2024 prepared in accordance with IFRS, including auditor's report, notes to accounts, and management discussion & analysis",
+      dueDate: "2025-04-30",
       priority: "high",
       status: "pending",
-      requestedBy: "Sarah Johnson (Lender)",
-      requestDate: "2025-01-01",
+      requestedBy: "Agent Bank - Facility Administration",
+      requestDate: "2025-01-02",
       documents: [],
       comments: [
         {
           id: "1",
-          author: "Sarah Johnson",
+          author: "Agent Bank",
           message:
-            "Please ensure the statements are audited and include all subsidiaries",
-          timestamp: "2025-01-01 10:00",
+            "Please ensure statements include segment reporting and related party disclosures as required under the Facility Agreement",
+          timestamp: "2025-01-02 09:30",
         },
       ],
     },
     {
       id: "2",
       loanId: "loan-001",
-      loanName: "TechCorp $50M Term Loan",
-      borrower: "TechCorp Industries",
+      loanName: "Meridian Holdings £75M Senior Secured",
+      borrower: "Meridian Holdings PLC",
       requestType: "compliance_certificate",
       title: "Q4 2024 Compliance Certificate",
       description:
-        "Compliance certificate confirming adherence to all financial covenants",
+        "Quarterly compliance certificate signed by two directors confirming covenant compliance with detailed calculations",
       dueDate: "2025-01-31",
-      priority: "medium",
+      priority: "high",
       status: "submitted",
-      requestedBy: "Mike Chen (Lender)",
+      requestedBy: "Agent Bank - Credit Team",
       requestDate: "2024-12-15",
       submittedDate: "2025-01-15",
       documents: [
         "compliance-certificate-q4-2024.pdf",
-        "covenant-calculations.xlsx",
+        "covenant-calculations-q4-2024.xlsx",
       ],
       comments: [],
     },
     {
       id: "3",
-      loanId: "loan-002",
-      loanName: "ManufacturingCo $25M Revolver",
-      borrower: "ManufacturingCo Ltd",
-      requestType: "material_event",
-      title: "Acquisition Notification",
+      loanId: "loan-003",
+      loanName: "Atlas Logistics $200M ABL Facility",
+      borrower: "Atlas Logistics Inc",
+      requestType: "covenant_calculation",
+      title: "Borrowing Base Certificate - Week 1 Jan 2025",
       description:
-        "Details regarding the proposed acquisition of subsidiary company",
-      dueDate: "2025-01-20",
+        "Weekly borrowing base certificate with eligible receivables aging, inventory valuation, and concentration limit calculations",
+      dueDate: "2025-01-07",
       priority: "urgent",
       status: "under_review",
-      requestedBy: "Legal Team",
-      requestDate: "2025-01-05",
-      submittedDate: "2025-01-10",
-      documents: ["acquisition-agreement.pdf", "financial-projections.xlsx"],
+      requestedBy: "ABL Agent - Collateral Team",
+      requestDate: "2025-01-02",
+      submittedDate: "2025-01-06",
+      documents: [
+        "borrowing-base-cert-wk1-jan25.xlsx",
+        "ar-aging-report.pdf",
+        "inventory-valuation.pdf",
+      ],
       comments: [
         {
           id: "1",
-          author: "Legal Team",
-          message: "Please provide additional details on financing structure",
-          timestamp: "2025-01-12 14:30",
+          author: "Collateral Team",
+          message:
+            "Please clarify the treatment of the $2.3M receivable from Customer ABC - appears to be over 90 days",
+          timestamp: "2025-01-07 11:45",
+        },
+      ],
+    },
+    {
+      id: "4",
+      loanId: "loan-002",
+      loanName: "Nordic Energy €120M Green Loan",
+      borrower: "Nordic Energy AS",
+      requestType: "other",
+      title: "Green Loan Annual Review Documentation",
+      description:
+        "Annual sustainability performance report, third-party verification of KPIs, and updated Use of Proceeds report for Green Loan compliance",
+      dueDate: "2025-01-31",
+      priority: "high",
+      status: "pending",
+      requestedBy: "Sustainability-Linked Loan Coordinator",
+      requestDate: "2024-12-20",
+      documents: ["green-loan-framework.pdf"],
+      comments: [
+        {
+          id: "1",
+          author: "SLL Coordinator",
+          message:
+            "Third-party verification must be from an approved ESG rating agency per Schedule 12",
+          timestamp: "2024-12-20 14:00",
         },
       ],
     },
   ]);
 
-  // Mock notification templates
+  // Mock notification templates - LMA-style notifications
   const [templates] = useState<NotificationTemplate[]>([
     {
       id: "1",
       name: "Covenant Breach Alert",
       type: "covenant_breach",
-      recipients: ["lender@bank.com", "borrower@company.com", "legal@bank.com"],
-      subject: "URGENT: Covenant Breach Detected - {loan_name}",
+      recipients: [
+        "agent@facilitybank.com",
+        "credit.risk@facilitybank.com",
+        "borrower.treasury@company.com",
+      ],
+      subject: "URGENT: Covenant Breach Notification - {loan_name}",
       message:
-        "A covenant breach has been detected for {borrower}. Immediate attention required.",
+        "A financial covenant breach has been identified for {borrower} under the {loan_name}. The {covenant_name} covenant has been breached with current value of {current_value} against threshold of {threshold}. Immediate remediation action is required within the cure period specified in the Facility Agreement.",
       frequency: "immediate",
       active: true,
     },
     {
       id: "2",
-      name: "Monthly Reporting Reminder",
+      name: "Quarterly Reporting Reminder",
       type: "reporting_due",
-      recipients: ["borrower@company.com", "cfo@company.com"],
-      subject: "Monthly Financial Reporting Due - {loan_name}",
+      recipients: ["borrower.cfo@company.com", "borrower.treasury@company.com"],
+      subject: "Reminder: Quarterly Compliance Certificate Due - {loan_name}",
       message:
-        "Your monthly financial reports are due in 5 days. Please submit via the portal.",
+        "This is a reminder that your quarterly compliance certificate and financial statements are due within 45 days of quarter end as per Schedule 5 of the Facility Agreement. Please submit via the secure portal.",
       frequency: "monthly",
       active: true,
     },
@@ -215,64 +249,93 @@ export function InformationDistribution() {
       id: "3",
       name: "Material Event Notification",
       type: "material_event",
-      recipients: ["lender@bank.com", "risk@bank.com"],
-      subject: "Material Event Reported - {borrower}",
+      recipients: ["agent@facilitybank.com", "syndicate.desk@facilitybank.com"],
+      subject: "Material Event Notification - {borrower}",
       message:
-        "A material event has been reported by {borrower}. Please review immediately.",
+        "A material event has been reported by {borrower} which may constitute a Notifiable Event under Clause 19 of the Facility Agreement. Please review the attached documentation and assess any required lender actions.",
+      frequency: "immediate",
+      active: true,
+    },
+    {
+      id: "4",
+      name: "Interest Payment Reminder",
+      type: "payment_due",
+      recipients: [
+        "borrower.treasury@company.com",
+        "agent.operations@facilitybank.com",
+      ],
+      subject: "Interest Payment Due - {loan_name}",
+      message:
+        "Interest payment of {amount} is due on {due_date} for the current Interest Period. Please ensure funds are available in the designated account by 11:00am London time on the due date.",
       frequency: "immediate",
       active: true,
     },
   ]);
 
-  // Mock material events
+  // Mock material events - realistic loan market scenarios
   const [events] = useState<MaterialEvent[]>([
     {
       id: "1",
       loanId: "loan-001",
-      borrower: "TechCorp Industries",
+      borrower: "Meridian Holdings PLC",
       eventType: "acquisition",
-      title: "Acquisition of AI Startup",
+      title: "Proposed Acquisition of TechSub Ltd",
       description:
-        "TechCorp is acquiring an AI startup for $15M to expand their machine learning capabilities",
+        "Meridian Holdings proposes to acquire 100% of TechSub Ltd for £8.5M consideration. Transaction requires Majority Lender consent under Clause 22.3 (Permitted Acquisitions) as consideration exceeds £5M threshold.",
       impact: "medium",
-      reportedDate: "2025-01-05",
-      eventDate: "2025-01-03",
+      reportedDate: "2025-01-03",
+      eventDate: "2025-01-02",
       status: "under_review",
       notificationSent: true,
     },
     {
       id: "2",
-      loanId: "loan-002",
-      borrower: "ManufacturingCo Ltd",
+      loanId: "loan-003",
+      borrower: "Atlas Logistics Inc",
       eventType: "litigation",
-      title: "Product Liability Lawsuit",
+      title: "Employment Class Action Filed",
       description:
-        "Class action lawsuit filed regarding product defects, potential exposure $5M",
+        "Class action lawsuit filed in California Superior Court alleging wage and hour violations. Potential exposure estimated at $4.2M. May constitute Material Adverse Effect under Facility Agreement.",
       impact: "high",
-      reportedDate: "2024-12-20",
-      eventDate: "2024-12-18",
+      reportedDate: "2024-12-28",
+      eventDate: "2024-12-20",
       status: "ongoing",
       notificationSent: true,
     },
     {
       id: "3",
-      loanId: "loan-003",
-      borrower: "RetailChain Corp",
-      eventType: "operational",
-      title: "Store Closure Program",
-      description: "Closing 15 underperforming stores to improve profitability",
-      impact: "medium",
+      loanId: "loan-002",
+      borrower: "Nordic Energy AS",
+      eventType: "regulatory",
+      title: "Environmental Permit Renewal Approved",
+      description:
+        "Key environmental operating permit for wind farm operations renewed for 10-year term. Removes regulatory uncertainty previously flagged in credit assessment.",
+      impact: "low",
       reportedDate: "2024-12-15",
-      eventDate: "2024-12-10",
+      eventDate: "2024-12-12",
       status: "resolved",
+      notificationSent: true,
+    },
+    {
+      id: "4",
+      loanId: "loan-001",
+      borrower: "Meridian Holdings PLC",
+      eventType: "financial",
+      title: "Change in Accounting Policy",
+      description:
+        "Adoption of IFRS 16 lease accounting standard resulting in £12M increase in reported debt. Impact on covenant calculations to be assessed at next test date.",
+      impact: "medium",
+      reportedDate: "2025-01-02",
+      eventDate: "2025-01-01",
+      status: "under_review",
       notificationSent: true,
     },
   ]);
 
   const loans = [
-    { id: "loan-001", name: "TechCorp $50M Term Loan" },
-    { id: "loan-002", name: "ManufacturingCo $25M Revolver" },
-    { id: "loan-003", name: "RetailChain $100M Credit Facility" },
+    { id: "loan-001", name: "Meridian Holdings £75M Senior Secured" },
+    { id: "loan-002", name: "Nordic Energy €120M Green Loan" },
+    { id: "loan-003", name: "Atlas Logistics $200M ABL Facility" },
   ];
 
   const getStatusIcon = (status: string) => {

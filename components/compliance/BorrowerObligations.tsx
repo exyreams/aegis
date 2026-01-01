@@ -100,41 +100,45 @@ export function BorrowerObligations() {
   >("dashboard");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  // Mock borrower obligations data
+  // Mock borrower obligations data - realistic loan market scenarios
   const [obligations] = useState<BorrowerObligation[]>([
     {
       id: "1",
       loanId: "loan-001",
-      loanName: "TechCorp $50M Term Loan",
-      borrower: "TechCorp Industries",
+      loanName: "Meridian Holdings £75M Senior Secured",
+      borrower: "Meridian Holdings PLC",
       category: "financial",
       type: "recurring",
-      title: "Monthly Financial Statements",
+      title: "Monthly Management Accounts",
       description:
-        "Submit unaudited monthly financial statements including P&L, balance sheet, and cash flow",
+        "Submit unaudited monthly management accounts including P&L, balance sheet, cash flow statement, and borrowing base certificate within 30 days of month end",
       frequency: "monthly",
-      dueDate: "2025-01-31",
+      dueDate: "2025-01-30",
       nextDueDate: "2025-02-28",
       status: "pending",
       priority: "high",
-      completionRate: 85,
-      lastCompleted: "2024-12-31",
-      responsibleParty: "CFO",
-      consequences: "Default interest rate increase of 2%",
-      documents: ["monthly-financials-template.xlsx"],
+      completionRate: 92,
+      lastCompleted: "2024-12-30",
+      responsibleParty: "Group CFO",
+      consequences:
+        "Information Event of Default; 0.25% margin step-up after 5 business days",
+      documents: [
+        "management-accounts-template.xlsx",
+        "borrowing-base-cert.pdf",
+      ],
       automationLevel: "semi_automated",
       reminderSent: true,
     },
     {
       id: "2",
       loanId: "loan-001",
-      loanName: "TechCorp $50M Term Loan",
-      borrower: "TechCorp Industries",
+      loanName: "Meridian Holdings £75M Senior Secured",
+      borrower: "Meridian Holdings PLC",
       category: "reporting",
       type: "recurring",
-      title: "Compliance Certificate",
+      title: "Quarterly Compliance Certificate",
       description:
-        "Officer's certificate confirming compliance with all loan covenants",
+        "Officer's certificate confirming compliance with all financial covenants including Leverage Ratio, Interest Cover, and Cashflow Cover calculations",
       frequency: "quarterly",
       dueDate: "2025-01-31",
       nextDueDate: "2025-04-30",
@@ -142,49 +146,56 @@ export function BorrowerObligations() {
       priority: "high",
       completionRate: 100,
       lastCompleted: "2025-01-15",
-      responsibleParty: "CEO",
-      consequences: "Event of default",
-      documents: ["compliance-certificate-q4-2024.pdf"],
+      responsibleParty: "CEO & CFO",
+      consequences:
+        "Event of Default if not delivered within 5 business days of due date",
+      documents: [
+        "compliance-certificate-q4-2024.pdf",
+        "covenant-calculations.xlsx",
+      ],
       automationLevel: "manual",
       reminderSent: false,
     },
     {
       id: "3",
       loanId: "loan-002",
-      loanName: "ManufacturingCo $25M Revolver",
-      borrower: "ManufacturingCo Ltd",
+      loanName: "Nordic Energy €120M Green Loan",
+      borrower: "Nordic Energy AS",
       category: "insurance",
       type: "recurring",
-      title: "Insurance Policy Renewal",
+      title: "Insurance Certificate Renewal",
       description:
-        "Maintain comprehensive general liability and property insurance",
+        "Provide evidence of comprehensive insurance coverage including property, business interruption, and public liability with Agent named as loss payee",
       frequency: "annually",
-      dueDate: "2025-03-15",
+      dueDate: "2025-01-20",
       status: "pending",
-      priority: "medium",
-      completionRate: 90,
-      lastCompleted: "2024-03-15",
-      responsibleParty: "Risk Manager",
-      consequences: "Cure period of 30 days, then event of default",
-      documents: ["insurance-policy-2024.pdf"],
+      priority: "high",
+      completionRate: 85,
+      lastCompleted: "2024-01-20",
+      responsibleParty: "Group Risk Manager",
+      consequences:
+        "Agent may procure insurance at Borrower's cost; potential Event of Default",
+      documents: ["insurance-schedule-2024.pdf"],
       automationLevel: "semi_automated",
       reminderSent: true,
     },
     {
       id: "4",
       loanId: "loan-001",
-      loanName: "TechCorp $50M Term Loan",
-      borrower: "TechCorp Industries",
+      loanName: "Meridian Holdings £75M Senior Secured",
+      borrower: "Meridian Holdings PLC",
       category: "legal",
       type: "event_driven",
-      title: "Material Contract Notification",
-      description: "Notify lender of any material contracts exceeding $5M",
-      dueDate: "2025-02-01",
+      title: "Material Litigation Notification",
+      description:
+        "Notify Agent promptly of any litigation, arbitration or administrative proceedings with potential liability exceeding £2M or which may have Material Adverse Effect",
+      dueDate: "2025-01-05",
       status: "overdue",
       priority: "critical",
-      completionRate: 60,
-      responsibleParty: "Legal Counsel",
-      consequences: "Potential acceleration of loan",
+      completionRate: 0,
+      responsibleParty: "General Counsel",
+      consequences:
+        "Breach of Information Undertaking; potential Event of Default",
       documents: [],
       automationLevel: "manual",
       reminderSent: true,
@@ -192,21 +203,23 @@ export function BorrowerObligations() {
     {
       id: "5",
       loanId: "loan-003",
-      loanName: "RetailChain $100M Credit Facility",
-      borrower: "RetailChain Corp",
+      loanName: "Atlas Logistics $200M ABL Facility",
+      borrower: "Atlas Logistics Inc",
       category: "operational",
       type: "recurring",
-      title: "Inventory Reporting",
-      description: "Monthly inventory reports with aging analysis",
+      title: "Borrowing Base Certificate",
+      description:
+        "Weekly borrowing base certificate detailing eligible receivables, inventory values, and concentration limits",
       frequency: "monthly",
-      dueDate: "2025-01-15",
-      nextDueDate: "2025-02-15",
+      dueDate: "2025-01-07",
+      nextDueDate: "2025-01-14",
       status: "overdue",
-      priority: "high",
-      completionRate: 75,
-      lastCompleted: "2024-11-15",
-      responsibleParty: "Operations Manager",
-      consequences: "Borrowing base reduction",
+      priority: "critical",
+      completionRate: 70,
+      lastCompleted: "2024-12-31",
+      responsibleParty: "Treasury Manager",
+      consequences:
+        "Immediate reduction in availability; potential cash dominion trigger",
       documents: [],
       automationLevel: "fully_automated",
       reminderSent: true,
@@ -214,30 +227,75 @@ export function BorrowerObligations() {
     {
       id: "6",
       loanId: "loan-002",
-      loanName: "ManufacturingCo $25M Revolver",
-      borrower: "ManufacturingCo Ltd",
+      loanName: "Nordic Energy €120M Green Loan",
+      borrower: "Nordic Energy AS",
       category: "environmental",
       type: "recurring",
-      title: "Environmental Compliance Report",
-      description: "Annual environmental compliance and sustainability report",
+      title: "Sustainability Performance Report",
+      description:
+        "Annual sustainability report demonstrating progress against Green Loan KPIs including carbon intensity reduction, renewable capacity additions, and ESG ratings",
+      frequency: "annually",
+      dueDate: "2025-01-31",
+      status: "pending",
+      priority: "high",
+      completionRate: 65,
+      lastCompleted: "2024-01-31",
+      responsibleParty: "Head of Sustainability",
+      consequences:
+        "Margin adjustment of +0.10% if KPIs not met; reputational risk",
+      documents: ["sustainability-framework.pdf", "kpi-tracker-2024.xlsx"],
+      automationLevel: "semi_automated",
+      reminderSent: true,
+    },
+    {
+      id: "7",
+      loanId: "loan-003",
+      loanName: "Atlas Logistics $200M ABL Facility",
+      borrower: "Atlas Logistics Inc",
+      category: "financial",
+      type: "recurring",
+      title: "Annual Audited Financial Statements",
+      description:
+        "Deliver audited consolidated financial statements prepared in accordance with GAAP within 120 days of fiscal year end",
       frequency: "annually",
       dueDate: "2025-04-30",
       status: "pending",
       priority: "medium",
-      completionRate: 95,
-      lastCompleted: "2024-04-30",
-      responsibleParty: "Sustainability Officer",
-      consequences: "Regulatory penalties and potential loan acceleration",
-      documents: ["environmental-report-2024.pdf"],
-      automationLevel: "semi_automated",
+      completionRate: 25,
+      lastCompleted: "2024-04-28",
+      responsibleParty: "CFO & External Auditors",
+      consequences: "Event of Default if not delivered within 150 days",
+      documents: ["audit-engagement-letter.pdf"],
+      automationLevel: "manual",
       reminderSent: false,
+    },
+    {
+      id: "8",
+      loanId: "loan-001",
+      loanName: "Meridian Holdings £75M Senior Secured",
+      borrower: "Meridian Holdings PLC",
+      category: "reporting",
+      type: "event_driven",
+      title: "Acquisition/Disposal Notification",
+      description:
+        "Provide 10 business days advance notice of any proposed acquisition or disposal with aggregate consideration exceeding £5M",
+      dueDate: "2025-01-25",
+      status: "pending",
+      priority: "medium",
+      completionRate: 50,
+      responsibleParty: "M&A Director",
+      consequences:
+        "Transaction may be blocked; potential breach of Permitted Acquisition basket",
+      documents: ["acquisition-summary.pdf"],
+      automationLevel: "manual",
+      reminderSent: true,
     },
   ]);
 
   const loans = [
-    { id: "loan-001", name: "TechCorp $50M Term Loan" },
-    { id: "loan-002", name: "ManufacturingCo $25M Revolver" },
-    { id: "loan-003", name: "RetailChain $100M Credit Facility" },
+    { id: "loan-001", name: "Meridian Holdings £75M Senior Secured" },
+    { id: "loan-002", name: "Nordic Energy €120M Green Loan" },
+    { id: "loan-003", name: "Atlas Logistics $200M ABL Facility" },
   ];
 
   // Mock automation rules
@@ -719,21 +777,174 @@ export function BorrowerObligations() {
 
       {/* Calendar View */}
       {viewMode === "calendar" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Obligation Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center text-gray-500 py-8">
-              <Calendar className="h-12 w-12 mx-auto mb-4" />
-              <p>Calendar view coming soon</p>
-              <p className="text-sm">
-                Interactive calendar showing all upcoming obligations and
-                deadlines
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center">
+                <Calendar className="h-5 w-5 mr-2" />
+                January 2025 - Obligation Calendar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1 mb-4">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                  (day) => (
+                    <div
+                      key={day}
+                      className="text-center text-sm font-medium text-gray-500 py-2"
+                    >
+                      {day}
+                    </div>
+                  )
+                )}
+                {/* Empty cells for days before the 1st */}
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={`empty-${i}`}
+                    className="h-24 bg-gray-50 rounded-lg"
+                  />
+                ))}
+                {/* Calendar days */}
+                {[...Array(31)].map((_, i) => {
+                  const day = i + 1;
+                  const dayObligations = filteredObligations.filter((o) => {
+                    const dueDay = new Date(o.dueDate).getDate();
+                    const dueMonth = new Date(o.dueDate).getMonth();
+                    return dueDay === day && dueMonth === 0; // January
+                  });
+                  const hasOverdue = dayObligations.some(
+                    (o) => o.status === "overdue"
+                  );
+                  const hasPending = dayObligations.some(
+                    (o) => o.status === "pending"
+                  );
+
+                  return (
+                    <div
+                      key={day}
+                      className={`h-24 border rounded-lg p-1 ${
+                        dayObligations.length > 0
+                          ? hasOverdue
+                            ? "bg-red-50 border-red-200"
+                            : hasPending
+                            ? "bg-yellow-50 border-yellow-200"
+                            : "bg-green-50 border-green-200"
+                          : "bg-white border-gray-100"
+                      }`}
+                    >
+                      <div className="text-xs font-medium text-gray-700">
+                        {day}
+                      </div>
+                      <div className="space-y-0.5 mt-1">
+                        {dayObligations.slice(0, 2).map((o) => (
+                          <div
+                            key={o.id}
+                            className={`text-xs px-1 py-0.5 rounded truncate ${
+                              o.status === "overdue"
+                                ? "bg-red-100 text-red-700"
+                                : o.status === "pending"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {o.title.substring(0, 15)}...
+                          </div>
+                        ))}
+                        {dayObligations.length > 2 && (
+                          <div className="text-xs text-gray-500 px-1">
+                            +{dayObligations.length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center justify-center space-x-6 pt-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded bg-red-100 border border-red-200" />
+                  <span className="text-sm text-gray-600">Overdue</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded bg-yellow-100 border border-yellow-200" />
+                  <span className="text-sm text-gray-600">Pending</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded bg-green-100 border border-green-200" />
+                  <span className="text-sm text-gray-600">Compliant</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Deadlines List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Upcoming Deadlines</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {filteredObligations
+                  .filter(
+                    (o) => o.status === "pending" || o.status === "overdue"
+                  )
+                  .sort(
+                    (a, b) =>
+                      new Date(a.dueDate).getTime() -
+                      new Date(b.dueDate).getTime()
+                  )
+                  .map((obligation) => {
+                    const daysUntilDue = Math.ceil(
+                      (new Date(obligation.dueDate).getTime() -
+                        new Date().getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    );
+                    return (
+                      <div
+                        key={obligation.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div className="flex items-center space-x-3">
+                          {getCategoryIcon(obligation.category)}
+                          <div>
+                            <div className="font-medium text-sm">
+                              {obligation.title}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {obligation.borrower}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`text-sm font-medium ${
+                              daysUntilDue < 0
+                                ? "text-red-600"
+                                : daysUntilDue <= 7
+                                ? "text-yellow-600"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {daysUntilDue < 0
+                              ? `${Math.abs(daysUntilDue)} days overdue`
+                              : daysUntilDue === 0
+                              ? "Due today"
+                              : `${daysUntilDue} days left`}
+                          </div>
+                          <Badge className={getStatusColor(obligation.status)}>
+                            {obligation.dueDate}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Automation View */}
