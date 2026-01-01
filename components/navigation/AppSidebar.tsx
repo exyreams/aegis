@@ -9,6 +9,19 @@ import {
   ESG,
   DigitalLoans,
 } from "@/components/icons";
+import {
+  Search,
+  MessageSquare,
+  Lightbulb,
+  GitBranch,
+  Target,
+  Award,
+  Shield,
+  FileText,
+  BarChart3,
+  Scale,
+  Settings,
+} from "lucide-react";
 
 import { NavMain } from "@/components/navigation/NavMain";
 import { NavUser } from "@/components/navigation/NavUser";
@@ -46,82 +59,82 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // ESG section as a separate collapsible group
   const esgItems = [
     {
-      title: "Dashboard",
+      title: "Overview",
       url: "/dashboard/esg",
       icon: ESG,
     },
     {
-      title: "Benchmarks",
+      title: "Performance Benchmarks",
       url: "/dashboard/esg/benchmarks",
-      icon: ESG,
+      icon: Target,
     },
     {
-      title: "Certifications",
+      title: "Green Certifications",
       url: "/dashboard/esg/certifications",
-      icon: ESG,
+      icon: Award,
     },
     {
-      title: "Compliance",
+      title: "Regulatory Compliance",
       url: "/dashboard/esg/compliance",
-      icon: Compliance,
+      icon: Shield,
     },
     {
-      title: "Reports",
+      title: "Sustainability Reports",
       url: "/dashboard/esg/reports",
-      icon: Documents,
+      icon: FileText,
     },
   ];
 
   // Documents section as a separate collapsible group
   const documentsItems = [
     {
-      title: "Dashboard",
+      title: "Overview",
       url: "/dashboard/documents",
       icon: Documents,
     },
     {
-      title: "Analyze",
+      title: "Document Analysis",
       url: "/dashboard/documents/analyze",
-      icon: Documents,
+      icon: Search,
     },
     {
-      title: "Negotiate",
+      title: "Contract Negotiation",
       url: "/dashboard/documents/negotiate",
-      icon: Documents,
+      icon: MessageSquare,
     },
     {
-      title: "Suggestions",
+      title: "AI Suggestions",
       url: "/dashboard/documents/suggestions",
-      icon: Documents,
+      icon: Lightbulb,
     },
     {
       title: "Version Control",
       url: "/dashboard/documents/versions",
-      icon: Documents,
+      icon: GitBranch,
     },
   ];
 
   // Loans section as a separate collapsible group
   const loansItems = [
     {
-      title: "Dashboard",
+      title: "Overview",
       url: "/dashboard/loans",
       icon: DigitalLoans,
     },
     {
-      title: "Analytics",
+      title: "Loan Analytics",
       url: "/dashboard/loans/analytics",
-      icon: DigitalLoans,
+      icon: BarChart3,
     },
     {
-      title: "Compare",
+      title: "Rate Comparison",
       url: "/dashboard/loans/compare",
-      icon: DigitalLoans,
+      icon: Scale,
     },
     {
-      title: "Standard",
+      title: "Loan Standards",
       url: "/dashboard/loans/standard",
-      icon: DigitalLoans,
+      icon: Settings,
     },
   ];
 
@@ -144,7 +157,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/dashboard" className="flex items-center gap-2">
-                <Logo width={24} height={24} className="object-contain" />
+                <Logo width={28} height={28} className="object-contain" />
                 <span className="text-base font-semibold">Aegis</span>
               </Link>
             </SidebarMenuButton>
