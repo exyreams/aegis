@@ -39,7 +39,6 @@ import {
   Globe,
   Clock,
   PieChart,
-  Shield,
   Briefcase,
   Network,
 } from "lucide-react";
@@ -362,7 +361,7 @@ export default function SecondaryMarketPage() {
             <div className="flex flex-col gap-8 py-6 md:gap-10 md:py-8">
               {/* HERO SECTION - Unchanged (Chef's Kiss) */}
               <div className="px-4 md:px-8">
-                <div className="relative overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-2xl">
+                <div className="relative overflow-hidden rounded-4xl bg-slate-950 text-white shadow-2xl">
                   {/* Abstract Background Elements */}
                   <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
                   <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
@@ -381,7 +380,7 @@ export default function SecondaryMarketPage() {
                         <div className="space-y-3">
                           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]">
                             Secondary Loan <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-white to-emerald-400">
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-white to-emerald-400">
                               Marketplace
                             </span>
                           </h1>
@@ -450,7 +449,7 @@ export default function SecondaryMarketPage() {
                               ].map((h, i) => (
                                 <div
                                   key={i}
-                                  className="flex-1 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-sm opacity-80 hover:opacity-100 transition-opacity"
+                                  className="flex-1 bg-linear-to-t from-blue-600 to-blue-400 rounded-t-sm opacity-80 hover:opacity-100 transition-opacity"
                                   style={{ height: `${h}%` }}
                                 />
                               ))}
@@ -597,66 +596,64 @@ export default function SecondaryMarketPage() {
 
                     {/* Search & Filters */}
                     {activeTab === "marketplace" && (
-                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                        <div className="relative group flex-1 max-w-md">
+                      <div className="flex items-center gap-3 mt-4">
+                        {/* Search bar takes most space */}
+                        <div className="relative group flex-1">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                           <Input
-                            placeholder="Search borrower, loan ID..."
+                            placeholder="Search borrower, loan ID, industry..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 h-10 rounded-lg transition-all"
+                            className="pl-10 h-11 rounded-lg transition-all text-sm"
                           />
                         </div>
 
-                        <div className="flex gap-2">
-                          <Select
-                            value={industryFilter}
-                            onValueChange={setIndustryFilter}
-                          >
-                            <SelectTrigger className="w-full sm:w-40 h-10 rounded-lg">
-                              <SelectValue placeholder="Industry" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">
-                                All Industries
-                              </SelectItem>
-                              <SelectItem value="technology">
-                                Technology
-                              </SelectItem>
-                              <SelectItem value="energy">Energy</SelectItem>
-                              <SelectItem value="manufacturing">
-                                Manufacturing
-                              </SelectItem>
-                              <SelectItem value="healthcare">
-                                Healthcare
-                              </SelectItem>
-                              <SelectItem value="industrial services">
-                                Industrial Services
-                              </SelectItem>
-                              <SelectItem value="renewable energy">
-                                Renewable Energy
-                              </SelectItem>
-                              <SelectItem value="transportation & logistics">
-                                Transportation
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                        {/* Filters on the right */}
+                        <Select
+                          value={industryFilter}
+                          onValueChange={setIndustryFilter}
+                        >
+                          <SelectTrigger className="w-auto min-w-32 h-11 rounded-lg text-sm">
+                            <SelectValue placeholder="Industry" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Industries</SelectItem>
+                            <SelectItem value="technology">
+                              Technology
+                            </SelectItem>
+                            <SelectItem value="energy">Energy</SelectItem>
+                            <SelectItem value="manufacturing">
+                              Manufacturing
+                            </SelectItem>
+                            <SelectItem value="healthcare">
+                              Healthcare
+                            </SelectItem>
+                            <SelectItem value="industrial services">
+                              Industrial Services
+                            </SelectItem>
+                            <SelectItem value="renewable energy">
+                              Renewable Energy
+                            </SelectItem>
+                            <SelectItem value="transportation & logistics">
+                              Transportation
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
 
-                          <Select
-                            value={riskFilter}
-                            onValueChange={setRiskFilter}
-                          >
-                            <SelectTrigger className="w-full sm:w-32 h-10 rounded-lg">
-                              <SelectValue placeholder="Risk" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Risk</SelectItem>
-                              <SelectItem value="low">Low</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="high">High</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Select
+                          value={riskFilter}
+                          onValueChange={setRiskFilter}
+                        >
+                          <SelectTrigger className="w-auto min-w-24 h-11 rounded-lg text-sm">
+                            <SelectValue placeholder="Risk" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Risk</SelectItem>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
                   </CardHeader>

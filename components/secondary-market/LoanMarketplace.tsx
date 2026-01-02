@@ -31,6 +31,7 @@ import {
   Wallet,
   ArrowRight,
   Briefcase,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -189,10 +190,10 @@ export function LoanMarketplace({
 
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000000) {
-      return `$${(amount / 1000000000).toFixed(1)}B`;
+      return `${(amount / 1000000000).toFixed(1)}B`;
     }
     if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
+      return `${(amount / 1000000).toFixed(1)}M`;
     }
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -213,30 +214,6 @@ export function LoanMarketplace({
     return ((part / total) * 100).toFixed(1);
   };
 
-  const renderSortButton = (option: SortOption, label: string, Icon: any) => (
-    <button
-      key={option}
-      onClick={() => handleSort(option)}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
-        sortBy === option
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-      }`}
-    >
-      <Icon className="h-3.5 w-3.5" />
-      {label}
-      {sortBy === option && (
-        <span className="ml-1">
-          {sortOrder === "desc" ? (
-            <TrendingDown className="h-3 w-3" />
-          ) : (
-            <TrendingUp className="h-3 w-3" />
-          )}
-        </span>
-      )}
-    </button>
-  );
-
   return (
     <div className="px-4 space-y-6">
       {/* Section Header */}
@@ -244,50 +221,128 @@ export function LoanMarketplace({
         <div>
           <h3 className="text-lg font-semibold">Loan Positions</h3>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {listings.length} opportunities available for secondary market
-            trading
+            {sortedListings.length} of {listings.length} opportunities available
+            for secondary market trading
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Sort by:</span>
-          <div className="flex gap-1">
-            {renderSortButton("yield", "Yield", TrendingUp)}
-            {renderSortButton("amount", "Amount", DollarSign)}
-            {renderSortButton("rating", "Rating", Filter)}
-            {renderSortButton("score", "Score", BarChart3)}
+      </div>
+
+      {/* Quick Filters & Summary */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted/30 rounded-xl">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="text-xs">
+            <Target className="h-3 w-3 mr-1" />
+            High Yield (
+            {sortedListings.filter((l) => l.yieldToMaturity > 9).length})
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            High DD Score (
+            {sortedListings.filter((l) => l.dueDiligenceScore >= 90).length})
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            <Clock className="h-3 w-3 mr-1" />
+            Maturing Soon (
+            {
+              sortedListings.filter(
+                (l) => calculateDaysToMaturity(l.maturityDate) < 365
+              ).length
+            }
+            )
+          </Badge>
+        </div>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <span>Avg Yield:</span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+              {(
+                sortedListings.reduce((sum, l) => sum + l.yieldToMaturity, 0) /
+                sortedListings.length
+              ).toFixed(1)}
+              %
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span>Total Value:</span>
+            <span className="font-semibold">
+              {formatCurrency(
+                sortedListings.reduce((sum, l) => sum + l.outstandingAmount, 0)
+              )}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Table Header */}
+      {/* Enhanced Table Header with Sorting */}
       <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-5 py-3 bg-muted/50 rounded-t-xl border">
-        <div className="col-span-4">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="col-span-3">
+          <button
+            onClick={() => handleSort("rating")}
+            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+          >
             Borrower / Lender
-          </span>
+            {sortBy === "rating" && (
+              <span className="text-primary">
+                {sortOrder === "desc" ? "↓" : "↑"}
+              </span>
+            )}
+          </button>
         </div>
-        <div className="col-span-2 text-center">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="col-span-2 flex justify-center">
+          <button
+            onClick={() => handleSort("amount")}
+            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+          >
             Outstanding
-          </span>
+            {sortBy === "amount" && (
+              <span className="text-primary">
+                {sortOrder === "desc" ? "↓" : "↑"}
+              </span>
+            )}
+          </button>
         </div>
-        <div className="col-span-2 text-center">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="col-span-1.5 flex justify-center">
+          <button
+            onClick={() => handleSort("yield")}
+            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+          >
             Yield
+            {sortBy === "yield" && (
+              <span className="text-primary">
+                {sortOrder === "desc" ? "↓" : "↑"}
+              </span>
+            )}
+          </button>
+        </div>
+        <div className="col-span-1.5 flex justify-center">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Maturity
           </span>
         </div>
-        <div className="col-span-2 text-center">
+        <div className="col-span-1.5 flex justify-center">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Rating
           </span>
         </div>
-        <div className="col-span-2 text-center">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="col-span-1.5 flex justify-center">
+          <button
+            onClick={() => handleSort("score")}
+            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+          >
             DD Score
+            {sortBy === "score" && (
+              <span className="text-primary">
+                {sortOrder === "desc" ? "↓" : "↑"}
+              </span>
+            )}
+          </button>
+        </div>
+        <div className="col-span-1 flex justify-center">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Actions
           </span>
         </div>
       </div>
-
       {/* Loan List */}
       <div className="space-y-2">
         {sortedListings.map((listing) => {
@@ -315,18 +370,18 @@ export function LoanMarketplace({
               >
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
                   {/* Borrower Info */}
-                  <div className="col-span-4 flex items-center gap-4">
+                  <div className="col-span-3 flex items-center gap-3">
                     <div className={`w-1 h-10 rounded-full ${riskConfig.bg}`} />
-                    <div>
-                      <h4 className="text-sm font-semibold">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-semibold truncate">
                         {listing.borrower}
                       </h4>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground truncate">
                           {listing.originalLender}
                         </span>
                         <span className="text-muted-foreground/50">•</span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground truncate">
                           {listing.industry}
                         </span>
                       </div>
@@ -334,18 +389,32 @@ export function LoanMarketplace({
                   </div>
 
                   {/* Desktop Metrics */}
-                  <div className="hidden lg:grid lg:grid-cols-8 col-span-8 gap-4 items-center">
+                  <div className="hidden lg:grid lg:grid-cols-9 col-span-9 gap-4 items-center">
                     <div className="col-span-2 text-center">
                       <p className="text-sm font-semibold">
                         {formatCurrency(listing.outstandingAmount)}
                       </p>
                     </div>
-                    <div className="col-span-2 text-center">
+                    <div className="col-span-1.5 text-center">
                       <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                         {listing.yieldToMaturity.toFixed(2)}%
                       </p>
                     </div>
-                    <div className="col-span-2 text-center">
+                    <div className="col-span-1.5 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(listing.maturityDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            year: "2-digit",
+                          }
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {daysToMaturity} days
+                      </p>
+                    </div>
+                    <div className="col-span-1.5 text-center">
                       <p
                         className={`text-sm font-semibold ${getRatingStyle(
                           listing.creditRating
@@ -354,27 +423,42 @@ export function LoanMarketplace({
                         {listing.creditRating}
                       </p>
                     </div>
-                    <div className="col-span-2 flex items-center justify-center gap-2">
-                      <p
-                        className={`text-sm font-semibold ${getScoreStyle(
-                          listing.dueDiligenceScore
-                        )}`}
+                    <div className="col-span-1.5 flex items-center justify-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <p
+                          className={`text-sm font-semibold ${getScoreStyle(
+                            listing.dueDiligenceScore
+                          )}`}
+                        >
+                          {listing.dueDiligenceScore}
+                        </p>
+                        {listing.dueDiligenceScore >= 90 ? (
+                          <CheckCircle className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
+                        ) : listing.dueDiligenceScore >= 75 ? (
+                          <AlertTriangle className="h-3 w-3 text-amber-500 dark:text-amber-400" />
+                        ) : (
+                          <AlertTriangle className="h-3 w-3 text-rose-500 dark:text-rose-400" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-span-1 flex items-center justify-center">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 hover:bg-primary/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewDetails(listing.id);
+                        }}
                       >
-                        {listing.dueDiligenceScore}
-                      </p>
-                      {listing.dueDiligenceScore >= 90 ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
-                      ) : listing.dueDiligenceScore >= 75 ? (
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
-                      ) : (
-                        <AlertTriangle className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" />
-                      )}
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
 
                   {/* Mobile Metrics & Status */}
-                  <div className="col-span-8 lg:col-span-0 flex items-center justify-between">
-                    <div className="lg:hidden grid grid-cols-2 gap-2">
+                  <div className="col-span-9 lg:col-span-0 flex items-center justify-between">
+                    <div className="lg:hidden grid grid-cols-3 gap-2">
                       <div>
                         <p className="text-xs text-muted-foreground">Yield</p>
                         <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
@@ -391,6 +475,25 @@ export function LoanMarketplace({
                           {listing.creditRating}
                         </p>
                       </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Score</p>
+                        <div className="flex items-center gap-1">
+                          <p
+                            className={`text-sm font-semibold ${getScoreStyle(
+                              listing.dueDiligenceScore
+                            )}`}
+                          >
+                            {listing.dueDiligenceScore}
+                          </p>
+                          {listing.dueDiligenceScore >= 90 ? (
+                            <CheckCircle className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
+                          ) : listing.dueDiligenceScore >= 75 ? (
+                            <AlertTriangle className="h-3 w-3 text-amber-500 dark:text-amber-400" />
+                          ) : (
+                            <AlertTriangle className="h-3 w-3 text-rose-500 dark:text-rose-400" />
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       {getStatusBadge(listing.status)}
@@ -403,412 +506,554 @@ export function LoanMarketplace({
                   </div>
                 </div>
               </div>
-
-              {/* Expanded Section */}
+              {/* Expanded Section - Unified Card */}
               {isExpanded && (
-                <div className="border-t bg-muted/30">
+                <div className="border-t">
                   <div className="p-6">
-                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                      {/* Investment Details Grid */}
-                      <div className="xl:col-span-3">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {/* Asking Price */}
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <DollarSign className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Asking Price
-                              </span>
+                    {/* Single Unified Card */}
+                    <div className="bg-card rounded-xl border p-6 shadow-sm">
+                      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+                        {/* Main Details Section */}
+                        <div className="xl:col-span-3 space-y-6">
+                          {/* Investment Overview */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                              <DollarSign className="h-4 w-4" />
+                              Investment Overview
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Asking Price
+                                </p>
+                                <p className="text-lg font-bold">
+                                  {formatCurrency(listing.askingPrice)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {getPercentage(
+                                    listing.askingPrice,
+                                    listing.outstandingAmount
+                                  )}
+                                  % of outstanding
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Discount
+                                </p>
+                                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                  {discountPercentage.toFixed(1)}%
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatCurrency(
+                                    listing.outstandingAmount -
+                                      listing.askingPrice
+                                  )}{" "}
+                                  savings
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Current Rate
+                                </p>
+                                <p className="text-lg font-bold">
+                                  {listing.interestRate}%
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  +
+                                  {(
+                                    listing.yieldToMaturity -
+                                    listing.interestRate
+                                  ).toFixed(1)}
+                                  % spread
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Expected Return
+                                </p>
+                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                  {listing.yieldToMaturity.toFixed(2)}%
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Yield to maturity
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-lg font-bold">
-                              {formatCurrency(listing.askingPrice)}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {getPercentage(
-                                listing.askingPrice,
-                                listing.outstandingAmount
-                              )}
-                              % of outstanding
-                            </p>
                           </div>
 
-                          {/* Discount */}
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <TrendingDown className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Discount
-                              </span>
-                            </div>
-                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                              {discountPercentage.toFixed(1)}%
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {formatCurrency(
-                                listing.outstandingAmount - listing.askingPrice
-                              )}{" "}
-                              savings
-                            </p>
-                          </div>
-
-                          {/* Maturity */}
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Maturity Date
-                              </span>
-                            </div>
-                            <p className="text-sm font-semibold">
-                              {new Date(
-                                listing.maturityDate
-                              ).toLocaleDateString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {daysToMaturity} days remaining
-                            </p>
-                          </div>
-
-                          {/* Current Rate */}
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Percent className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Current Rate
-                              </span>
-                            </div>
-                            <p className="text-lg font-bold">
-                              {listing.interestRate}%
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              +
-                              {(
-                                listing.yieldToMaturity - listing.interestRate
-                              ).toFixed(1)}
-                              % spread
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Secondary Info Row */}
-                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Target className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Risk Level
-                              </span>
-                            </div>
-                            <Badge
-                              className={`${riskConfig.lightBg} ${riskConfig.text} border-0`}
-                            >
-                              {listing.riskLevel.charAt(0).toUpperCase() +
-                                listing.riskLevel.slice(1)}
-                            </Badge>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {listing.dueDiligenceScore >= 90
-                                ? "Low risk profile"
-                                : listing.dueDiligenceScore >= 75
-                                ? "Moderate risk"
-                                : "Higher risk"}
-                            </p>
-                          </div>
-
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Listed
-                              </span>
-                            </div>
-                            <p className="text-sm font-semibold">
-                              {listing.listingDate}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Original lender
-                            </p>
-                          </div>
-
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Briefcase className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Original Loan
-                              </span>
-                            </div>
-                            <p className="text-sm font-semibold">
-                              {formatCurrency(listing.loanAmount)}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {getPercentage(
-                                listing.outstandingAmount,
-                                listing.loanAmount
-                              )}
-                              % outstanding
-                            </p>
-                          </div>
-
-                          <div className="bg-card rounded-lg border p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Credit Rating
-                              </span>
-                            </div>
-                            <p
-                              className={`text-lg font-semibold ${getRatingStyle(
-                                listing.creditRating
-                              )}`}
-                            >
-                              {listing.creditRating}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              External rating
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action Panel */}
-                      <div className="xl:col-span-1">
-                        <div className="bg-card rounded-lg border p-4">
-                          <h5 className="text-sm font-semibold mb-4">
-                            Available Actions
-                          </h5>
-                          <div className="space-y-2">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className="w-full justify-between h-10 text-sm"
-                                  onClick={() => setSelectedLoan(listing)}
+                          {/* Loan Details */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                              <Briefcase className="h-4 w-4" />
+                              Loan Details
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Original Loan
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {formatCurrency(listing.loanAmount)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {getPercentage(
+                                    listing.outstandingAmount,
+                                    listing.loanAmount
+                                  )}
+                                  % outstanding
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Maturity Date
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {new Date(
+                                    listing.maturityDate
+                                  ).toLocaleDateString()}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {daysToMaturity} days remaining
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Credit Rating
+                                </p>
+                                <p
+                                  className={`text-sm font-semibold ${getRatingStyle(
+                                    listing.creditRating
+                                  )}`}
                                 >
-                                  <span className="flex items-center gap-2">
-                                    <Eye className="h-4 w-4" />
-                                    View Details
-                                  </span>
-                                  <ArrowRight className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                  <DialogTitle className="flex items-center gap-2 text-lg">
-                                    <Building className="h-5 w-5 text-muted-foreground" />
-                                    {selectedLoan?.borrower}
-                                  </DialogTitle>
-                                  <DialogDescription>
-                                    Complete loan position details and due
-                                    diligence summary
-                                  </DialogDescription>
-                                </DialogHeader>
-                                {selectedLoan && (
-                                  <div className="mt-6 space-y-6">
-                                    {/* Loan Details Grid */}
-                                    <div className="grid grid-cols-2 gap-6">
-                                      <div>
-                                        <h6 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                          <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                          Loan Details
-                                        </h6>
-                                        <div className="space-y-2">
-                                          {[
-                                            {
-                                              label: "Original Amount",
-                                              value: formatCurrency(
-                                                selectedLoan.loanAmount
-                                              ),
-                                            },
-                                            {
-                                              label: "Outstanding",
-                                              value: formatCurrency(
+                                  {listing.creditRating}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  External rating
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Risk Level
+                                </p>
+                                <Badge
+                                  className={`${riskConfig.lightBg} ${riskConfig.text} border-0 text-xs`}
+                                >
+                                  {listing.riskLevel.charAt(0).toUpperCase() +
+                                    listing.riskLevel.slice(1)}
+                                </Badge>
+                                <p className="text-xs text-muted-foreground">
+                                  {listing.dueDiligenceScore >= 90
+                                    ? "Low risk"
+                                    : listing.dueDiligenceScore >= 75
+                                    ? "Moderate"
+                                    : "Higher risk"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Listing Information */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              Listing Information
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Listed Date
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {listing.listingDate}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Original lender
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Industry
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {listing.industry}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Sector classification
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  DD Score
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p
+                                    className={`text-sm font-semibold ${getScoreStyle(
+                                      listing.dueDiligenceScore
+                                    )}`}
+                                  >
+                                    {listing.dueDiligenceScore}
+                                  </p>
+                                  {listing.dueDiligenceScore >= 90 ? (
+                                    <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                  ) : listing.dueDiligenceScore >= 75 ? (
+                                    <AlertTriangle className="h-3 w-3 text-amber-500" />
+                                  ) : (
+                                    <AlertTriangle className="h-3 w-3 text-rose-500" />
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Automated analysis
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Actions Section */}
+                        <div className="xl:col-span-1">
+                          <div className="space-y-4">
+                            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                              Available Actions
+                            </h4>
+                            <div className="space-y-3">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className="w-full justify-between h-11"
+                                    onClick={() => setSelectedLoan(listing)}
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <Eye className="h-4 w-4" />
+                                      View Details
+                                    </span>
+                                    <ArrowRight className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2 text-lg">
+                                      <Building className="h-5 w-5 text-muted-foreground" />
+                                      {selectedLoan?.borrower}
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                      Complete loan position details and due
+                                      diligence summary
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  {selectedLoan && (
+                                    <div className="mt-6 space-y-6">
+                                      {/* Investment Overview */}
+                                      <div className="bg-muted/50 rounded-xl p-6">
+                                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                                          <DollarSign className="h-4 w-4" />
+                                          Investment Overview
+                                        </h4>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                          <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground">
+                                              Asking Price
+                                            </p>
+                                            <p className="text-lg font-bold">
+                                              {formatCurrency(
+                                                selectedLoan.askingPrice
+                                              )}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {getPercentage(
+                                                selectedLoan.askingPrice,
                                                 selectedLoan.outstandingAmount
-                                              ),
-                                            },
-                                            {
-                                              label: "Interest Rate",
-                                              value: `${selectedLoan.interestRate}%`,
-                                            },
-                                            {
-                                              label: "Maturity Date",
-                                              value: selectedLoan.maturityDate,
-                                            },
-                                            {
-                                              label: "Original Lender",
-                                              value:
-                                                selectedLoan.originalLender,
-                                            },
-                                            {
-                                              label: "Listing Date",
-                                              value: selectedLoan.listingDate,
-                                            },
-                                          ].map((item, idx) => (
-                                            <div
-                                              key={idx}
-                                              className="flex justify-between py-2 border-b"
-                                            >
-                                              <span className="text-sm text-muted-foreground">
-                                                {item.label}
-                                              </span>
-                                              <span className="text-sm font-medium">
-                                                {item.value}
-                                              </span>
-                                            </div>
-                                          ))}
+                                              )}
+                                              % of outstanding
+                                            </p>
+                                          </div>
+                                          <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground">
+                                              Discount
+                                            </p>
+                                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                              {(
+                                                ((selectedLoan.outstandingAmount -
+                                                  selectedLoan.askingPrice) /
+                                                  selectedLoan.outstandingAmount) *
+                                                100
+                                              ).toFixed(1)}
+                                              %
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {formatCurrency(
+                                                selectedLoan.outstandingAmount -
+                                                  selectedLoan.askingPrice
+                                              )}{" "}
+                                              savings
+                                            </p>
+                                          </div>
+                                          <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground">
+                                              Current Rate
+                                            </p>
+                                            <p className="text-lg font-bold">
+                                              {selectedLoan.interestRate}%
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              +
+                                              {(
+                                                selectedLoan.yieldToMaturity -
+                                                selectedLoan.interestRate
+                                              ).toFixed(1)}
+                                              % spread
+                                            </p>
+                                          </div>
+                                          <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground">
+                                              Expected Return
+                                            </p>
+                                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                              {selectedLoan.yieldToMaturity.toFixed(
+                                                2
+                                              )}
+                                              %
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              Yield to maturity
+                                            </p>
+                                          </div>
                                         </div>
                                       </div>
 
-                                      <div>
-                                        <h6 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                          <Filter className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                          Risk Assessment
-                                        </h6>
-                                        <div className="space-y-2">
-                                          {[
-                                            {
-                                              label: "Credit Rating",
-                                              value: selectedLoan.creditRating,
-                                              color: getRatingStyle(
-                                                selectedLoan.creditRating
-                                              ),
-                                            },
-                                            {
-                                              label: "Risk Level",
-                                              value:
-                                                selectedLoan.riskLevel.toUpperCase(),
-                                              badge:
-                                                riskConfig.lightBg +
-                                                " " +
-                                                riskConfig.text,
-                                            },
-                                            {
-                                              label: "DD Score",
-                                              value: `${selectedLoan.dueDiligenceScore}/100`,
-                                              color: getScoreStyle(
-                                                selectedLoan.dueDiligenceScore
-                                              ),
-                                            },
-                                            {
-                                              label: "Industry",
-                                              value: selectedLoan.industry,
-                                            },
-                                            {
-                                              label: "Status",
-                                              value: getStatusBadge(
-                                                selectedLoan.status
-                                              ),
-                                            },
-                                          ].map((item, idx) => (
-                                            <div
-                                              key={idx}
-                                              className="flex justify-between items-center py-2 border-b"
-                                            >
+                                      {/* Loan Details */}
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                          <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                                            <Briefcase className="h-4 w-4" />
+                                            Loan Details
+                                          </h4>
+                                          <div className="space-y-3">
+                                            {[
+                                              {
+                                                label: "Original Amount",
+                                                value: formatCurrency(
+                                                  selectedLoan.loanAmount
+                                                ),
+                                              },
+                                              {
+                                                label: "Outstanding",
+                                                value: formatCurrency(
+                                                  selectedLoan.outstandingAmount
+                                                ),
+                                              },
+                                              {
+                                                label: "Interest Rate",
+                                                value: `${selectedLoan.interestRate}%`,
+                                              },
+                                              {
+                                                label: "Maturity Date",
+                                                value: new Date(
+                                                  selectedLoan.maturityDate
+                                                ).toLocaleDateString(),
+                                              },
+                                              {
+                                                label: "Original Lender",
+                                                value:
+                                                  selectedLoan.originalLender,
+                                              },
+                                              {
+                                                label: "Industry",
+                                                value: selectedLoan.industry,
+                                              },
+                                            ].map((item, idx) => (
+                                              <div
+                                                key={idx}
+                                                className="flex justify-between items-center py-2 border-b border-border/50"
+                                              >
+                                                <span className="text-sm text-muted-foreground">
+                                                  {item.label}
+                                                </span>
+                                                <span className="text-sm font-medium">
+                                                  {item.value}
+                                                </span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        <div>
+                                          <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                                            <Shield className="h-4 w-4" />
+                                            Risk Assessment
+                                          </h4>
+                                          <div className="space-y-3">
+                                            <div className="flex justify-between items-center py-2 border-b border-border/50">
                                               <span className="text-sm text-muted-foreground">
-                                                {item.label}
+                                                Credit Rating
                                               </span>
                                               <span
-                                                className={`text-sm font-medium ${
-                                                  item.color || ""
-                                                } ${item.badge || ""}`}
+                                                className={`text-sm font-medium ${getRatingStyle(
+                                                  selectedLoan.creditRating
+                                                )}`}
                                               >
-                                                {item.value}
+                                                {selectedLoan.creditRating}
                                               </span>
                                             </div>
-                                          ))}
+                                            <div className="flex justify-between items-center py-2 border-b border-border/50">
+                                              <span className="text-sm text-muted-foreground">
+                                                Risk Level
+                                              </span>
+                                              <Badge
+                                                className={`${
+                                                  getRiskConfig(
+                                                    selectedLoan.riskLevel
+                                                  ).lightBg
+                                                } ${
+                                                  getRiskConfig(
+                                                    selectedLoan.riskLevel
+                                                  ).text
+                                                } border-0 text-xs`}
+                                              >
+                                                {selectedLoan.riskLevel
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                                  selectedLoan.riskLevel.slice(
+                                                    1
+                                                  )}
+                                              </Badge>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-border/50">
+                                              <span className="text-sm text-muted-foreground">
+                                                DD Score
+                                              </span>
+                                              <div className="flex items-center gap-2">
+                                                <span
+                                                  className={`text-sm font-medium ${getScoreStyle(
+                                                    selectedLoan.dueDiligenceScore
+                                                  )}`}
+                                                >
+                                                  {
+                                                    selectedLoan.dueDiligenceScore
+                                                  }
+                                                  /100
+                                                </span>
+                                                {selectedLoan.dueDiligenceScore >=
+                                                90 ? (
+                                                  <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                                ) : selectedLoan.dueDiligenceScore >=
+                                                  75 ? (
+                                                  <AlertTriangle className="h-3 w-3 text-amber-500" />
+                                                ) : (
+                                                  <AlertTriangle className="h-3 w-3 text-rose-500" />
+                                                )}
+                                              </div>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-border/50">
+                                              <span className="text-sm text-muted-foreground">
+                                                Status
+                                              </span>
+                                              <span>
+                                                {getStatusBadge(
+                                                  selectedLoan.status
+                                                )}
+                                              </span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2">
+                                              <span className="text-sm text-muted-foreground">
+                                                Listed Date
+                                              </span>
+                                              <span className="text-sm font-medium">
+                                                {selectedLoan.listingDate}
+                                              </span>
+                                            </div>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
 
-                                    {/* Investment Summary */}
-                                    <div className="bg-muted rounded-lg border p-5">
-                                      <h6 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                                        <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                        Investment Summary
-                                      </h6>
-                                      <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                          <p className="text-xs text-muted-foreground">
-                                            Investment Required
-                                          </p>
-                                          <p className="text-2xl font-bold mt-1">
-                                            {formatCurrency(
-                                              selectedLoan.askingPrice
-                                            )}
-                                          </p>
-                                          <p className="text-xs text-muted-foreground mt-1">
-                                            {getPercentage(
-                                              selectedLoan.askingPrice,
-                                              selectedLoan.outstandingAmount
-                                            )}
-                                            % of outstanding
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-muted-foreground">
-                                            Expected Yield
-                                          </p>
-                                          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                                            {selectedLoan.yieldToMaturity.toFixed(
-                                              2
-                                            )}
-                                            %
-                                          </p>
-                                          <p className="text-xs text-muted-foreground mt-1">
-                                            Current rate:{" "}
-                                            {selectedLoan.interestRate}%
-                                          </p>
-                                        </div>
+                                      {/* Action Buttons */}
+                                      <div className="flex gap-3 pt-4 border-t">
+                                        <Button
+                                          variant="outline"
+                                          className="flex-1"
+                                          onClick={() => {
+                                            onStartDueDiligence(
+                                              selectedLoan.id
+                                            );
+                                            toast.success(
+                                              "Due diligence report generated"
+                                            );
+                                          }}
+                                        >
+                                          <FileSearch className="h-4 w-4 mr-2" />
+                                          Due Diligence Report
+                                        </Button>
+                                        <Button
+                                          className="flex-1"
+                                          onClick={() => {
+                                            toast.success(
+                                              "Purchase interest submitted"
+                                            );
+                                          }}
+                                        >
+                                          <ShoppingCart className="h-4 w-4 mr-2" />
+                                          Express Interest
+                                        </Button>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
-                              </DialogContent>
-                            </Dialog>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start h-10 text-sm"
-                              onClick={() => {
-                                onStartDueDiligence(listing.id);
-                                toast.success("Due diligence report generated");
-                              }}
-                            >
-                              <FileSearch className="h-4 w-4 mr-2" />
-                              Due Diligence Report
-                            </Button>
-                            <Button
-                              className="w-full justify-start h-10 text-sm"
-                              onClick={() => {
-                                toast.success("Purchase interest submitted");
-                              }}
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-2" />
-                              Express Interest
-                            </Button>
-                          </div>
-                        </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-between h-11"
+                                onClick={() => {
+                                  onStartDueDiligence(listing.id);
+                                  toast.success(
+                                    "Due diligence report generated"
+                                  );
+                                }}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <FileSearch className="h-4 w-4" />
+                                  Due Diligence
+                                </span>
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                className="w-full justify-between h-11"
+                                onClick={() => {
+                                  toast.success("Purchase interest submitted");
+                                }}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <ShoppingCart className="h-4 w-4" />
+                                  Express Interest
+                                </span>
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            </div>
 
-                        {/* Summary Card */}
-                        <div className="mt-4 bg-gradient-to-br from-primary to-primary/80 rounded-lg p-4 text-primary-foreground">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-primary-foreground/80">
-                              Investment
-                            </span>
-                            <span className="text-xs text-primary-foreground/80">
-                              Expected Return
-                            </span>
-                          </div>
-                          <div className="flex items-end justify-between">
-                            <span className="text-xl font-bold">
-                              {formatCurrency(listing.askingPrice)}
-                            </span>
-                            <span className="text-lg font-semibold text-emerald-300">
-                              {listing.yieldToMaturity.toFixed(2)}%
-                            </span>
-                          </div>
-                          <div className="mt-3 pt-3 border-t border-primary-foreground/20 flex items-center justify-between text-xs text-primary-foreground/80">
-                            <span>
-                              {discountPercentage.toFixed(1)}% discount
-                            </span>
-                            <span>{daysToMaturity} days to maturity</span>
+                            {/* Investment Summary */}
+                            <div className="bg-linear-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="text-xs text-muted-foreground font-medium">
+                                  Investment Required
+                                </span>
+                                <span className="text-xs text-muted-foreground font-medium">
+                                  Expected Return
+                                </span>
+                              </div>
+                              <div className="flex items-end justify-between">
+                                <span className="text-xl font-bold">
+                                  {formatCurrency(listing.askingPrice)}
+                                </span>
+                                <span className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                                  {listing.yieldToMaturity.toFixed(2)}%
+                                </span>
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-primary/20 flex items-center justify-between text-xs text-muted-foreground">
+                                <span>
+                                  {discountPercentage.toFixed(1)}% discount
+                                </span>
+                                <span>{daysToMaturity} days to maturity</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -820,7 +1065,6 @@ export function LoanMarketplace({
           );
         })}
       </div>
-
       {/* Empty State */}
       {listings.length === 0 && (
         <div className="text-center py-16 bg-card rounded-xl border">
