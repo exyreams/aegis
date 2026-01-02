@@ -7,13 +7,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -25,14 +18,10 @@ import {
   Activity,
   TrendingUp,
   TrendingDown,
-  DollarSign,
-  ShoppingCart,
   Clock,
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Eye,
-  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -75,50 +64,76 @@ export function TradingDashboard() {
   const [sellAmount, setSellAmount] = useState("");
   const [sellPrice, setSellPrice] = useState("");
 
-  // Mock trading data
+  // Mock trading data - realistic secondary loan market positions
   const positions: Position[] = [
     {
       id: "1",
       loanId: "LOAN001",
-      borrower: "TechCorp Industries",
-      originalAmount: 42000000,
-      currentAmount: 42000000,
-      purchasePrice: 41500000,
-      currentValue: 42800000,
-      yieldToMaturity: 8.2,
-      maturityDate: "2027-01-15",
-      creditRating: "A-",
-      unrealizedPnL: 1300000,
-      unrealizedPnLPercent: 3.13,
+      borrower: "Meridian Holdings PLC",
+      originalAmount: 68500000,
+      currentAmount: 68500000,
+      purchasePrice: 67815000, // 99.0 cents
+      currentValue: 69185000, // 101.0 cents - price appreciation
+      yieldToMaturity: 8.65,
+      maturityDate: "2028-06-15",
+      creditRating: "BB+",
+      unrealizedPnL: 1370000,
+      unrealizedPnLPercent: 2.02,
     },
     {
       id: "2",
       loanId: "LOAN002",
-      borrower: "Green Energy Solutions",
-      originalAmount: 23500000,
-      currentAmount: 23500000,
-      purchasePrice: 23200000,
-      currentValue: 23100000,
-      yieldToMaturity: 7.8,
-      maturityDate: "2026-06-30",
-      creditRating: "BBB+",
-      unrealizedPnL: -100000,
-      unrealizedPnLPercent: -0.43,
+      borrower: "Nordic Energy AS",
+      originalAmount: 115000000,
+      currentAmount: 115000000,
+      purchasePrice: 116150000, // 101.0 cents (green loan premium)
+      currentValue: 117300000, // 102.0 cents
+      yieldToMaturity: 7.35,
+      maturityDate: "2031-03-01",
+      creditRating: "BBB-",
+      unrealizedPnL: 1150000,
+      unrealizedPnLPercent: 0.99,
+    },
+    {
+      id: "3",
+      loanId: "LOAN003",
+      borrower: "Pinnacle Healthcare Group",
+      originalAmount: 50000000,
+      currentAmount: 50000000,
+      purchasePrice: 49500000, // 99.0 cents
+      currentValue: 49000000, // 98.0 cents - slight decline
+      yieldToMaturity: 8.15,
+      maturityDate: "2029-12-15",
+      creditRating: "BB",
+      unrealizedPnL: -500000,
+      unrealizedPnLPercent: -1.01,
     },
   ];
 
   const activeOrders: Trade[] = [
     {
       id: "1",
-      loanId: "LOAN003",
-      borrower: "Manufacturing Corp",
+      loanId: "LOAN004",
+      borrower: "Atlas Logistics Inc",
       tradeType: "buy",
-      amount: 12800000,
-      price: 12200000,
+      amount: 25000000, // Partial position
+      price: 23750000, // 95.0 cents - distressed pricing
       status: "pending",
-      timestamp: "2025-01-01T14:30:00Z",
-      yieldToMaturity: 11.5,
-      dueDiligenceScore: 74,
+      timestamp: "2025-01-02T09:15:00Z",
+      yieldToMaturity: 12.8,
+      dueDiligenceScore: 72,
+    },
+    {
+      id: "2",
+      loanId: "LOAN005",
+      borrower: "Continental Manufacturing GmbH",
+      tradeType: "buy",
+      amount: 15000000,
+      price: 14700000, // 98.0 cents
+      status: "pending",
+      timestamp: "2025-01-02T11:30:00Z",
+      yieldToMaturity: 9.25,
+      dueDiligenceScore: 82,
     },
   ];
 
@@ -126,28 +141,54 @@ export function TradingDashboard() {
     {
       id: "1",
       loanId: "LOAN001",
-      borrower: "TechCorp Industries",
+      borrower: "Meridian Holdings PLC",
       tradeType: "buy",
-      amount: 42000000,
-      price: 41500000,
+      amount: 68500000,
+      price: 67815000,
       status: "executed",
-      timestamp: "2024-12-15T10:00:00Z",
-      counterparty: "First National Bank",
-      yieldToMaturity: 8.2,
-      dueDiligenceScore: 92,
+      timestamp: "2024-11-15T10:00:00Z",
+      counterparty: "Barclays Bank PLC",
+      yieldToMaturity: 8.65,
+      dueDiligenceScore: 94,
     },
     {
       id: "2",
       loanId: "LOAN002",
-      borrower: "Green Energy Solutions",
+      borrower: "Nordic Energy AS",
       tradeType: "buy",
-      amount: 23500000,
-      price: 23200000,
+      amount: 115000000,
+      price: 116150000,
       status: "executed",
-      timestamp: "2024-12-20T15:45:00Z",
-      counterparty: "Sustainable Capital",
-      yieldToMaturity: 7.8,
+      timestamp: "2024-12-01T14:30:00Z",
+      counterparty: "DNB Bank ASA",
+      yieldToMaturity: 7.35,
+      dueDiligenceScore: 91,
+    },
+    {
+      id: "3",
+      loanId: "LOAN003",
+      borrower: "Pinnacle Healthcare Group",
+      tradeType: "buy",
+      amount: 50000000,
+      price: 49500000,
+      status: "executed",
+      timestamp: "2024-12-18T16:45:00Z",
+      counterparty: "JPMorgan Chase Bank NA",
+      yieldToMaturity: 8.15,
       dueDiligenceScore: 88,
+    },
+    {
+      id: "4",
+      loanId: "LOAN006",
+      borrower: "Retail Dynamics Corp",
+      tradeType: "sell",
+      amount: 30000000,
+      price: 28500000, // 95.0 cents - sold at discount
+      status: "executed",
+      timestamp: "2024-12-22T11:00:00Z",
+      counterparty: "Credit Suisse AG",
+      yieldToMaturity: 10.5,
+      dueDiligenceScore: 76,
     },
   ];
 
@@ -208,7 +249,7 @@ export function TradingDashboard() {
       : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4">
       {/* Portfolio Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
