@@ -102,7 +102,7 @@ export function LoanMarketplace({
     switch (risk) {
       case "low":
         return {
-          bg: "bg-emerald-500 dark:bg-emerald-500",
+          bg: "bg-emerald-500",
           lightBg: "bg-emerald-50 dark:bg-emerald-950/50",
           text: "text-emerald-700 dark:text-emerald-400",
           border: "border-emerald-200 dark:border-emerald-800",
@@ -111,7 +111,7 @@ export function LoanMarketplace({
         };
       case "medium":
         return {
-          bg: "bg-amber-500 dark:bg-amber-500",
+          bg: "bg-amber-500",
           lightBg: "bg-amber-50 dark:bg-amber-950/50",
           text: "text-amber-700 dark:text-amber-400",
           border: "border-amber-200 dark:border-amber-800",
@@ -120,7 +120,7 @@ export function LoanMarketplace({
         };
       case "high":
         return {
-          bg: "bg-rose-500 dark:bg-rose-500",
+          bg: "bg-rose-500",
           lightBg: "bg-rose-50 dark:bg-rose-950/50",
           text: "text-rose-700 dark:text-rose-400",
           border: "border-rose-200 dark:border-rose-800",
@@ -129,12 +129,11 @@ export function LoanMarketplace({
         };
       default:
         return {
-          bg: "bg-slate-500 dark:bg-slate-500",
-          lightBg: "bg-slate-50 dark:bg-slate-800",
-          text: "text-slate-700 dark:text-slate-400",
-          border: "border-slate-200 dark:border-slate-700",
-          badge:
-            "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+          bg: "bg-muted-foreground",
+          lightBg: "bg-muted",
+          text: "text-muted-foreground",
+          border: "border",
+          badge: "bg-muted text-muted-foreground",
         };
     }
   };
@@ -157,19 +156,19 @@ export function LoanMarketplace({
         );
       case "sold":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
             Sold
           </span>
         );
       case "withdrawn":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-500">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
             Withdrawn
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
             {status}
           </span>
         );
@@ -220,8 +219,8 @@ export function LoanMarketplace({
       onClick={() => handleSort(option)}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
         sortBy === option
-          ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
-          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          ? "bg-primary text-primary-foreground"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
       }`}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -243,18 +242,14 @@ export function LoanMarketplace({
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-            Loan Positions
-          </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <h3 className="text-lg font-semibold">Loan Positions</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
             {listings.length} opportunities available for secondary market
             trading
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            Sort by:
-          </span>
+          <span className="text-sm text-muted-foreground">Sort by:</span>
           <div className="flex gap-1">
             {renderSortButton("yield", "Yield", TrendingUp)}
             {renderSortButton("amount", "Amount", DollarSign)}
@@ -265,29 +260,29 @@ export function LoanMarketplace({
       </div>
 
       {/* Table Header */}
-      <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-5 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-t-xl border border-slate-200 dark:border-slate-700">
+      <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-5 py-3 bg-muted/50 rounded-t-xl border">
         <div className="col-span-4">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Borrower / Lender
           </span>
         </div>
         <div className="col-span-2 text-center">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Outstanding
           </span>
         </div>
         <div className="col-span-2 text-center">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Yield
           </span>
         </div>
         <div className="col-span-2 text-center">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Rating
           </span>
         </div>
         <div className="col-span-2 text-center">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             DD Score
           </span>
         </div>
@@ -307,10 +302,10 @@ export function LoanMarketplace({
           return (
             <div
               key={listing.id}
-              className={`bg-white dark:bg-slate-900 border rounded-xl overflow-hidden transition-all duration-200 ${
+              className={`bg-card border rounded-xl overflow-hidden transition-all duration-200 ${
                 isExpanded
-                  ? "border-slate-300 dark:border-slate-600 shadow-lg dark:shadow-xl"
-                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm dark:hover:shadow-lg"
+                  ? "shadow-lg dark:shadow-xl"
+                  : "hover:shadow-sm dark:hover:shadow-lg"
               }`}
             >
               {/* Main Row */}
@@ -323,17 +318,15 @@ export function LoanMarketplace({
                   <div className="col-span-4 flex items-center gap-4">
                     <div className={`w-1 h-10 rounded-full ${riskConfig.bg}`} />
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                      <h4 className="text-sm font-semibold">
                         {listing.borrower}
                       </h4>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-muted-foreground">
                           {listing.originalLender}
                         </span>
-                        <span className="text-slate-300 dark:text-slate-600">
-                          •
-                        </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-muted-foreground/50">•</span>
+                        <span className="text-xs text-muted-foreground">
                           {listing.industry}
                         </span>
                       </div>
@@ -343,7 +336,7 @@ export function LoanMarketplace({
                   {/* Desktop Metrics */}
                   <div className="hidden lg:grid lg:grid-cols-8 col-span-8 gap-4 items-center">
                     <div className="col-span-2 text-center">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                      <p className="text-sm font-semibold">
                         {formatCurrency(listing.outstandingAmount)}
                       </p>
                     </div>
@@ -383,17 +376,13 @@ export function LoanMarketplace({
                   <div className="col-span-8 lg:col-span-0 flex items-center justify-between">
                     <div className="lg:hidden grid grid-cols-2 gap-2">
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Yield
-                        </p>
+                        <p className="text-xs text-muted-foreground">Yield</p>
                         <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                           {listing.yieldToMaturity.toFixed(2)}%
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Rating
-                        </p>
+                        <p className="text-xs text-muted-foreground">Rating</p>
                         <p
                           className={`text-sm font-semibold ${getRatingStyle(
                             listing.creditRating
@@ -406,7 +395,7 @@ export function LoanMarketplace({
                     <div className="flex items-center gap-3">
                       {getStatusBadge(listing.status)}
                       <ChevronRight
-                        className={`h-4 w-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
+                        className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
                           isExpanded ? "rotate-90" : ""
                         }`}
                       />
@@ -417,24 +406,24 @@ export function LoanMarketplace({
 
               {/* Expanded Section */}
               {isExpanded && (
-                <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                <div className="border-t bg-muted/30">
                   <div className="p-6">
                     <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
                       {/* Investment Details Grid */}
                       <div className="xl:col-span-3">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           {/* Asking Price */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <DollarSign className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <DollarSign className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Asking Price
                               </span>
                             </div>
-                            <p className="text-lg font-bold text-slate-900 dark:text-white">
+                            <p className="text-lg font-bold">
                               {formatCurrency(listing.askingPrice)}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {getPercentage(
                                 listing.askingPrice,
                                 listing.outstandingAmount
@@ -444,17 +433,17 @@ export function LoanMarketplace({
                           </div>
 
                           {/* Discount */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <TrendingDown className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Discount
                               </span>
                             </div>
                             <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                               {discountPercentage.toFixed(1)}%
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {formatCurrency(
                                 listing.outstandingAmount - listing.askingPrice
                               )}{" "}
@@ -463,35 +452,35 @@ export function LoanMarketplace({
                           </div>
 
                           {/* Maturity */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <Calendar className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Maturity Date
                               </span>
                             </div>
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            <p className="text-sm font-semibold">
                               {new Date(
                                 listing.maturityDate
                               ).toLocaleDateString()}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {daysToMaturity} days remaining
                             </p>
                           </div>
 
                           {/* Current Rate */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <Percent className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <Percent className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Current Rate
                               </span>
                             </div>
-                            <p className="text-lg font-bold text-slate-900 dark:text-white">
+                            <p className="text-lg font-bold">
                               {listing.interestRate}%
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               +
                               {(
                                 listing.yieldToMaturity - listing.interestRate
@@ -503,10 +492,10 @@ export function LoanMarketplace({
 
                         {/* Secondary Info Row */}
                         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <Target className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <Target className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Risk Level
                               </span>
                             </div>
@@ -516,7 +505,7 @@ export function LoanMarketplace({
                               {listing.riskLevel.charAt(0).toUpperCase() +
                                 listing.riskLevel.slice(1)}
                             </Badge>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {listing.dueDiligenceScore >= 90
                                 ? "Low risk profile"
                                 : listing.dueDiligenceScore >= 75
@@ -525,32 +514,32 @@ export function LoanMarketplace({
                             </p>
                           </div>
 
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Listed
                               </span>
                             </div>
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            <p className="text-sm font-semibold">
                               {listing.listingDate}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               Original lender
                             </p>
                           </div>
 
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <Briefcase className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <Briefcase className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Original Loan
                               </span>
                             </div>
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            <p className="text-sm font-semibold">
                               {formatCurrency(listing.loanAmount)}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {getPercentage(
                                 listing.outstandingAmount,
                                 listing.loanAmount
@@ -559,10 +548,10 @@ export function LoanMarketplace({
                             </p>
                           </div>
 
-                          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                          <div className="bg-card rounded-lg border p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <BarChart3 className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
                                 Credit Rating
                               </span>
                             </div>
@@ -573,7 +562,7 @@ export function LoanMarketplace({
                             >
                               {listing.creditRating}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               External rating
                             </p>
                           </div>
@@ -582,8 +571,8 @@ export function LoanMarketplace({
 
                       {/* Action Panel */}
                       <div className="xl:col-span-1">
-                        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-                          <h5 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">
+                        <div className="bg-card rounded-lg border p-4">
+                          <h5 className="text-sm font-semibold mb-4">
                             Available Actions
                           </h5>
                           <div className="space-y-2">
@@ -591,7 +580,7 @@ export function LoanMarketplace({
                               <DialogTrigger asChild>
                                 <Button
                                   variant="outline"
-                                  className="w-full justify-between h-10 text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                  className="w-full justify-between h-10 text-sm"
                                   onClick={() => setSelectedLoan(listing)}
                                 >
                                   <span className="flex items-center gap-2">
@@ -601,13 +590,13 @@ export function LoanMarketplace({
                                   <ArrowRight className="h-4 w-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="max-w-2xl dark:bg-slate-900 dark:border-slate-700">
+                              <DialogContent className="max-w-2xl">
                                 <DialogHeader>
-                                  <DialogTitle className="flex items-center gap-2 text-lg dark:text-white">
-                                    <Building className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                                  <DialogTitle className="flex items-center gap-2 text-lg">
+                                    <Building className="h-5 w-5 text-muted-foreground" />
                                     {selectedLoan?.borrower}
                                   </DialogTitle>
-                                  <DialogDescription className="dark:text-slate-400">
+                                  <DialogDescription>
                                     Complete loan position details and due
                                     diligence summary
                                   </DialogDescription>
@@ -617,7 +606,7 @@ export function LoanMarketplace({
                                     {/* Loan Details Grid */}
                                     <div className="grid grid-cols-2 gap-6">
                                       <div>
-                                        <h6 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <h6 className="text-sm font-semibold mb-3 flex items-center gap-2">
                                           <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                           Loan Details
                                         </h6>
@@ -655,12 +644,12 @@ export function LoanMarketplace({
                                           ].map((item, idx) => (
                                             <div
                                               key={idx}
-                                              className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800"
+                                              className="flex justify-between py-2 border-b"
                                             >
-                                              <span className="text-sm text-slate-500 dark:text-slate-400">
+                                              <span className="text-sm text-muted-foreground">
                                                 {item.label}
                                               </span>
-                                              <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                              <span className="text-sm font-medium">
                                                 {item.value}
                                               </span>
                                             </div>
@@ -669,7 +658,7 @@ export function LoanMarketplace({
                                       </div>
 
                                       <div>
-                                        <h6 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <h6 className="text-sm font-semibold mb-3 flex items-center gap-2">
                                           <Filter className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                                           Risk Assessment
                                         </h6>
@@ -711,9 +700,9 @@ export function LoanMarketplace({
                                           ].map((item, idx) => (
                                             <div
                                               key={idx}
-                                              className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800"
+                                              className="flex justify-between items-center py-2 border-b"
                                             >
-                                              <span className="text-sm text-slate-500 dark:text-slate-400">
+                                              <span className="text-sm text-muted-foreground">
                                                 {item.label}
                                               </span>
                                               <span
@@ -730,22 +719,22 @@ export function LoanMarketplace({
                                     </div>
 
                                     {/* Investment Summary */}
-                                    <div className="bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
-                                      <h6 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <div className="bg-muted rounded-lg border p-5">
+                                      <h6 className="text-sm font-semibold mb-4 flex items-center gap-2">
                                         <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                         Investment Summary
                                       </h6>
                                       <div className="grid grid-cols-2 gap-6">
                                         <div>
-                                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                                          <p className="text-xs text-muted-foreground">
                                             Investment Required
                                           </p>
-                                          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                                          <p className="text-2xl font-bold mt-1">
                                             {formatCurrency(
                                               selectedLoan.askingPrice
                                             )}
                                           </p>
-                                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                          <p className="text-xs text-muted-foreground mt-1">
                                             {getPercentage(
                                               selectedLoan.askingPrice,
                                               selectedLoan.outstandingAmount
@@ -754,7 +743,7 @@ export function LoanMarketplace({
                                           </p>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                                          <p className="text-xs text-muted-foreground">
                                             Expected Yield
                                           </p>
                                           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
@@ -763,7 +752,7 @@ export function LoanMarketplace({
                                             )}
                                             %
                                           </p>
-                                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                          <p className="text-xs text-muted-foreground mt-1">
                                             Current rate:{" "}
                                             {selectedLoan.interestRate}%
                                           </p>
@@ -776,7 +765,7 @@ export function LoanMarketplace({
                             </Dialog>
                             <Button
                               variant="outline"
-                              className="w-full justify-start h-10 text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                              className="w-full justify-start h-10 text-sm"
                               onClick={() => {
                                 onStartDueDiligence(listing.id);
                                 toast.success("Due diligence report generated");
@@ -786,7 +775,7 @@ export function LoanMarketplace({
                               Due Diligence Report
                             </Button>
                             <Button
-                              className="w-full justify-start h-10 text-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100"
+                              className="w-full justify-start h-10 text-sm"
                               onClick={() => {
                                 toast.success("Purchase interest submitted");
                               }}
@@ -798,12 +787,12 @@ export function LoanMarketplace({
                         </div>
 
                         {/* Summary Card */}
-                        <div className="mt-4 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-700 dark:to-slate-800 rounded-lg p-4 text-white">
+                        <div className="mt-4 bg-gradient-to-br from-primary to-primary/80 rounded-lg p-4 text-primary-foreground">
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-slate-400 dark:text-slate-400">
+                            <span className="text-xs text-primary-foreground/80">
                               Investment
                             </span>
-                            <span className="text-xs text-slate-400 dark:text-slate-400">
+                            <span className="text-xs text-primary-foreground/80">
                               Expected Return
                             </span>
                           </div>
@@ -811,11 +800,11 @@ export function LoanMarketplace({
                             <span className="text-xl font-bold">
                               {formatCurrency(listing.askingPrice)}
                             </span>
-                            <span className="text-lg font-semibold text-emerald-400 dark:text-emerald-400">
+                            <span className="text-lg font-semibold text-emerald-300">
                               {listing.yieldToMaturity.toFixed(2)}%
                             </span>
                           </div>
-                          <div className="mt-3 pt-3 border-t border-slate-700 dark:border-slate-600 flex items-center justify-between text-xs text-slate-400 dark:text-slate-400">
+                          <div className="mt-3 pt-3 border-t border-primary-foreground/20 flex items-center justify-between text-xs text-primary-foreground/80">
                             <span>
                               {discountPercentage.toFixed(1)}% discount
                             </span>
@@ -834,14 +823,14 @@ export function LoanMarketplace({
 
       {/* Empty State */}
       {listings.length === 0 && (
-        <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="h-14 w-14 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-            <Building className="h-7 w-7 text-slate-400 dark:text-slate-500" />
+        <div className="text-center py-16 bg-card rounded-xl border">
+          <div className="h-14 w-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+            <Building className="h-7 w-7 text-muted-foreground" />
           </div>
-          <h4 className="text-base font-semibold text-slate-900 dark:text-white mb-2">
+          <h4 className="text-base font-semibold mb-2">
             No loan positions available
           </h4>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             There are currently no loan positions matching your criteria. Please
             adjust your filters or check back later.
           </p>

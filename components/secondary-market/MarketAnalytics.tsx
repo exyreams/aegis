@@ -1,22 +1,37 @@
 "use client";
 
-import React from "react";
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
-  BarChart,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
+import {
+  Area,
+  AreaChart,
   Bar,
+  BarChart,
+  CartesianGrid,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from "recharts";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/Chart";
 import {
   TrendingUp,
   Users,
@@ -56,62 +71,114 @@ interface MarketAnalyticsProps {
   stats: MarketStats;
 }
 
-// Custom Tooltip for consistent styling across charts
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-3 border border-gray-100 shadow-xl rounded-lg">
-        <p className="font-semibold text-gray-900 mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center gap-2 text-sm mb-1">
-            <div
-              className="w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-gray-500 capitalize">{entry.name}:</span>
-            <span className="font-medium text-gray-900">
-              {entry.name === "volume"
-                ? formatCurrency(Number(entry.value) * 1000000)
-                : `${entry.value}%`}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
+// Utility function for formatting currency
+const formatCurrency = (amount: number) => {
+  if (amount >= 1000000000) {
+    return `${(amount / 1000000000).toFixed(1)}B`;
   }
-  return null;
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(1)}M`;
+  }
+  if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)}K`;
+  }
+  return `${amount.toFixed(0)}`;
 };
+
+// Chart configurations
+const volumeYieldConfig = {
+  volume: {
+    label: "Volume",
+    color: "var(--chart-1)",
+  },
+  avgYield: {
+    label: "Avg Yield",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
+
+const industryConfig = {
+  value: {
+    label: "Value",
+  },
+} satisfies ChartConfig;
+
+const riskConfig = {
+  value: {
+    label: "Value",
+  },
+} satisfies ChartConfig;
+
+const tradingConfig = {
+  trades: {
+    label: "Trades",
+    color: "var(--chart-1)",
+  },
+  volume: {
+    label: "Volume",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
 
 export function MarketAnalytics({
   trends,
   industryData,
   stats,
 }: MarketAnalyticsProps) {
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000000) {
-      return `$${(amount / 1000000000).toFixed(1)}B`;
-    }
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
-    }
-    if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`;
-    }
-    return `$${amount.toFixed(0)}`;
-  };
+  const [timeRange, setTimeRange] = React.useState("90d");
+
+  // Fallback data in case props are empty
+  const defaultTrends = [
+    { month: "Jan", volume: 145, avgYield: 8.2 },
+    { month: "Feb", volume: 167, avgYield: 8.4 },
+    { month: "Mar", volume: 189, avgYield: 8.1 },
+    { month: "Apr", volume: 203, avgYield: 8.6 },
+    { month: "May", volume: 178, avgYield: 8.9 },
+    { month: "Jun", volume: 234, avgYield: 8.7 },
+  ];
+
+  const defaultIndustryData = [
+    { name: "Healthcare", value: 28, color: "var(--chart-1)" },
+    { name: "Technology", value: 22, color: "var(--chart-2)" },
+    { name: "Manufacturing", value: 18, color: "var(--chart-3)" },
+    { name: "Energy", value: 15, color: "var(--chart-4)" },
+    { name: "Real Estate", value: 12, color: "var(--chart-5)" },
+    { name: "Other", value: 5, color: "#94a3b8" },
+  ];
+
+  // Use provided data or fallback to defaults
+  const trendsData = trends && trends.length > 0 ? trends : defaultTrends;
+  const industryChartData =
+    industryData && industryData.length > 0
+      ? industryData
+      : defaultIndustryData;
 
   // Calculate month-over-month changes
   const volumeChange =
-    trends.length >= 2
-      ? ((trends[trends.length - 1].volume - trends[trends.length - 2].volume) /
-          trends[trends.length - 2].volume) *
+    trendsData.length >= 2
+      ? ((trendsData[trendsData.length - 1].volume -
+          trendsData[trendsData.length - 2].volume) /
+          trendsData[trendsData.length - 2].volume) *
         100
       : 0;
 
   const yieldChange =
-    trends.length >= 2
-      ? trends[trends.length - 1].avgYield - trends[trends.length - 2].avgYield
+    trendsData.length >= 2
+      ? trendsData[trendsData.length - 1].avgYield -
+        trendsData[trendsData.length - 2].avgYield
       : 0;
+
+  // Filter trends data based on time range
+  const filteredTrends = React.useMemo(() => {
+    if (!trendsData || trendsData.length === 0) return defaultTrends;
+
+    if (timeRange === "30d") {
+      return trendsData.slice(-6); // Last 6 months for 30d view
+    } else if (timeRange === "7d") {
+      return trendsData.slice(-3); // Last 3 months for 7d view
+    }
+    return trendsData; // All data for 90d view
+  }, [trendsData, timeRange]);
 
   // Mock additional analytics data
   const riskDistribution = [
@@ -143,70 +210,76 @@ export function MarketAnalytics({
     <div className="space-y-6 px-4 mx-auto max-w-screen-2xl">
       {/* Key Performance Indicators */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-md transition-shadow duration-200">
+        <Card className="hover:shadow-md dark:hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <TrendingUp className="h-4 w-4 mr-2 text-blue-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              <TrendingUp className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400" />
               Market Growth
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               +{volumeChange.toFixed(1)}%
             </div>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm text-muted-foreground mt-1">
               Volume growth (MoM)
             </div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow duration-200">
+        <Card className="hover:shadow-md dark:hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <Target className="h-4 w-4 mr-2 text-purple-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              <Target className="h-4 w-4 mr-2 text-purple-500 dark:text-purple-400" />
               Avg Yield Spread
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div
               className={`text-2xl font-bold ${
-                yieldChange >= 0 ? "text-green-600" : "text-red-600"
+                yieldChange >= 0
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400"
               }`}
             >
               {yieldChange >= 0 ? "+" : ""}
               {yieldChange.toFixed(1)}bp
             </div>
-            <div className="text-sm text-gray-600 mt-1">Yield change (MoM)</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              Yield change (MoM)
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow duration-200">
+        <Card className="hover:shadow-md dark:hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <Clock className="h-4 w-4 mr-2 text-orange-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              <Clock className="h-4 w-4 mr-2 text-orange-500 dark:text-orange-400" />
               Settlement Time
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {stats.avgDueDiligenceTime}d
             </div>
-            <div className="text-sm text-gray-600 mt-1">Avg due diligence</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              Avg due diligence
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow duration-200">
+        <Card className="hover:shadow-md dark:hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <Users className="h-4 w-4 mr-2 text-teal-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              <Users className="h-4 w-4 mr-2 text-teal-500 dark:text-teal-400" />
               Market Participants
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {stats.activeListings}
             </div>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm text-muted-foreground mt-1">
               Active participants
             </div>
           </CardContent>
@@ -217,71 +290,105 @@ export function MarketAnalytics({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Volume and Yield Trends */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Activity className="h-5 w-5 mr-2 text-blue-500" />
-              Market Volume & Yield Trends
-            </CardTitle>
+          <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+            <div className="grid flex-1 gap-1">
+              <CardTitle className="flex items-center text-lg">
+                <Activity className="h-5 w-5 mr-2 text-blue-500 dark:text-blue-400" />
+                Market Volume & Yield Trends
+              </CardTitle>
+            </div>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger
+                className="w-[160px] rounded-lg sm:ml-auto"
+                aria-label="Select a time range"
+              >
+                <SelectValue placeholder="Last 3 months" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="90d" className="rounded-lg">
+                  Last 3 months
+                </SelectItem>
+                <SelectItem value="30d" className="rounded-lg">
+                  Last 30 days
+                </SelectItem>
+                <SelectItem value="7d" className="rounded-lg">
+                  Last 7 days
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trends}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f0f0f0"
-                />
+          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+            <ChartContainer
+              config={volumeYieldConfig}
+              className="aspect-auto h-[250px] w-full"
+            >
+              <AreaChart data={filteredTrends}>
+                <defs>
+                  <linearGradient id="fillVolume" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-volume)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-volume)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                  <linearGradient id="fillYield" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-avgYield)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-avgYield)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="month"
-                  axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis
-                  yAxisId="left"
                   axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
-                  tickFormatter={(value) => `${value}M`}
+                  tickMargin={8}
                 />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
-                  tickFormatter={(value) => `${value}%`}
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(value) => `Month: ${value}`}
+                      formatter={(value, name) => [
+                        name === "volume"
+                          ? `${formatCurrency(Number(value) * 1000000)}`
+                          : `${value}%`,
+                        name === "volume" ? "Volume" : "Avg Yield",
+                      ]}
+                    />
+                  }
                 />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ stroke: "#e5e7eb", strokeWidth: 1 }}
-                />
-                <Bar
-                  yAxisId="left"
+                <Area
                   dataKey="volume"
-                  fill="#3b82f6"
-                  radius={[4, 4, 0, 0]}
-                  barSize={40}
-                  name="volume"
-                  opacity={0.8}
+                  type="natural"
+                  fill="url(#fillVolume)"
+                  stroke="var(--color-volume)"
+                  strokeWidth={2}
+                  stackId="a"
                 />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
+                <Area
                   dataKey="avgYield"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{
-                    r: 4,
-                    fill: "#10b981",
-                    strokeWidth: 2,
-                    stroke: "#fff",
-                  }}
-                  name="avgYield"
+                  type="natural"
+                  fill="url(#fillYield)"
+                  stroke="var(--color-avgYield)"
+                  strokeWidth={2}
+                  stackId="b"
                 />
-              </LineChart>
-            </ResponsiveContainer>
+                <ChartLegend content={<ChartLegendContent />} />
+              </AreaChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -289,15 +396,15 @@ export function MarketAnalytics({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
-              <BarChart3 className="h-5 w-5 mr-2 text-indigo-500" />
+              <BarChart3 className="h-5 w-5 mr-2 text-indigo-500 dark:text-indigo-400" />
               Industry Distribution
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ChartContainer config={industryConfig} className="h-[300px]">
               <PieChart>
                 <Pie
-                  data={industryData}
+                  data={industryChartData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -305,7 +412,7 @@ export function MarketAnalytics({
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {industryData.map((entry, index) => (
+                  {industryChartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.color}
@@ -313,29 +420,35 @@ export function MarketAnalytics({
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name) => [`${value}%`, name]}
+                    />
+                  }
+                />
                 <text
                   x="50%"
                   y="50%"
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="text-gray-700 font-bold text-lg"
+                  className="font-bold text-lg fill-foreground"
                 >
-                  {`${industryData.reduce(
+                  {`${industryChartData.reduce(
                     (a, b) => a + (b.value as number),
                     0
                   )}%`}
                 </text>
               </PieChart>
-            </ResponsiveContainer>
+            </ChartContainer>
             <div className="flex flex-wrap justify-center gap-4 mt-4">
-              {industryData.map((item) => (
+              {industryChartData.map((item) => (
                 <div key={item.name} className="flex items-center text-sm">
                   <div
                     className="w-3 h-3 rounded-full mr-2"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-gray-600">{item.name}</span>
+                  <span className="text-muted-foreground">{item.name}</span>
                 </div>
               ))}
             </div>
@@ -349,7 +462,7 @@ export function MarketAnalytics({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
-              <Activity className="h-5 w-5 mr-2 text-red-500" />
+              <Activity className="h-5 w-5 mr-2 text-red-500 dark:text-red-400" />
               Risk Profile Distribution
             </CardTitle>
           </CardHeader>
@@ -363,15 +476,11 @@ export function MarketAnalytics({
                         className="w-3 h-3 rounded-full shadow-sm"
                         style={{ backgroundColor: risk.color }}
                       />
-                      <span className="font-medium text-gray-700">
-                        {risk.name}
-                      </span>
+                      <span className="font-medium">{risk.name}</span>
                     </div>
-                    <span className="text-sm font-bold text-gray-900">
-                      {risk.value}%
-                    </span>
+                    <span className="text-sm font-bold">{risk.value}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500 ease-out"
                       style={{
@@ -383,16 +492,16 @@ export function MarketAnalytics({
                 </div>
               ))}
             </div>
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-100 dark:border-blue-800">
               <div className="flex items-start">
-                <div className="p-2 bg-blue-100 rounded-full mr-3">
-                  <Zap className="h-4 w-4 text-blue-600" />
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-full mr-3">
+                  <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-blue-900 mb-1 text-sm">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-1 text-sm">
                     Risk Insights
                   </h4>
-                  <p className="text-sm text-blue-800 leading-relaxed">
+                  <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
                     Low-risk loans dominate the market at 45%, indicating strong
                     institutional confidence. High-yield opportunities remain
                     available for risk-tolerant investors.
@@ -407,60 +516,57 @@ export function MarketAnalytics({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
-              <TrendingUp className="h-5 w-5 mr-2 text-amber-500" />
+              <TrendingUp className="h-5 w-5 mr-2 text-amber-500 dark:text-amber-400" />
               Weekly Trading Activity
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ChartContainer config={tradingConfig} className="h-[300px]">
               <BarChart data={tradingActivity}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f0f0f0"
-                />
+                <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="day"
-                  axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis
-                  yAxisId="left"
                   axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  tickMargin={8}
                 />
+                <YAxis yAxisId="left" tickLine={false} axisLine={false} />
                 <YAxis
                   yAxisId="right"
                   orientation="right"
-                  axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  axisLine={false}
                 />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "#f9fafb" }}
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name) => [
+                        name === "trades"
+                          ? `${value} trades`
+                          : `${value}M volume`,
+                        name === "trades" ? "Trades" : "Volume",
+                      ]}
+                    />
+                  }
                 />
                 <Bar
                   yAxisId="left"
                   dataKey="trades"
-                  fill="#f59e0b"
+                  fill="var(--color-trades)"
                   radius={[4, 4, 0, 0]}
                   barSize={24}
-                  name="trades"
                 />
                 <Bar
                   yAxisId="right"
                   dataKey="volume"
-                  fill="#3b82f6"
+                  fill="var(--color-volume)"
                   radius={[4, 4, 0, 0]}
                   barSize={24}
-                  name="volume"
                 />
+                <ChartLegend content={<ChartLegendContent />} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
@@ -469,35 +575,32 @@ export function MarketAnalytics({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-lg">
-            <DollarSign className="h-5 w-5 mr-2 text-green-500" />
+            <DollarSign className="h-5 w-5 mr-2 text-green-500 dark:text-green-400" />
             Yield by Credit Rating
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {yieldByRating.map((rating) => (
-              <div
+              <Card
                 key={rating.rating}
-                className="border rounded-xl p-4 hover:shadow-md transition-shadow bg-white"
+                className="p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <Badge
-                    variant="outline"
-                    className="font-mono font-bold border-gray-300 text-gray-700"
-                  >
+                  <Badge variant="outline" className="font-mono font-bold">
                     {rating.rating}
                   </Badge>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
                     {rating.count}
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-blue-600 mb-1">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                   {rating.yield.toFixed(1)}%
                 </div>
-                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
                   Avg Yield
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </CardContent>
@@ -505,10 +608,10 @@ export function MarketAnalytics({
 
       {/* Market Efficiency Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-white to-gray-50">
+        <Card className="bg-gradient-to-br from-card to-muted/50">
           <CardHeader>
             <CardTitle className="text-base flex items-center">
-              <Zap className="h-4 w-4 mr-2 text-amber-500" />
+              <Zap className="h-4 w-4 mr-2 text-amber-500 dark:text-amber-400" />
               Automation Impact
             </CardTitle>
           </CardHeader>
@@ -529,9 +632,11 @@ export function MarketAnalytics({
               ].map((metric) => (
                 <div
                   key={metric.label}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-card hover:shadow-sm transition-all"
                 >
-                  <span className="text-sm text-gray-600">{metric.label}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {metric.label}
+                  </span>
                   <span className={`font-bold ${metric.color}`}>
                     {metric.value}
                   </span>
@@ -541,10 +646,10 @@ export function MarketAnalytics({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-white to-gray-50">
+        <Card className="bg-gradient-to-br from-card to-muted/50">
           <CardHeader>
             <CardTitle className="text-base flex items-center">
-              <Activity className="h-4 w-4 mr-2 text-blue-500" />
+              <Activity className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400" />
               Market Liquidity
             </CardTitle>
           </CardHeader>
@@ -557,12 +662,14 @@ export function MarketAnalytics({
               ].map((metric) => (
                 <div
                   key={metric.label}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-card hover:shadow-sm transition-all"
                 >
-                  <span className="text-sm text-gray-600">{metric.label}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {metric.label}
+                  </span>
                   <span
                     className={`font-bold ${
-                      metric.highlight ? "text-blue-600" : "text-gray-900"
+                      metric.highlight ? "text-blue-600 dark:text-blue-400" : ""
                     }`}
                   >
                     {metric.value}
@@ -573,10 +680,10 @@ export function MarketAnalytics({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-white to-gray-50">
+        <Card className="bg-gradient-to-br from-card to-muted/50">
           <CardHeader>
             <CardTitle className="text-base flex items-center">
-              <Users className="h-4 w-4 mr-2 text-purple-500" />
+              <Users className="h-4 w-4 mr-2 text-purple-500 dark:text-purple-400" />
               Platform Performance
             </CardTitle>
           </CardHeader>
@@ -597,12 +704,12 @@ export function MarketAnalytics({
               ].map((metric) => (
                 <div
                   key={metric.label}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-card hover:shadow-sm transition-all"
                 >
-                  <span className="text-sm text-gray-600">{metric.label}</span>
-                  <span
-                    className={`font-bold ${metric.color || "text-gray-900"}`}
-                  >
+                  <span className="text-sm text-muted-foreground">
+                    {metric.label}
+                  </span>
+                  <span className={`font-bold ${metric.color || ""}`}>
                     {metric.value}
                   </span>
                 </div>

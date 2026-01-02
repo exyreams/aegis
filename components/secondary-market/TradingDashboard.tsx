@@ -199,26 +199,26 @@ export function TradingDashboard() {
       case "pending":
         return <Clock className="h-4 w-4 text-yellow-500" />;
       case "cancelled":
-        return <XCircle className="h-4 w-4 text-gray-500" />;
+        return <XCircle className="h-4 w-4 text-muted-foreground" />;
       case "failed":
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+        return <AlertTriangle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "executed":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-400";
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-400";
       case "cancelled":
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
       case "failed":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -291,7 +291,7 @@ export function TradingDashboard() {
             >
               {formatCurrency(totalUnrealizedPnL)}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               {positions.length} active positions
             </div>
           </CardContent>
@@ -303,7 +303,7 @@ export function TradingDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeOrders.length}</div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               {formatCurrency(
                 activeOrders.reduce((sum, order) => sum + order.price, 0)
               )}{" "}
@@ -328,13 +328,15 @@ export function TradingDashboard() {
                 : 0}
               %
             </div>
-            <div className="text-sm text-gray-600">Weighted average</div>
+            <div className="text-sm text-muted-foreground">
+              Weighted average
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
         <Button
           variant={activeTab === "positions" ? "default" : "ghost"}
           size="sm"
@@ -371,7 +373,7 @@ export function TradingDashboard() {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h4 className="font-medium">{position.borrower}</h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {position.creditRating} • Matures{" "}
                         {new Date(position.maturityDate).toLocaleDateString()}
                       </p>
@@ -410,7 +412,7 @@ export function TradingDashboard() {
                                 value={sellAmount}
                                 onChange={(e) => setSellAmount(e.target.value)}
                               />
-                              <p className="text-sm text-gray-600 mt-1">
+                              <p className="text-sm text-muted-foreground mt-1">
                                 Available:{" "}
                                 {formatCurrency(position.currentAmount)}
                               </p>
@@ -423,7 +425,7 @@ export function TradingDashboard() {
                                 value={sellPrice}
                                 onChange={(e) => setSellPrice(e.target.value)}
                               />
-                              <p className="text-sm text-gray-600 mt-1">
+                              <p className="text-sm text-muted-foreground mt-1">
                                 Current value:{" "}
                                 {formatCurrency(position.currentValue)}
                               </p>
@@ -450,25 +452,29 @@ export function TradingDashboard() {
 
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
-                      <div className="text-gray-600">Position Size</div>
+                      <div className="text-muted-foreground">Position Size</div>
                       <div className="font-medium">
                         {formatCurrency(position.currentAmount)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Purchase Price</div>
+                      <div className="text-muted-foreground">
+                        Purchase Price
+                      </div>
                       <div className="font-medium">
                         {formatCurrency(position.purchasePrice)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Current Value</div>
+                      <div className="text-muted-foreground">Current Value</div>
                       <div className="font-medium">
                         {formatCurrency(position.currentValue)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Unrealized P&L</div>
+                      <div className="text-muted-foreground">
+                        Unrealized P&L
+                      </div>
                       <div
                         className={`font-medium ${
                           position.unrealizedPnL >= 0
@@ -480,7 +486,7 @@ export function TradingDashboard() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Return</div>
+                      <div className="text-muted-foreground">Return</div>
                       <div
                         className={`font-medium ${
                           position.unrealizedPnLPercent >= 0
@@ -511,7 +517,7 @@ export function TradingDashboard() {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h4 className="font-medium">{order.borrower}</h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {order.tradeType.toUpperCase()} order •{" "}
                         {new Date(order.timestamp).toLocaleString()}
                       </p>
@@ -529,25 +535,27 @@ export function TradingDashboard() {
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <div className="text-gray-600">Amount</div>
+                      <div className="text-muted-foreground">Amount</div>
                       <div className="font-medium">
                         {formatCurrency(order.amount)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Price</div>
+                      <div className="text-muted-foreground">Price</div>
                       <div className="font-medium">
                         {formatCurrency(order.price)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Expected Yield</div>
+                      <div className="text-muted-foreground">
+                        Expected Yield
+                      </div>
                       <div className="font-medium text-blue-600">
                         {order.yieldToMaturity.toFixed(1)}%
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">DD Score</div>
+                      <div className="text-muted-foreground">DD Score</div>
                       <div className="font-medium">
                         {order.dueDiligenceScore}/100
                       </div>
@@ -558,11 +566,11 @@ export function TradingDashboard() {
 
               {activeOrders.length === 0 && (
                 <div className="text-center py-8">
-                  <Activity className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
                     No active orders
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     Your buy and sell orders will appear here.
                   </p>
                 </div>
@@ -584,7 +592,7 @@ export function TradingDashboard() {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h4 className="font-medium">{trade.borrower}</h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {trade.tradeType.toUpperCase()} •{" "}
                         {new Date(trade.timestamp).toLocaleString()}
                         {trade.counterparty && ` • with ${trade.counterparty}`}
@@ -600,25 +608,25 @@ export function TradingDashboard() {
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <div className="text-gray-600">Amount</div>
+                      <div className="text-muted-foreground">Amount</div>
                       <div className="font-medium">
                         {formatCurrency(trade.amount)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Price</div>
+                      <div className="text-muted-foreground">Price</div>
                       <div className="font-medium">
                         {formatCurrency(trade.price)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">Yield</div>
+                      <div className="text-muted-foreground">Yield</div>
                       <div className="font-medium text-blue-600">
                         {trade.yieldToMaturity.toFixed(1)}%
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600">DD Score</div>
+                      <div className="text-muted-foreground">DD Score</div>
                       <div className="font-medium">
                         {trade.dueDiligenceScore}/100
                       </div>
