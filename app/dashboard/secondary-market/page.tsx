@@ -41,6 +41,8 @@ import {
   PieChart,
   Briefcase,
   Network,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface MarketStats {
@@ -182,10 +184,12 @@ export default function SecondaryMarketPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [industryFilter, setIndustryFilter] = useState<string>("all");
   const [riskFilter, setRiskFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Mock market statistics
   const marketStats: MarketStats = {
-    totalVolume: 847000000000,
+    totalVolume: 1847000000000, // Updated to reflect 15 loans
     activeListings: 234,
     avgDueDiligenceTime: 2.3,
     avgTransactionCost: 12500,
@@ -219,7 +223,7 @@ export default function SecondaryMarketPage() {
     { name: "Other", value: 5, color: "#94a3b8" },
   ];
 
-  // Mock loan listings
+  // Mock loan listings - 15 total positions
   const loanListings: LoanListing[] = [
     {
       id: "1",
@@ -323,12 +327,169 @@ export default function SecondaryMarketPage() {
       status: "active",
       riskLevel: "high",
     },
+    {
+      id: "7",
+      borrower: "Global Retail Partners",
+      originalLender: "Bank of America NA",
+      loanAmount: 95000000,
+      outstandingAmount: 89000000,
+      interestRate: 7.75,
+      maturityDate: "2030-11-20",
+      creditRating: "BBB",
+      industry: "Retail",
+      askingPrice: 87110000,
+      yieldToMaturity: 8.45,
+      dueDiligenceScore: 89,
+      listingDate: "2024-12-15",
+      status: "active",
+      riskLevel: "low",
+    },
+    {
+      id: "8",
+      borrower: "Apex Construction Corp",
+      originalLender: "Citibank NA",
+      loanAmount: 180000000,
+      outstandingAmount: 172000000,
+      interestRate: 9.25,
+      maturityDate: "2026-07-10",
+      creditRating: "B+",
+      industry: "Construction",
+      askingPrice: 165440000,
+      yieldToMaturity: 11.8,
+      dueDiligenceScore: 75,
+      listingDate: "2025-01-01",
+      status: "active",
+      riskLevel: "high",
+    },
+    {
+      id: "9",
+      borrower: "Quantum Pharmaceuticals",
+      originalLender: "HSBC Bank USA",
+      loanAmount: 65000000,
+      outstandingAmount: 61500000,
+      interestRate: 8.0,
+      maturityDate: "2029-05-25",
+      creditRating: "BB+",
+      industry: "Healthcare",
+      askingPrice: 60270000,
+      yieldToMaturity: 8.75,
+      dueDiligenceScore: 92,
+      listingDate: "2024-12-30",
+      status: "active",
+      riskLevel: "low",
+    },
+    {
+      id: "10",
+      borrower: "Sterling Hospitality Group",
+      originalLender: "PNC Bank NA",
+      loanAmount: 110000000,
+      outstandingAmount: 105000000,
+      interestRate: 8.75,
+      maturityDate: "2028-03-18",
+      creditRating: "BB-",
+      industry: "Hospitality",
+      askingPrice: 100800000,
+      yieldToMaturity: 9.65,
+      dueDiligenceScore: 79,
+      listingDate: "2024-12-25",
+      status: "active",
+      riskLevel: "medium",
+    },
+    {
+      id: "11",
+      borrower: "Frontier Mining Ltd",
+      originalLender: "Royal Bank of Canada",
+      loanAmount: 250000000,
+      outstandingAmount: 235000000,
+      interestRate: 10.5,
+      maturityDate: "2027-12-01",
+      creditRating: "B",
+      industry: "Mining",
+      askingPrice: 220750000,
+      yieldToMaturity: 14.2,
+      dueDiligenceScore: 65,
+      listingDate: "2025-01-03",
+      status: "under_review",
+      riskLevel: "high",
+    },
+    {
+      id: "12",
+      borrower: "Pacific Telecom Solutions",
+      originalLender: "TD Bank NA",
+      loanAmount: 80000000,
+      outstandingAmount: 76000000,
+      interestRate: 7.25,
+      maturityDate: "2030-09-15",
+      creditRating: "BBB-",
+      industry: "Technology",
+      askingPrice: 74480000,
+      yieldToMaturity: 7.95,
+      dueDiligenceScore: 87,
+      listingDate: "2024-12-18",
+      status: "active",
+      riskLevel: "low",
+    },
+    {
+      id: "13",
+      borrower: "Metro Transportation Inc",
+      originalLender: "US Bank NA",
+      loanAmount: 135000000,
+      outstandingAmount: 128000000,
+      interestRate: 8.95,
+      maturityDate: "2026-10-30",
+      creditRating: "BB",
+      industry: "Transportation & Logistics",
+      askingPrice: 121600000,
+      yieldToMaturity: 10.85,
+      dueDiligenceScore: 81,
+      listingDate: "2024-12-22",
+      status: "active",
+      riskLevel: "medium",
+    },
+    {
+      id: "14",
+      borrower: "Renewable Power Corp",
+      originalLender: "Credit Suisse",
+      loanAmount: 190000000,
+      outstandingAmount: 182000000,
+      interestRate: 6.75,
+      maturityDate: "2032-04-12",
+      creditRating: "A-",
+      industry: "Renewable Energy",
+      askingPrice: 180180000,
+      yieldToMaturity: 7.15,
+      dueDiligenceScore: 96,
+      listingDate: "2024-12-10",
+      status: "active",
+      riskLevel: "low",
+    },
+    {
+      id: "15",
+      borrower: "Urban Development Partners",
+      originalLender: "Morgan Stanley",
+      loanAmount: 220000000,
+      outstandingAmount: 208000000,
+      interestRate: 9.5,
+      maturityDate: "2027-08-20",
+      creditRating: "B-",
+      industry: "Real Estate",
+      askingPrice: 197520000,
+      yieldToMaturity: 12.4,
+      dueDiligenceScore: 70,
+      listingDate: "2025-01-02",
+      status: "sold",
+      riskLevel: "high",
+    },
   ];
 
   const filteredListings = loanListings.filter((listing) => {
     if (
       searchQuery &&
-      !listing.borrower.toLowerCase().includes(searchQuery.toLowerCase())
+      !listing.borrower.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !listing.originalLender
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) &&
+      !listing.industry.toLowerCase().includes(searchQuery.toLowerCase())
     ) {
       return false;
     }
@@ -343,6 +504,24 @@ export default function SecondaryMarketPage() {
     }
     return true;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredListings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedListings = filteredListings.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  const handleFilterChange = (filterType: string, value: string) => {
+    setCurrentPage(1);
+    if (filterType === "search") {
+      setSearchQuery(value);
+    } else if (filterType === "industry") {
+      setIndustryFilter(value);
+    } else if (filterType === "risk") {
+      setRiskFilter(value);
+    }
+  };
 
   return (
     <SidebarProvider
@@ -386,7 +565,7 @@ export default function SecondaryMarketPage() {
                           </h1>
                           <p className="text-base text-slate-300 max-w-xl leading-relaxed">
                             {user?.role === "lender"
-                              ? "Trade loan positions with institutional-grade automation. Access the $847B market with transparent pricing and AI-driven due diligence."
+                              ? "Trade loan positions with institutional-grade automation. Access the $1.8T market with transparent pricing and AI-driven due diligence."
                               : "Discover institutional-quality investment opportunities powered by real-time analytics and automated compliance checks."}
                           </p>
                         </div>
@@ -433,7 +612,7 @@ export default function SecondaryMarketPage() {
                                   Total Volume
                                 </p>
                                 <p className="text-2xl font-bold text-white mt-0.5">
-                                  $847B
+                                  $1.8T
                                 </p>
                               </div>
                               <Badge className="mb-3 bg-emerald-500/20 text-emerald-300 border-0 hover:bg-emerald-500/30 text-xs">
@@ -601,9 +780,11 @@ export default function SecondaryMarketPage() {
                         <div className="relative group flex-1">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                           <Input
-                            placeholder="Search borrower, loan ID, industry..."
+                            placeholder="Search borrower, lender, industry..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) =>
+                              handleFilterChange("search", e.target.value)
+                            }
                             className="pl-10 h-11 rounded-lg transition-all text-sm"
                           />
                         </div>
@@ -611,7 +792,9 @@ export default function SecondaryMarketPage() {
                         {/* Filters on the right */}
                         <Select
                           value={industryFilter}
-                          onValueChange={setIndustryFilter}
+                          onValueChange={(value) =>
+                            handleFilterChange("industry", value)
+                          }
                         >
                           <SelectTrigger className="w-auto min-w-32 h-11 rounded-lg text-sm">
                             <SelectValue placeholder="Industry" />
@@ -637,12 +820,25 @@ export default function SecondaryMarketPage() {
                             <SelectItem value="transportation & logistics">
                               Transportation
                             </SelectItem>
+                            <SelectItem value="retail">Retail</SelectItem>
+                            <SelectItem value="construction">
+                              Construction
+                            </SelectItem>
+                            <SelectItem value="hospitality">
+                              Hospitality
+                            </SelectItem>
+                            <SelectItem value="mining">Mining</SelectItem>
+                            <SelectItem value="real estate">
+                              Real Estate
+                            </SelectItem>
                           </SelectContent>
                         </Select>
 
                         <Select
                           value={riskFilter}
-                          onValueChange={setRiskFilter}
+                          onValueChange={(value) =>
+                            handleFilterChange("risk", value)
+                          }
                         >
                           <SelectTrigger className="w-auto min-w-24 h-11 rounded-lg text-sm">
                             <SelectValue placeholder="Risk" />
@@ -660,13 +856,72 @@ export default function SecondaryMarketPage() {
 
                   <CardContent className="p-0 bg-muted/30">
                     {activeTab === "marketplace" && (
-                      <LoanMarketplace
-                        listings={filteredListings}
-                        onViewDetails={(id) => console.log("View details:", id)}
-                        onStartDueDiligence={(id) =>
-                          console.log("Start DD:", id)
-                        }
-                      />
+                      <div className="space-y-4">
+                        <LoanMarketplace
+                          listings={paginatedListings}
+                          onViewDetails={(id) =>
+                            console.log("View details:", id)
+                          }
+                          onStartDueDiligence={(id) =>
+                            console.log("Start DD:", id)
+                          }
+                        />
+
+                        {/* Pagination */}
+                        {filteredListings.length > itemsPerPage && (
+                          <div className="flex items-center justify-between px-6 py-4 border-t bg-card">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>
+                                Showing {startIndex + 1} to{" "}
+                                {Math.min(endIndex, filteredListings.length)} of{" "}
+                                {filteredListings.length} results
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="h-8 w-8 p-0"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+
+                              <div className="flex items-center gap-1">
+                                {Array.from(
+                                  { length: totalPages },
+                                  (_, i) => i + 1
+                                ).map((page) => (
+                                  <Button
+                                    key={page}
+                                    variant={
+                                      currentPage === page
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    size="sm"
+                                    onClick={() => setCurrentPage(page)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    {page}
+                                  </Button>
+                                ))}
+                              </div>
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="h-8 w-8 p-0"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                     {activeTab === "due_diligence" && <DueDiligenceEngine />}
                     {activeTab === "trading" && <TradingDashboard />}
