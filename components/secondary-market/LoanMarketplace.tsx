@@ -371,7 +371,6 @@ export function LoanMarketplace({
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
                   {/* Borrower Info */}
                   <div className="col-span-3 flex items-center gap-3">
-                    <div className={`w-1 h-10 rounded-full ${riskConfig.bg}`} />
                     <div className="min-w-0 flex-1">
                       <h4 className="text-sm font-semibold truncate">
                         {listing.borrower}
