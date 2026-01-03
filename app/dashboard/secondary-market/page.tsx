@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/navigation";
 import { SiteHeader } from "@/components/layout";
 import { SidebarInset, SidebarProvider } from "@/components/ui/Sidebar";
@@ -22,14 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/Dialog";
 import { useAuth } from "@/hooks/useAuth";
 import {
   TrendingUp,
@@ -145,12 +138,12 @@ function StatCard({
 
 export default function SecondaryMarketPage() {
   const { auth } = useAuth();
+  const router = useRouter();
   const user = auth.user;
   const [searchQuery, setSearchQuery] = useState("");
   const [industryFilter, setIndustryFilter] = useState<string>("all");
   const [riskFilter, setRiskFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedLoan, setSelectedLoan] = useState<LoanListing | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const itemsPerPage = 10;
 
@@ -319,7 +312,7 @@ export default function SecondaryMarketPage() {
   };
 
   const onViewDetails = (id: string) => {
-    console.log("View details:", id);
+    router.push(`/dashboard/secondary-market/${id}`);
   };
 
   const onStartDueDiligence = (id: string) => {
@@ -1178,219 +1171,19 @@ export default function SecondaryMarketPage() {
                                             Available Actions
                                           </h4>
                                           <div className="space-y-3">
-                                            <Dialog>
-                                              <DialogTrigger asChild>
-                                                <Button
-                                                  variant="outline"
-                                                  className="w-full justify-between h-11"
-                                                  onClick={() =>
-                                                    setSelectedLoan(listing)
-                                                  }
-                                                >
-                                                  <span className="flex items-center gap-2">
-                                                    <Eye className="h-4 w-4" />
-                                                    View Details
-                                                  </span>
-                                                  <ArrowRight className="h-4 w-4" />
-                                                </Button>
-                                              </DialogTrigger>
-                                              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                                <DialogHeader>
-                                                  <DialogTitle className="flex items-center gap-2 text-lg">
-                                                    <Building className="h-5 w-5 text-muted-foreground" />
-                                                    {selectedLoan?.borrower}
-                                                  </DialogTitle>
-                                                  <DialogDescription>
-                                                    Complete loan position
-                                                    details and due diligence
-                                                    summary
-                                                  </DialogDescription>
-                                                </DialogHeader>
-                                                {selectedLoan && (
-                                                  <div className="mt-6 space-y-6">
-                                                    {/* Investment Summary */}
-                                                    <div className="bg-muted/50 rounded-xl p-6">
-                                                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                        <div className="space-y-1">
-                                                          <p className="text-xs text-muted-foreground">
-                                                            Asking Price
-                                                          </p>
-                                                          <p className="text-lg font-bold">
-                                                            {formatCurrency(
-                                                              selectedLoan.askingPrice
-                                                            )}
-                                                          </p>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                          <p className="text-xs text-muted-foreground">
-                                                            Discount
-                                                          </p>
-                                                          <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                                            {(
-                                                              ((selectedLoan.outstandingAmount -
-                                                                selectedLoan.askingPrice) /
-                                                                selectedLoan.outstandingAmount) *
-                                                              100
-                                                            ).toFixed(1)}
-                                                            %
-                                                          </p>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                          <p className="text-xs text-muted-foreground">
-                                                            Current Rate
-                                                          </p>
-                                                          <p className="text-lg font-bold">
-                                                            {
-                                                              selectedLoan.interestRate
-                                                            }
-                                                            %
-                                                          </p>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                          <p className="text-xs text-muted-foreground">
-                                                            Expected Return
-                                                          </p>
-                                                          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                                            {selectedLoan.yieldToMaturity.toFixed(
-                                                              2
-                                                            )}
-                                                            %
-                                                          </p>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-
-                                                    {/* Key Details */}
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                      <div>
-                                                        <h4 className="text-sm font-semibold mb-3">
-                                                          Loan Information
-                                                        </h4>
-                                                        <div className="space-y-2">
-                                                          {[
-                                                            {
-                                                              label:
-                                                                "Outstanding",
-                                                              value:
-                                                                formatCurrency(
-                                                                  selectedLoan.outstandingAmount
-                                                                ),
-                                                            },
-                                                            {
-                                                              label:
-                                                                "Maturity Date",
-                                                              value: new Date(
-                                                                selectedLoan.maturityDate
-                                                              ).toLocaleDateString(),
-                                                            },
-                                                            {
-                                                              label:
-                                                                "Original Lender",
-                                                              value:
-                                                                selectedLoan.originalLender,
-                                                            },
-                                                            {
-                                                              label: "Industry",
-                                                              value:
-                                                                selectedLoan.industry,
-                                                            },
-                                                          ].map((item, idx) => (
-                                                            <div
-                                                              key={idx}
-                                                              className="flex justify-between py-1"
-                                                            >
-                                                              <span className="text-sm text-muted-foreground">
-                                                                {item.label}
-                                                              </span>
-                                                              <span className="text-sm font-medium">
-                                                                {item.value}
-                                                              </span>
-                                                            </div>
-                                                          ))}
-                                                        </div>
-                                                      </div>
-
-                                                      <div>
-                                                        <h4 className="text-sm font-semibold mb-3">
-                                                          Risk Assessment
-                                                        </h4>
-                                                        <div className="space-y-2">
-                                                          <div className="flex justify-between py-1">
-                                                            <span className="text-sm text-muted-foreground">
-                                                              Credit Rating
-                                                            </span>
-                                                            <span
-                                                              className={`text-sm font-medium ${getRatingStyle(
-                                                                selectedLoan.creditRating
-                                                              )}`}
-                                                            >
-                                                              {
-                                                                selectedLoan.creditRating
-                                                              }
-                                                            </span>
-                                                          </div>
-                                                          <div className="flex justify-between py-1">
-                                                            <span className="text-sm text-muted-foreground">
-                                                              DD Score
-                                                            </span>
-                                                            <span
-                                                              className={`text-sm font-medium ${getScoreStyle(
-                                                                selectedLoan.dueDiligenceScore
-                                                              )}`}
-                                                            >
-                                                              {
-                                                                selectedLoan.dueDiligenceScore
-                                                              }
-                                                              /100
-                                                            </span>
-                                                          </div>
-                                                          <div className="flex justify-between py-1">
-                                                            <span className="text-sm text-muted-foreground">
-                                                              Status
-                                                            </span>
-                                                            <span>
-                                                              {getStatusBadge(
-                                                                selectedLoan.status
-                                                              )}
-                                                            </span>
-                                                          </div>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-
-                                                    {/* Actions */}
-                                                    <div className="flex gap-3 pt-4 border-t">
-                                                      <Button
-                                                        variant="outline"
-                                                        className="flex-1"
-                                                        onClick={() => {
-                                                          onStartDueDiligence(
-                                                            selectedLoan.id
-                                                          );
-                                                          toast.success(
-                                                            "Due diligence report generated"
-                                                          );
-                                                        }}
-                                                      >
-                                                        <FileSearch className="h-4 w-4 mr-2" />
-                                                        Due Diligence Report
-                                                      </Button>
-                                                      <Button
-                                                        className="flex-1"
-                                                        onClick={() => {
-                                                          toast.success(
-                                                            "Purchase interest submitted"
-                                                          );
-                                                        }}
-                                                      >
-                                                        <ShoppingCart className="h-4 w-4 mr-2" />
-                                                        Express Interest
-                                                      </Button>
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </DialogContent>
-                                            </Dialog>
+                                            <Button
+                                              variant="outline"
+                                              className="w-full justify-between h-11"
+                                              onClick={() =>
+                                                onViewDetails(listing.id)
+                                              }
+                                            >
+                                              <span className="flex items-center gap-2">
+                                                <Eye className="h-4 w-4" />
+                                                View Details
+                                              </span>
+                                              <ArrowRight className="h-4 w-4" />
+                                            </Button>
                                             <Button
                                               variant="outline"
                                               className="w-full justify-between h-11"
