@@ -145,7 +145,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Secondary Market section as a separate collapsible group
   const secondaryMarketItems = [
     {
-      title: "Market",
+      title: "Marketplace",
       url: "/dashboard/secondary-market",
       icon: ShoppingCart,
     },
