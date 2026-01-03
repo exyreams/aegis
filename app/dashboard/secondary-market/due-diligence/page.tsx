@@ -187,7 +187,7 @@ export default function DueDiligencePage() {
     }, 800); // 800ms per step
   };
 
-  const finishGeneration = (selectedLoan: any) => {
+  const finishGeneration = (selectedLoan: (typeof loansData)[0]) => {
     setTimeout(() => {
       setIsGenerating(false);
 
@@ -359,53 +359,72 @@ export default function DueDiligencePage() {
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col bg-background h-screen overflow-hidden">
-          {/* --- TOP COMMAND BAR --- */}
-          <div className="shrink-0 border-b bg-background z-20 px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 bg-primary/5 rounded-lg border border-primary/10 flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold tracking-tight text-foreground">
-                    Due Diligence Engine
-                  </h1>
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">
-                    Automated Document Analysis & Risk Grading
-                  </p>
-                </div>
+          {/* --- PAGE HEADER --- */}
+          <div className="shrink-0 border-b bg-background z-20 px-6 py-6">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                <Shield className="h-6 w-6 text-blue-600" />
               </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  Due Diligence Engine
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Automated document analysis & risk grading for secondary loan
+                  opportunities
+                </p>
+              </div>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-3">
+          {/* --- SEARCH & AUDIT BAR --- */}
+          <div className="shrink-0 bg-muted/30 border-b px-6 py-4">
+            <div className="flex items-center gap-6">
+              <div className="flex-1 max-w-md">
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Select Loan Position
+                </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Select
                     value={selectedLoanId}
                     onValueChange={setSelectedLoanId}
                   >
-                    <SelectTrigger className="w-[320px] pl-9 h-10 bg-muted/30">
-                      <SelectValue placeholder="Search Loan ID, ISIN, or Borrower..." />
+                    <SelectTrigger className="pl-9 h-11 bg-background border-border">
+                      <SelectValue placeholder="Search by borrower name, industry, or credit rating..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-[400px]">
                       {loansData.map((loan) => (
                         <SelectItem
                           key={loan.id}
                           value={loan.id}
                           className="py-3"
                         >
-                          <div className="flex flex-col gap-0.5">
+                          <div className="flex flex-col gap-1 w-full">
                             <div className="flex items-center justify-between gap-4">
-                              <span className="font-semibold text-sm">
+                              <span className="font-semibold text-sm text-foreground">
                                 {loan.borrower}
                               </span>
-                              <span className="text-xs font-mono">
+                              <span className="text-xs font-mono text-muted-foreground">
                                 {formatCurrency(loan.outstandingAmount)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <span>{loan.industry}</span>
-                              <span className="h-1 w-1 bg-muted-foreground/30 rounded-full"></span>
+                              <span>•</span>
                               <span>{loan.creditRating} Rated</span>
+                              <span>•</span>
+                              <span
+                                className={`font-medium ${
+                                  loan.riskLevel === "low"
+                                    ? "text-emerald-600"
+                                    : loan.riskLevel === "medium"
+                                    ? "text-amber-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {loan.riskLevel} risk
+                              </span>
                             </div>
                           </div>
                         </SelectItem>
@@ -413,24 +432,75 @@ export default function DueDiligencePage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
+              {/* Selected Loan Info */}
+              {selectedLoanId && (
+                <div className="flex-1 max-w-sm">
+                  <div className="text-sm font-medium text-foreground mb-2">
+                    Selected Position
+                  </div>
+                  <div className="bg-background border border-border rounded-lg p-3">
+                    {(() => {
+                      const selectedLoan = loansData.find(
+                        (loan) => loan.id === selectedLoanId
+                      );
+                      return selectedLoan ? (
+                        <div className="space-y-1">
+                          <div className="font-semibold text-sm">
+                            {selectedLoan.borrower}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{selectedLoan.industry}</span>
+                            <span>•</span>
+                            <span>
+                              {formatCurrency(selectedLoan.outstandingAmount)}
+                            </span>
+                            <span>•</span>
+                            <span
+                              className={`font-medium ${
+                                selectedLoan.riskLevel === "low"
+                                  ? "text-emerald-600"
+                                  : selectedLoan.riskLevel === "medium"
+                                  ? "text-amber-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {selectedLoan.riskLevel} risk
+                            </span>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-end gap-3">
                 <Button
                   onClick={generateDueDiligenceReport}
                   disabled={isGenerating || !selectedLoanId}
-                  className="h-10 px-5 shadow-sm font-semibold"
+                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                 >
                   {isGenerating ? (
                     <span className="flex items-center gap-2">
-                      <Zap className="h-4 w-4 animate-pulse" />
-                      Analyzing...
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Running Audit...
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
                       <FileCheck className="h-4 w-4" />
-                      Run Audit
+                      Run Due Diligence Audit
                     </span>
                   )}
                 </Button>
+
+                {selectedLoanId && (
+                  <Button variant="outline" className="h-11 px-4 border-border">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Report
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -682,21 +752,21 @@ export default function DueDiligencePage() {
                   {/* Custom Tabs */}
                   <div className="flex items-center justify-between">
                     <div className="flex bg-background border p-1 rounded-lg shadow-sm">
-                      {["all", "Financial", "Legal", "Market", "ESG"].map(
-                        (tab) => (
-                          <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab as any)}
-                            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
-                              activeTab === tab
-                                ? "bg-muted text-foreground font-semibold shadow-sm"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                            }`}
-                          >
-                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                          </button>
-                        )
-                      )}
+                      {(
+                        ["all", "Financial", "Legal", "Market", "ESG"] as const
+                      ).map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => setActiveTab(tab)}
+                          className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
+                            activeTab === tab
+                              ? "bg-muted text-foreground font-semibold shadow-sm"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        </button>
+                      ))}
                     </div>
                     <Button
                       variant="outline"
@@ -793,7 +863,7 @@ export default function DueDiligencePage() {
                                     )}
                                   </div>
                                   <div className="pl-2 border-l-2 border-primary/20 italic text-muted-foreground font-serif bg-background/50 p-1.5 rounded-r">
-                                    "{check.citation.textSnippet}"
+                                    &ldquo;{check.citation.textSnippet}&rdquo;
                                   </div>
                                 </div>
                               )}
