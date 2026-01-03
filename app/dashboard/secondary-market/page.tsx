@@ -45,11 +45,12 @@ import {
   Briefcase,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Eye,
   Building,
   AlertTriangle,
   CheckCircle,
-  DollarSign,
   ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -702,7 +703,7 @@ export default function SecondaryMarketPage() {
 
                   <CardContent className="px-0">
                     {/* Table Header */}
-                    <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-6 py-4 bg-muted/30 border-b border-border/50">
+                    <div className="hidden lg:grid lg:grid-cols-12 gap-4 mx-4 mt-2 px-6 py-4 bg-muted/30 border border-border/50 rounded-lg">
                       <div className="col-span-3">
                         <span className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                           Borrower / Lender
@@ -906,11 +907,23 @@ export default function SecondaryMarketPage() {
                                   </div>
                                   <div className="flex items-center gap-3">
                                     {getStatusBadge(listing.status)}
-                                    <ChevronRight
-                                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                                        isExpanded ? "rotate-90" : ""
-                                      }`}
-                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setExpandedId(
+                                          isExpanded ? null : listing.id
+                                        );
+                                      }}
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </Button>
                                   </div>
                                 </div>
                               </div>
@@ -920,17 +933,16 @@ export default function SecondaryMarketPage() {
                             {isExpanded && (
                               <div className="border-t">
                                 <div className="p-6">
-                                  <div className="bg-card rounded-xl border p-6 shadow-sm">
+                                  <div className="bg-card rounded-xl p-2 shadow-sm">
                                     <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
                                       {/* Main Details Section */}
                                       <div className="xl:col-span-3 space-y-6">
                                         {/* Investment Overview */}
                                         <div>
                                           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                                            <DollarSign className="h-4 w-4" />
                                             Investment Overview
                                           </h4>
-                                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                             <div className="space-y-1">
                                               <p className="text-xs text-muted-foreground">
                                                 Asking Price
@@ -969,12 +981,144 @@ export default function SecondaryMarketPage() {
                                               </p>
                                             </div>
                                           </div>
+
+                                          {/* Additional Investment Metrics */}
+                                          <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+                                            <h5 className="text-sm font-semibold text-foreground">
+                                              Investment Analysis
+                                            </h5>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                              <div className="space-y-1">
+                                                <p className="text-xs text-muted-foreground">
+                                                  Break-even Period
+                                                </p>
+                                                <p className="text-sm font-semibold">
+                                                  {Math.round(
+                                                    (listing.askingPrice /
+                                                      ((listing.outstandingAmount *
+                                                        listing.interestRate) /
+                                                        100)) *
+                                                      12
+                                                  )}{" "}
+                                                  months
+                                                </p>
+                                              </div>
+                                              <div className="space-y-1">
+                                                <p className="text-xs text-muted-foreground">
+                                                  Total Return Potential
+                                                </p>
+                                                <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                                  {formatCurrency(
+                                                    listing.outstandingAmount -
+                                                      listing.askingPrice
+                                                  )}
+                                                </p>
+                                              </div>
+                                              <div className="space-y-1">
+                                                <p className="text-xs text-muted-foreground">
+                                                  Risk-Adjusted Return
+                                                </p>
+                                                <p className="text-sm font-semibold">
+                                                  {(
+                                                    listing.yieldToMaturity *
+                                                    (listing.dueDiligenceScore /
+                                                      100)
+                                                  ).toFixed(2)}
+                                                  %
+                                                </p>
+                                              </div>
+                                              <div className="space-y-1">
+                                                <p className="text-xs text-muted-foreground">
+                                                  Monthly Cash Flow
+                                                </p>
+                                                <p className="text-sm font-semibold">
+                                                  {formatCurrency(
+                                                    (listing.outstandingAmount *
+                                                      listing.interestRate) /
+                                                      100 /
+                                                      12
+                                                  )}
+                                                </p>
+                                              </div>
+                                              <div className="space-y-1">
+                                                <p className="text-xs text-muted-foreground">
+                                                  Price-to-Par Ratio
+                                                </p>
+                                                <p className="text-sm font-semibold">
+                                                  {(
+                                                    listing.askingPrice /
+                                                    listing.outstandingAmount
+                                                  ).toFixed(3)}
+                                                  x
+                                                </p>
+                                              </div>
+                                              <div className="space-y-1">
+                                                <p className="text-xs text-muted-foreground">
+                                                  Yield Spread vs Market
+                                                </p>
+                                                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                                  +
+                                                  {(
+                                                    listing.yieldToMaturity -
+                                                    7.5
+                                                  ).toFixed(2)}
+                                                  %
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          {/* Investment Highlights */}
+                                          <div className="pl-4 bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-r-lg">
+                                            <h5 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">
+                                              Key Investment Highlights
+                                            </h5>
+                                            <ul className="space-y-1 text-xs text-blue-600 dark:text-blue-400">
+                                              <li>
+                                                •{" "}
+                                                {discountPercentage.toFixed(1)}%
+                                                discount to par value
+                                              </li>
+                                              <li>
+                                                •{" "}
+                                                {listing.yieldToMaturity > 10
+                                                  ? "High"
+                                                  : listing.yieldToMaturity > 7
+                                                  ? "Attractive"
+                                                  : "Moderate"}{" "}
+                                                yield potential at{" "}
+                                                {listing.yieldToMaturity.toFixed(
+                                                  2
+                                                )}
+                                                %
+                                              </li>
+                                              <li>
+                                                •{" "}
+                                                {daysToMaturity < 365
+                                                  ? "Short-term"
+                                                  : daysToMaturity < 1095
+                                                  ? "Medium-term"
+                                                  : "Long-term"}{" "}
+                                                maturity ({daysToMaturity} days)
+                                              </li>
+                                              <li>
+                                                •{" "}
+                                                {listing.dueDiligenceScore >= 90
+                                                  ? "Excellent"
+                                                  : listing.dueDiligenceScore >=
+                                                    75
+                                                  ? "Good"
+                                                  : "Fair"}{" "}
+                                                due diligence score (
+                                                {listing.dueDiligenceScore}/100)
+                                              </li>
+                                            </ul>
+                                          </div>
                                         </div>
 
                                         {/* Loan Details */}
                                         <div>
                                           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                                            <Briefcase className="h-4 w-4" />
                                             Loan Details
                                           </h4>
                                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
