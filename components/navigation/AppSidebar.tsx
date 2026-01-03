@@ -21,6 +21,10 @@ import {
   BarChart3,
   Scale,
   Settings,
+  ShoppingCart,
+  FileSearch,
+  Briefcase,
+  PieChart,
 } from "lucide-react";
 
 import { NavMain } from "@/components/navigation/NavMain";
@@ -138,6 +142,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
+  // Secondary Market section as a separate collapsible group
+  const secondaryMarketItems = [
+    {
+      title: "Market",
+      url: "/dashboard/secondary-market",
+      icon: ShoppingCart,
+    },
+    {
+      title: "Due Diligence",
+      url: "/dashboard/secondary-market/due-diligence",
+      icon: FileSearch,
+    },
+    {
+      title: "Portfolio",
+      url: "/dashboard/secondary-market/portfolio",
+      icon: Briefcase,
+    },
+    {
+      title: "Analytics",
+      url: "/dashboard/secondary-market/analytics",
+      icon: PieChart,
+    },
+  ];
+
   // User data from authenticated user (only when available)
   const userData = auth.user
     ? {
@@ -170,6 +198,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           esgItems={esgItems}
           documentsItems={documentsItems}
           loansItems={loansItems}
+          secondaryMarketItems={secondaryMarketItems}
         />
       </SidebarContent>
       <SidebarFooter>

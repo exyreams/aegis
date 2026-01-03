@@ -33,6 +33,7 @@ function getInitialExpanded(pathname: string): Record<string, boolean> {
     documents: pathname.startsWith("/dashboard/documents"),
     esg: pathname.startsWith("/dashboard/esg"),
     loans: pathname.startsWith("/dashboard/loans"),
+    secondaryMarket: pathname.startsWith("/dashboard/secondary-market"),
   };
 }
 
@@ -41,6 +42,7 @@ export function NavMain({
   esgItems,
   documentsItems,
   loansItems,
+  secondaryMarketItems,
 }: {
   items: {
     title?: string;
@@ -60,6 +62,11 @@ export function NavMain({
     icon?: ComponentType<{ className?: string; size?: number }>;
   }[];
   loansItems?: {
+    title?: string;
+    url?: string;
+    icon?: ComponentType<{ className?: string; size?: number }>;
+  }[];
+  secondaryMarketItems?: {
     title?: string;
     url?: string;
     icon?: ComponentType<{ className?: string; size?: number }>;
@@ -96,11 +103,18 @@ export function NavMain({
     if (pathname.startsWith("/dashboard/loans") && !expandedSections.loans) {
       setExpandedSections((prev) => ({ ...prev, loans: true }));
     }
+    if (
+      pathname.startsWith("/dashboard/secondary-market") &&
+      !expandedSections.secondaryMarket
+    ) {
+      setExpandedSections((prev) => ({ ...prev, secondaryMarket: true }));
+    }
   }
 
   const isDocumentsExpanded = expandedSections.documents;
   const isESGExpanded = expandedSections.esg;
   const isLoansExpanded = expandedSections.loans;
+  const isSecondaryMarketExpanded = expandedSections.secondaryMarket;
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({
@@ -111,6 +125,9 @@ export function NavMain({
 
   const isDocumentsActive = pathname.startsWith("/dashboard/documents");
   const isLoansActive = pathname.startsWith("/dashboard/loans");
+  const isSecondaryMarketActive = pathname.startsWith(
+    "/dashboard/secondary-market"
+  );
 
   return (
     <SidebarGroup>
@@ -471,33 +488,108 @@ export function NavMain({
             </>
           )}
 
-          {/* Secondary Market - at the end with cyan theme */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Secondary Market"
-              isActive={pathname.startsWith("/dashboard/secondary-market")}
-              className={cn(
-                "group/market transition-all duration-300",
-                "hover:bg-cyan-50 dark:hover:bg-cyan-950/30",
-                pathname.startsWith("/dashboard/secondary-market")
-                  ? "bg-cyan-50 dark:bg-cyan-950/30 text-cyan-600 dark:text-cyan-400"
-                  : "hover:text-cyan-600 dark:hover:text-cyan-400"
-              )}
-            >
-              <Link href="/dashboard/secondary-market">
-                <SecondaryMarket
-                  className={cn(
-                    "transition-colors",
-                    pathname.startsWith("/dashboard/secondary-market")
-                      ? "text-cyan-500"
-                      : "text-muted-foreground group-hover/market:text-cyan-500"
-                  )}
-                />
-                <span>Secondary Market</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Secondary Market Collapsible Section */}
+          {secondaryMarketItems && secondaryMarketItems.length > 0 && (
+            <>
+              {/* --- Secondary Market Header --- */}
+              <SidebarMenuItem>
+                <div className="relative">
+                  <SidebarMenuButton
+                    onClick={() => toggleSection("secondaryMarket")}
+                    className={cn(
+                      "group/market w-full justify-between transition-all duration-300 cursor-pointer",
+                      "hover:bg-cyan-50 dark:hover:bg-cyan-950/30",
+                      isSecondaryMarketActive
+                        ? "text-cyan-600 dark:text-cyan-400"
+                        : "hover:text-cyan-600 dark:hover:text-cyan-400"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <SecondaryMarket
+                        className={cn(
+                          "h-4 w-4 transition-colors",
+                          isSecondaryMarketActive
+                            ? "text-cyan-500"
+                            : "text-muted-foreground group-hover/market:text-cyan-500"
+                        )}
+                      />
+                      <span className="font-semibold tracking-wide">
+                        Secondary Market
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        "transition-transform duration-300 ease-in-out",
+                        isSecondaryMarketExpanded ? "rotate-180" : "rotate-0"
+                      )}
+                    >
+                      <ChevronDown className="h-4 w-4 opacity-70" />
+                    </div>
+                  </SidebarMenuButton>
+                </div>
+              </SidebarMenuItem>
+
+              {/* --- Secondary Market Sub-Items --- */}
+              <AnimatePresence initial={false}>
+                {isSecondaryMarketExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="relative overflow-hidden ml-2 pl-2 group-data-[collapsible=icon]:hidden"
+                  >
+                    {/* Vine connector line */}
+                    <div className="absolute left-2 top-2 bottom-0 w-px bg-linear-to-b from-cyan-500/30 via-cyan-500/10 to-transparent" />
+
+                    <div className="space-y-1">
+                      {secondaryMarketItems.map((item) => {
+                        let isActive = false;
+                        if (item.url === "/dashboard/secondary-market") {
+                          isActive = pathname === "/dashboard/secondary-market";
+                        } else if (item.url) {
+                          isActive = pathname.startsWith(item.url);
+                        }
+
+                        return (
+                          <SidebarMenuItem
+                            key={item.title}
+                            className="relative pl-4"
+                          >
+                            <SidebarMenuButton
+                              asChild
+                              tooltip={item.title}
+                              isActive={isActive}
+                              className={cn(
+                                "h-8 text-sm transition-all duration-300",
+                                isActive
+                                  ? "bg-cyan-50 dark:bg-cyan-950/30 text-cyan-600 dark:text-cyan-400 font-medium"
+                                  : "hover:bg-cyan-50 dark:hover:bg-cyan-950/20 hover:text-cyan-600 dark:hover:text-cyan-400"
+                              )}
+                            >
+                              <Link href={item.url || "#"}>
+                                {item.icon && (
+                                  <item.icon
+                                    className={cn(
+                                      "h-4 w-4 mr-2 transition-colors",
+                                      isActive
+                                        ? "text-cyan-500"
+                                        : "text-muted-foreground group-hover:text-cyan-500"
+                                    )}
+                                  />
+                                )}
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
