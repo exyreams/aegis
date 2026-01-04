@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
@@ -534,119 +535,99 @@ export function CovenantMonitor() {
         </Card>
       </div>
 
-      {/* Covenant Details */}
-      <div className="space-y-4">
-        {filteredCovenants.map((covenant) => (
-          <Card key={covenant.id}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Badge variant="outline" className="text-xs">
-                      {covenant.category}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {covenant.testFrequency}
-                    </Badge>
+      {/* Covenant Details - Table View */}
+      <div className="rounded-md border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Borrower / Loan</TableHead>
+              <TableHead>Covenant</TableHead>
+              <TableHead>Current vs Threshold</TableHead>
+              <TableHead>Compliance</TableHead>
+              <TableHead>Next Test</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredCovenants.map((covenant) => (
+              <TableRow key={covenant.id} className="cursor-pointer hover:bg-muted/50">
+                <TableCell className="max-w-[200px]">
+                  <div className="font-medium truncate">{covenant.borrower}</div>
+                  <div className="text-xs text-muted-foreground truncate">{covenant.loanName}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-sm">{covenant.name}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                     <Badge variant="outline" className="text-[10px] px-1 py-0 h-5">
+                       {covenant.category}
+                     </Badge>
+                     <Badge variant="outline" className="text-[10px] px-1 py-0 h-5">
+                       {covenant.testFrequency}
+                     </Badge>
                   </div>
-                  <CardTitle className="text-base">{covenant.name}</CardTitle>
-                  <p className="text-sm text-gray-600">
-                    {covenant.borrower} • {covenant.loanName}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {getTrendIcon(covenant.trend)}
-                  <Badge className={getStatusColor(covenant.status)}>
-                    {getStatusIcon(covenant.status)}
-                    <span className="ml-1 capitalize">{covenant.status}</span>
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-gray-700">{covenant.description}</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span>
-                      Current:{" "}
-                      {formatValue(covenant.currentValue, covenant.unit)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col text-sm">
+                    <span className="font-medium">
+                        {formatValue(covenant.currentValue, covenant.unit)}
                     </span>
-                    <span>
-                      Threshold: {covenant.operator}{" "}
-                      {formatValue(covenant.threshold, covenant.unit)}
+                    <span className="text-xs text-muted-foreground">
+                        Target: {covenant.operator} {formatValue(covenant.threshold, covenant.unit)}
                     </span>
                   </div>
-                  <Progress
-                    value={calculateCompliancePercentage(
-                      covenant.currentValue,
-                      covenant.threshold,
-                      covenant.operator
-                    )}
-                    className="h-2"
-                  />
-                  <div className="text-xs text-gray-600 mt-1">
-                    Compliance:{" "}
-                    {Math.round(
-                      calculateCompliancePercentage(
-                        covenant.currentValue,
-                        covenant.threshold,
-                        covenant.operator
-                      )
-                    )}
-                    %
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Last Test:</span>
-                    <span>{covenant.lastTestDate}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Next Test:</span>
-                    <span className="font-medium">{covenant.nextTestDate}</span>
-                  </div>
-                  {covenant.cureDate && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Cure Date:</span>
-                      <span className="font-medium text-red-600">
-                        {covenant.cureDate}
-                      </span>
+                </TableCell>
+                <TableCell className="w-[180px]">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Progress
+                            value={calculateCompliancePercentage(
+                            covenant.currentValue,
+                            covenant.threshold,
+                            covenant.operator
+                            )}
+                            className="h-1.5 w-24"
+                        />
+                        <span className="text-xs font-medium">
+                            {Math.round(
+                            calculateCompliancePercentage(
+                                covenant.currentValue,
+                                covenant.threshold,
+                                covenant.operator
+                            )
+                            )}%
+                        </span>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm font-medium text-gray-800 mb-1">
-                  Breach Consequence
-                </div>
-                <div className="text-sm text-gray-700">
-                  {covenant.breachConsequence}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-600">
-                  Historical data: {covenant.historicalValues.length} data
-                  points
-                </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-1" />
-                    View History
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <FileText className="h-4 w-4 mr-1" />
-                    Update Value
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                     <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        Trend: {getTrendIcon(covenant.trend)} 
+                        <span className="capitalize">{covenant.trend}</span>
+                     </div>
+                </TableCell>
+                <TableCell>
+                    <div className="text-sm">{covenant.nextTestDate}</div>
+                    {covenant.cureDate && (
+                        <div className="text-xs text-red-600 font-medium">Cure: {covenant.cureDate}</div>
+                    )}
+                </TableCell>
+                <TableCell>
+                   <Badge className={`${getStatusColor(covenant.status)} border-0`}>
+                    {getStatusIcon(covenant.status)}
+                    <span className="ml-1 capitalize">{covenant.status.replace("_", " ")}</span>
+                  </Badge>
+                </TableCell>
+                 <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <FileText className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

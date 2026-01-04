@@ -46,7 +46,17 @@ import {
   Target,
   BarChart3,
   Share2,
+  TrendingUp,
+  ShieldAlert,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
 
 interface LoanCompliance {
   id: string;
@@ -227,72 +237,90 @@ export default function CompliancePage() {
                 </div>
               </div>
 
-              {/* Overview Stats */}
+              {/* Overview Stats - Premium Cards Refined */}
               <div className="px-4 lg:px-6">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <Card>
+                  <Card className="bg-zinc-900/50 border-zinc-800/50 hover:border-primary/30 transition-all backdrop-blur-sm shadow-sm">
                     <CardHeader className="pb-2">
-                      <CardDescription>Total Portfolio</CardDescription>
-                      <CardTitle className="text-3xl font-bold">
+                       <div className="flex items-center justify-between">
+                        <CardDescription className="text-zinc-400 font-medium tracking-tight">Total Portfolio</CardDescription>
+                        <Shield className="h-4 w-4 text-zinc-500" />
+                      </div>
+                      <CardTitle className="text-3xl font-bold tracking-tighter">
                         ${(overallStats.totalValue / 1000000).toFixed(0)}M
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Target className="h-4 w-4 mr-1" />
-                        {overallStats.totalLoans} active loans
+                      <div className="flex items-center justify-between">
+                         <div className="flex items-center text-sm text-zinc-500">
+                            <Target className="h-3.5 w-3.5 mr-1.5" />
+                            <span>{overallStats.totalLoans} active loans</span>
+                          </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="bg-zinc-900/50 border-zinc-800/50 hover:border-green-500/30 transition-all backdrop-blur-sm shadow-sm">
                     <CardHeader className="pb-2">
-                      <CardDescription>Compliance Rate</CardDescription>
-                      <CardTitle className="text-3xl font-bold text-green-600">
-                        {Math.round(
-                          (overallStats.compliantCovenants /
-                            overallStats.totalCovenants) *
-                            100
-                        )}
-                        %
+                       <div className="flex items-center justify-between">
+                        <CardDescription className="text-zinc-400 font-medium tracking-tight">Compliance Rate</CardDescription>
+                        <CheckCircle className="h-4 w-4 text-green-500/80" />
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <CardTitle className="text-3xl font-bold tracking-tighter text-green-500/90">
+                            {Math.round(
+                            (overallStats.compliantCovenants /
+                                overallStats.totalCovenants) *
+                                100
+                            )}%
+                        </CardTitle>
+                        <span className="text-xs font-semibold uppercase text-zinc-500 tracking-wider">Overall</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="w-full bg-zinc-800/50 h-1 rounded-full mt-1 mb-2 overflow-hidden">
+                             <div className="bg-green-500/80 h-full rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)]" style={{ width: `${Math.round((overallStats.compliantCovenants / overallStats.totalCovenants) * 100)}%` }} />
+                        </div>
+                       <div className="flex items-center text-[11px] text-zinc-500 font-medium">
+                        <span>{overallStats.compliantCovenants}/{overallStats.totalCovenants} covenants passing</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-zinc-900/50 border-zinc-800/50 hover:border-yellow-500/30 transition-all backdrop-blur-sm relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/5 rounded-bl-full -mr-10 -mt-10" />
+                    <CardHeader className="pb-2">
+                       <div className="flex items-center justify-between">
+                        <CardDescription className="text-zinc-400 font-medium tracking-tight">At Risk</CardDescription>
+                         <AlertTriangle className="h-4 w-4 text-yellow-500/80" />
+                      </div>
+                      <CardTitle className="text-3xl font-bold tracking-tighter text-yellow-500/90">
+                        {overallStats.atRisk}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        {overallStats.compliantCovenants} of{" "}
-                        {overallStats.totalCovenants} covenants
-                      </div>
+                       <div className="mt-2 text-[11px] font-bold text-yellow-500/90 bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-1 rounded-md w-fit flex items-center">
+                          <AlertTriangle className="h-3 w-3 mr-1.5" />
+                          REQUIRES REVIEW
+                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardDescription>Compliant Loans</CardDescription>
-                      <CardTitle className="text-3xl font-bold text-green-600">
-                        {overallStats.compliant}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Shield className="h-4 w-4 mr-1" />
-                        Fully compliant
+                  <Card className="bg-red-950/20 border-red-900/30 hover:border-red-500/30 transition-all relative overflow-hidden shadow-sm">
+                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-600/50 via-red-500/20 to-transparent" />
+                    <CardHeader className="pb-2 relative">
+                       <div className="flex items-center justify-between">
+                        <CardDescription className="text-red-400 font-medium tracking-tight">Major Breaches</CardDescription>
+                        <ShieldAlert className="h-4 w-4 text-red-500/80" />
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardDescription>Needs Attention</CardDescription>
-                      <CardTitle className="text-3xl font-bold text-red-600">
+                      <CardTitle className="text-3xl font-bold tracking-tighter text-red-500">
                         {overallStats.breach}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <AlertTriangle className="h-4 w-4 mr-1" />
-                        Covenant breaches
-                      </div>
+                    <CardContent className="relative">
+                      <Button size="sm" variant="destructive" className="w-full mt-2 h-8 text-[11px] font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20">
+                        Resolve Breaches
+                      </Button>
                     </CardContent>
                   </Card>
                 </div>
@@ -451,82 +479,55 @@ export default function CompliancePage() {
                           <h3 className="text-lg font-semibold">
                             Loan Portfolio
                           </h3>
-                          {loanCompliance.map((loan) => (
-                            <Card key={loan.id}>
-                              <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <CardTitle className="text-lg">
+                          <div className="rounded-md border bg-card">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Borrower</TableHead>
+                                  <TableHead>Loan Amount</TableHead>
+                                  <TableHead>Maturity</TableHead>
+                                  <TableHead>Covenants</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {loanCompliance.map((loan) => (
+                                  <TableRow key={loan.id} className="hover:bg-muted/50 cursor-pointer transition-colors">
+                                    <TableCell className="font-medium">
                                       {loan.borrower}
-                                    </CardTitle>
-                                    <p className="text-sm text-gray-600">
-                                      ${(loan.loanAmount / 1000000).toFixed(0)}M
-                                      • {loan.startDate} to {loan.maturityDate}
-                                    </p>
-                                  </div>
-                                  <Badge
-                                    className={getStatusColor(
-                                      loan.overallStatus
-                                    )}
-                                  >
-                                    {getStatusIcon(loan.overallStatus)}
-                                    <span className="ml-1 capitalize">
-                                      {loan.overallStatus.replace("_", " ")}
-                                    </span>
-                                  </Badge>
-                                </div>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-green-600">
-                                      {loan.compliantCovenants}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Compliant
-                                    </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-yellow-600">
-                                      {loan.atRiskCovenants}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      At Risk
-                                    </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-red-600">
-                                      {loan.breachedCovenants}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Breached
-                                    </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-gray-900">
-                                      {loan.totalCovenants}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Total
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center justify-between text-sm">
-                                  <div className="flex items-center">
-                                    <Calendar className="h-4 w-4 mr-1 text-gray-500" />
-                                    <span>
-                                      Last reported: {loan.lastReported}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                                    <span>Next due: {loan.nextReporting}</span>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
+                                      <div className="text-xs text-muted-foreground">ID: {loan.id}</div>
+                                    </TableCell>
+                                    <TableCell>${(loan.loanAmount / 1000000).toFixed(1)}M</TableCell>
+                                    <TableCell>{new Date(loan.maturityDate).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2 text-xs">
+                                         <span className="text-green-600 font-medium">{loan.compliantCovenants} Pass</span>
+                                         <span className="text-muted-foreground">/</span>
+                                         <span>{loan.totalCovenants} Total</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge
+                                        variant="outline"
+                                        className={`${getStatusColor(loan.overallStatus)} border-0`}
+                                      >
+                                        {getStatusIcon(loan.overallStatus)}
+                                        <span className="ml-1 capitalize">
+                                          {loan.overallStatus.replace("_", " ")}
+                                        </span>
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <Button variant="ghost" size="sm">
+                                        View
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
                       </div>
                     )}

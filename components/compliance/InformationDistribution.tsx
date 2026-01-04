@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Textarea } from "@/components/ui/Textarea";
+
 import {
   Select,
   SelectContent,
@@ -15,29 +14,17 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/Dialog";
-import {
   Send,
   Upload,
-  Download,
-  Calendar,
   Clock,
   CheckCircle,
   AlertTriangle,
   Users,
   FileText,
-  Mail,
   Bell,
   Eye,
   Plus,
 } from "lucide-react";
-import { toast } from "sonner";
 
 interface InformationRequest {
   id: string;
@@ -108,8 +95,7 @@ export function InformationDistribution() {
   const [activeTab, setActiveTab] = useState<
     "requests" | "notifications" | "events"
   >("requests");
-  const [isNewRequestOpen, setIsNewRequestOpen] = useState(false);
-  const [isNewEventOpen, setIsNewEventOpen] = useState(false);
+
   const [selectedLoan, setSelectedLoan] = useState<string>("all");
 
   // Mock information requests - realistic loan market scenarios
@@ -486,7 +472,7 @@ export function InformationDistribution() {
             <Card>
               <CardContent className="p-4">
                 <div className="text-2xl font-bold">{requestStats.total}</div>
-                <div className="text-sm text-gray-600">Total Requests</div>
+                <div className="text-sm text-muted-foreground">Total Requests</div>
               </CardContent>
             </Card>
             <Card>
@@ -494,7 +480,7 @@ export function InformationDistribution() {
                 <div className="text-2xl font-bold text-yellow-600">
                   {requestStats.pending}
                 </div>
-                <div className="text-sm text-gray-600">Pending</div>
+                <div className="text-sm text-muted-foreground">Pending</div>
               </CardContent>
             </Card>
             <Card>
@@ -502,7 +488,7 @@ export function InformationDistribution() {
                 <div className="text-2xl font-bold text-red-600">
                   {requestStats.overdue}
                 </div>
-                <div className="text-sm text-gray-600">Overdue</div>
+                <div className="text-sm text-muted-foreground">Overdue</div>
               </CardContent>
             </Card>
             <Card>
@@ -510,117 +496,75 @@ export function InformationDistribution() {
                 <div className="text-2xl font-bold text-blue-600">
                   {requestStats.submitted}
                 </div>
-                <div className="text-sm text-gray-600">Submitted</div>
+                <div className="text-sm text-muted-foreground">Submitted</div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Request List */}
-          <div className="space-y-4">
+          {/* Request List - Table Refactor */}
+          <div className="rounded-md border bg-card/50 backdrop-blur-sm overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/30">
+            <TableRow>
+              <TableHead className="w-[220px]">Request / Source</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredRequests.map((request) => (
-              <Card key={request.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Badge variant="outline" className="text-xs">
-                          {request.requestType.replace("_", " ")}
-                        </Badge>
-                        <Badge
-                          className={getPriorityColor(request.priority)}
-                          variant="secondary"
-                        >
-                          {request.priority}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-base">
-                        {request.title}
-                      </CardTitle>
-                      <p className="text-sm text-gray-600">
-                        {request.borrower} • {request.loanName}
-                      </p>
-                    </div>
-                    <Badge className={getStatusColor(request.status)}>
+              <TableRow key={request.id} className="cursor-pointer hover:bg-muted/40 transition-colors group">
+                <TableCell>
+                  <div className="font-semibold text-sm group-hover:text-primary transition-colors">{request.title}</div>
+                  <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                     <Users className="h-3 w-3" /> {request.requestedBy}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-[10px] px-1.5 h-5 capitalize">
+                    {request.requestType.replace("_", " ")}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{request.dueDate}</span>
+                    <span className="text-[10px] text-muted-foreground">Req: {request.requestDate}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                   <Badge className={`${getPriorityColor(request.priority)} border-0 px-2 h-6 text-xs`}>
+                    {request.priority}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                   <Badge className={`${getStatusColor(request.status)} border-0 shadow-none px-2 h-6`}>
+                    <div className="flex items-center gap-1.5 text-xs">
                       {getStatusIcon(request.status)}
-                      <span className="ml-1 capitalize">
-                        {request.status.replace("_", " ")}
-                      </span>
-                    </Badge>
+                      <span className="capitalize">{request.status.replace("_", " ")}</span>
+                    </div>
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-xs">
+                        <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-xs">
+                        <Upload className="h-3.5 w-3.5" />
+                    </Button>
+                     <Button variant="ghost" size="icon" className="h-7 w-7 text-xs">
+                        <Send className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-gray-700">{request.description}</p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Requested by:</span>
-                      <span className="ml-1 font-medium">
-                        {request.requestedBy}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Due Date:</span>
-                      <span
-                        className={`ml-1 font-medium ${
-                          new Date(request.dueDate) < new Date()
-                            ? "text-red-600"
-                            : ""
-                        }`}
-                      >
-                        {request.dueDate}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Documents:</span>
-                      <span className="ml-1 font-medium">
-                        {request.documents.length} files
-                      </span>
-                    </div>
-                  </div>
-
-                  {request.comments.length > 0 && (
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <div className="text-sm font-medium mb-2">
-                        Latest Comment
-                      </div>
-                      <div className="text-sm text-gray-700">
-                        <span className="font-medium">
-                          {request.comments[request.comments.length - 1].author}
-                          :
-                        </span>
-                        <span className="ml-1">
-                          {
-                            request.comments[request.comments.length - 1]
-                              .message
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-600">
-                      Requested: {request.requestDate}
-                      {request.submittedDate &&
-                        ` • Submitted: ${request.submittedDate}`}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
-                      {request.status === "pending" && (
-                        <Button size="sm">
-                          <Upload className="h-4 w-4 mr-1" />
-                          Submit Response
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </TableCell>
+              </TableRow>
             ))}
-          </div>
+          </TableBody>
+        </Table>
+      </div>
         </div>
       )}
 
@@ -644,7 +588,7 @@ export function InformationDistribution() {
                       <CardTitle className="text-base">
                         {template.name}
                       </CardTitle>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {template.type.replace("_", " ")} • {template.frequency}
                       </p>
                     </div>
@@ -656,13 +600,13 @@ export function InformationDistribution() {
                 <CardContent className="space-y-3">
                   <div>
                     <div className="text-sm font-medium mb-1">Subject</div>
-                    <div className="text-sm text-gray-700">
+                    <div className="text-sm text-foreground/80">
                       {template.subject}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm font-medium mb-1">Message</div>
-                    <div className="text-sm text-gray-700">
+                    <div className="text-sm text-foreground/80">
                       {template.message}
                     </div>
                   </div>
@@ -682,8 +626,8 @@ export function InformationDistribution() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
                         {template.recipients.length} recipients
                       </span>
                     </div>
@@ -732,7 +676,7 @@ export function InformationDistribution() {
                         </Badge>
                       </div>
                       <CardTitle className="text-base">{event.title}</CardTitle>
-                      <p className="text-sm text-gray-600">{event.borrower}</p>
+                      <p className="text-sm text-muted-foreground">{event.borrower}</p>
                     </div>
                     <Badge className={getStatusColor(event.status)}>
                       {getStatusIcon(event.status)}
@@ -743,23 +687,23 @@ export function InformationDistribution() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-gray-700">{event.description}</p>
-
+                  <p className="text-sm text-foreground/80">{event.description}</p>
+ 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600">Event Date:</span>
+                      <span className="text-muted-foreground">Event Date:</span>
                       <span className="ml-1 font-medium">
                         {event.eventDate}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Reported:</span>
+                      <span className="text-muted-foreground">Reported:</span>
                       <span className="ml-1 font-medium">
                         {event.reportedDate}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Notification:</span>
+                      <span className="text-muted-foreground">Notification:</span>
                       <span
                         className={`ml-1 font-medium ${
                           event.notificationSent
@@ -774,8 +718,8 @@ export function InformationDistribution() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <AlertTriangle className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
+                      <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
                         {event.impact.charAt(0).toUpperCase() +
                           event.impact.slice(1)}{" "}
                         impact event

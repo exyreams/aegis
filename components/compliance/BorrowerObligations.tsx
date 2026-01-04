@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
+
 import {
   Select,
   SelectContent,
@@ -561,7 +563,7 @@ export function BorrowerObligations() {
                 <div className="text-2xl font-bold">
                   {obligationStats.total}
                 </div>
-                <div className="text-sm text-gray-600">Total Obligations</div>
+                <div className="text-sm text-muted-foreground">Total Obligations</div>
               </CardContent>
             </Card>
             <Card>
@@ -569,7 +571,7 @@ export function BorrowerObligations() {
                 <div className="text-2xl font-bold text-green-600">
                   {obligationStats.compliant}
                 </div>
-                <div className="text-sm text-gray-600">Compliant</div>
+                <div className="text-sm text-muted-foreground">Compliant</div>
               </CardContent>
             </Card>
             <Card>
@@ -577,7 +579,7 @@ export function BorrowerObligations() {
                 <div className="text-2xl font-bold text-yellow-600">
                   {obligationStats.pending}
                 </div>
-                <div className="text-sm text-gray-600">Pending</div>
+                <div className="text-sm text-muted-foreground">Pending</div>
               </CardContent>
             </Card>
             <Card>
@@ -585,7 +587,7 @@ export function BorrowerObligations() {
                 <div className="text-2xl font-bold text-red-600">
                   {obligationStats.overdue}
                 </div>
-                <div className="text-sm text-gray-600">Overdue</div>
+                <div className="text-sm text-muted-foreground">Overdue</div>
               </CardContent>
             </Card>
             <Card>
@@ -593,7 +595,7 @@ export function BorrowerObligations() {
                 <div className="text-2xl font-bold text-blue-600">
                   {obligationStats.avgCompletionRate}%
                 </div>
-                <div className="text-sm text-gray-600">Avg Completion</div>
+                <div className="text-sm text-muted-foreground">Avg Completion</div>
               </CardContent>
             </Card>
           </div>
@@ -616,7 +618,7 @@ export function BorrowerObligations() {
                         <div className="font-medium text-sm">
                           {obligation.title}
                         </div>
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-muted-foreground">
                           {obligation.borrower}
                         </div>
                       </div>
@@ -628,7 +630,7 @@ export function BorrowerObligations() {
                       >
                         {obligation.priority}
                       </Badge>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         {obligation.dueDate}
                       </div>
                       <Badge className={getStatusColor(obligation.status)}>
@@ -646,132 +648,83 @@ export function BorrowerObligations() {
         </div>
       )}
 
-      {/* List View */}
+      {/* List View - Table Refactor */}
       {viewMode === "list" && (
-        <div className="space-y-4">
-          {filteredObligations.map((obligation) => (
-            <Card key={obligation.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Badge variant="outline" className="text-xs">
-                        {obligation.category}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {obligation.type.replace("_", " ")}
-                      </Badge>
-                      {obligation.frequency && (
-                        <Badge variant="outline" className="text-xs">
-                          {obligation.frequency}
+        <div className="rounded-md border bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="w-[220px]">Obligation / Loan</TableHead>
+                <TableHead>Category & Frequency</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Responsible</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredObligations.map((obligation) => (
+                <TableRow key={obligation.id} className="cursor-pointer hover:bg-muted/40 transition-colors group">
+                  <TableCell>
+                    <div className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-1">{obligation.title}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">{obligation.borrower}</div>
+                  </TableCell>
+                  <TableCell>
+                     <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className="w-fit text-[10px] px-1.5 h-5 capitalize">
+                          {obligation.category}
                         </Badge>
-                      )}
-                      <Badge
-                        className={getPriorityColor(obligation.priority)}
-                        variant="secondary"
-                      >
-                        {obligation.priority}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-base">
-                      {obligation.title}
-                    </CardTitle>
-                    <p className="text-sm text-gray-600">
-                      {obligation.borrower} • {obligation.loanName}
-                    </p>
-                  </div>
-                  <Badge className={getStatusColor(obligation.status)}>
-                    {getStatusIcon(obligation.status)}
-                    <span className="ml-1 capitalize">{obligation.status}</span>
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-700">
-                  {obligation.description}
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span>Completion Rate</span>
-                      <span>{obligation.completionRate}%</span>
-                    </div>
-                    <Progress
-                      value={obligation.completionRate}
-                      className="h-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Due Date:</span>
-                      <span
-                        className={`font-medium ${
-                          new Date(obligation.dueDate) < new Date() &&
-                          obligation.status !== "compliant"
-                            ? "text-red-600"
-                            : ""
-                        }`}
-                      >
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                           <Clock className="h-3 w-3" /> {obligation.frequency || "Ad-hoc"}
+                        </span>
+                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className={`text-sm font-medium ${obligation.status === "overdue" ? "text-red-500" : ""}`}>
                         {obligation.dueDate}
                       </span>
+                      {obligation.nextDueDate && (
+                        <span className="text-[10px] text-muted-foreground">Next: {obligation.nextDueDate}</span>
+                      )}
                     </div>
-                    {obligation.nextDueDate && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Next Due:</span>
-                        <span>{obligation.nextDueDate}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                        {obligation.responsibleParty.split(" ").map(n => n[0]).join("")}
                       </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Responsible:</span>
-                      <span>{obligation.responsibleParty}</span>
+                      <span className="text-xs">{obligation.responsibleParty}</span>
                     </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Badge
-                      className={getAutomationColor(obligation.automationLevel)}
-                      variant="secondary"
-                    >
-                      {obligation.automationLevel.replace("_", " ")}
+                  </TableCell>
+                  <TableCell>
+                     <Badge className={`${getStatusColor(obligation.status)} border-0 shadow-none px-2 h-6`}>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        {getStatusIcon(obligation.status)}
+                        <span className="capitalize">{obligation.status}</span>
+                      </div>
                     </Badge>
-                    {obligation.reminderSent && (
-                      <Badge variant="outline" className="text-xs">
-                        <Bell className="h-3 w-3 mr-1" />
-                        Reminder Sent
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-1" />
-                      View Details
-                    </Button>
-                    {obligation.status === "pending" && (
-                      <Button size="sm">
-                        <Upload className="h-4 w-4 mr-1" />
-                        Submit
+                  </TableCell>
+                  <TableCell>
+                     <Badge className={`${getPriorityColor(obligation.priority)} border-0 px-2 h-6 text-xs`}>
+                      {obligation.priority}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-xs">
+                          <Eye className="h-3.5 w-3.5" />
                       </Button>
-                    )}
-                  </div>
-                </div>
-
-                {obligation.consequences && (
-                  <div className="bg-red-50 p-3 rounded-lg">
-                    <div className="text-sm font-medium text-red-800 mb-1">
-                      Consequences of Non-Compliance
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-xs">
+                          <Upload className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
-                    <div className="text-sm text-red-700">
-                      {obligation.consequences}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
 
