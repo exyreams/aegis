@@ -316,7 +316,14 @@ export default function SecondaryMarketPage() {
   };
 
   const onStartDueDiligence = (id: string) => {
-    console.log("Start DD:", id);
+    router.push(`/dashboard/secondary-market/due-diligence/${id}`);
+  };
+
+  const scrollToListings = () => {
+    const element = document.getElementById("listings-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -369,21 +376,12 @@ export default function SecondaryMarketPage() {
                         <div className="flex flex-wrap gap-3 pt-1">
                           <Button
                             size="default"
+                            onClick={scrollToListings}
                             className="h-10 px-6 bg-blue-600 hover:bg-blue-500 text-white border-0 rounded-xl font-medium shadow-lg shadow-blue-500/25 transition-all hover:scale-105"
                           >
                             <ShoppingCart className="h-4 w-4 mr-2" />
                             Browse Opportunities
                           </Button>
-                          <Link href="/dashboard/secondary-market/due-diligence">
-                            <Button
-                              size="default"
-                              variant="outline"
-                              className="h-10 px-6 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white rounded-xl font-medium backdrop-blur-md transition-all"
-                            >
-                              <FileSearch className="h-4 w-4 mr-2" />
-                              Due Diligence
-                            </Button>
-                          </Link>
                         </div>
                       </div>
 
@@ -510,7 +508,7 @@ export default function SecondaryMarketPage() {
               </div>
 
               {/* MARKETPLACE CONTENT */}
-              <div className="px-4 md:px-8">
+              <div id="listings-section" className="px-4 md:px-8 scroll-mt-24">
                 <Card className="overflow-hidden gap-0 pt-0">
                   <CardHeader className="bg-muted/50 border-b pt-6">
                     <div className="space-y-6">
@@ -1184,16 +1182,13 @@ export default function SecondaryMarketPage() {
                                               </span>
                                               <ArrowRight className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                              variant="outline"
-                                              className="w-full justify-between h-11"
-                                              onClick={() => {
-                                                onStartDueDiligence(listing.id);
-                                                toast.success(
-                                                  "Due diligence report generated"
-                                                );
-                                              }}
-                                            >
+                                              <Button
+                                                variant="outline"
+                                                className="w-full justify-between h-11"
+                                                onClick={() => {
+                                                  onStartDueDiligence(listing.id);
+                                                }}
+                                              >
                                               <span className="flex items-center gap-2">
                                                 <FileSearch className="h-4 w-4" />
                                                 Due Diligence

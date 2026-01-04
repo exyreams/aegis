@@ -22,7 +22,6 @@ import {
   Scale,
   Settings,
   ShoppingCart,
-  FileSearch,
   Briefcase,
   PieChart,
 } from "lucide-react";
@@ -148,11 +147,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Marketplace",
       url: "/dashboard/secondary-market",
       icon: ShoppingCart,
-    },
-    {
-      title: "Due Diligence",
-      url: "/dashboard/secondary-market/due-diligence",
-      icon: FileSearch,
     },
     {
       title: "Portfolio",
