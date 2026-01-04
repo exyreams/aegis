@@ -32,6 +32,8 @@ import {
   WideModalContent,
 } from "@/components/ui/WideModal";
 import loansData from "@/components/secondary-market/data/loans.json";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // --- Deep Dive Types ---
 
@@ -95,17 +97,227 @@ export default function DueDiligenceDetailPage() {
   const [activeTab, setActiveTab] = useState<"all" | "Financial" | "Legal" | "Market" | "ESG">("all");
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
 
   const selectedLoan = loansData.find((loan) => loan.id === loanId);
 
   // --- Helpers ---
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000000000) {
+      return `$${(amount / 1000000000).toFixed(1)}B`;
+    }
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    }
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
+  };
 
+  const handleExportPDF = async (mode: "download" | "preview" = "download") => {
+    if (!activeReport || !selectedLoan) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 15;
+
+    // --- Header ---
+    doc.setFillColor(15, 23, 42); // Slate 900
+    doc.rect(0, 0, pageWidth, 40, "F");
+    
+    // Logo & Branding
+    try {
+      const img = new Image();
+      img.src = "/aegis_dark.png"; // Light logo for dark header
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+      doc.addImage(img, "PNG", 14, 12, 12, 12);
+    } catch (e) {
+      console.error("Logo load failed", e);
+    }
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("AEGIS", 32, 21); // Shifted right for logo
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Due Diligence Report", 32, 29); // Shifted right
+    
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, 32, 37); // Shifted right
+    doc.text(`Report ID: ${activeReport.loanId}-AUDIT`, pageWidth - 14, 26, { align: "right" });
+    doc.text(`Confidence: ${activeReport.confidenceLevel}%`, pageWidth - 14, 34, { align: "right" });
+
+    y = 50;
+
+    // --- Executive Summary ---
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Executive Summary", 14, y);
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(71, 85, 105); // Slate 500
+    
+    const summaryLines = [
+      `Borrower: ${activeReport.borrower}`,
+      `Industry: ${activeReport.industry}`,
+      `Estimated Value: ${formatCurrency(activeReport.estimatedValue)}`,
+      `Original Lender: ${selectedLoan.originalLender}`,
+      `Maturity Date: ${selectedLoan.maturityDate}`,
+    ];
+    summaryLines.forEach(line => {
+      doc.text(line, 14, y);
+      y += 6;
+    });
+    y += 4;
+
+    // --- Score Badge ---
+    const scoreX = pageWidth - 50;
+    const scoreY = 50;
+    const scoreColor = activeReport.overallScore >= 80 ? [16, 185, 129] : activeReport.overallScore >= 60 ? [245, 158, 11] : [239, 68, 68];
+    doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+    doc.roundedRect(scoreX, scoreY, 36, 24, 3, 3, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(activeReport.overallScore), scoreX + 18, scoreY + 14, { align: "center" });
+    doc.setFontSize(7);
+    doc.text(activeReport.riskLevel.toUpperCase() + " RISK", scoreX + 18, scoreY + 20, { align: "center" });
+
+    y += 6;
+
+    // --- Covenant Compliance Table ---
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Covenant Compliance", 14, y);
+    y += 6;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Metric", "Actual", "Covenant", "Headroom", "Status"]],
+      body: activeReport.financials.map(f => [
+        f.metric,
+        f.actual,
+        f.covenant,
+        f.headroom,
+        f.status.toUpperCase()
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9 },
+      bodyStyles: { fontSize: 9, textColor: [51, 65, 85] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        4: { halign: "center", fontStyle: "bold" }
+      },
+      didParseCell: (data) => {
+        if (data.column.index === 4 && data.section === "body") {
+          const status = String(data.cell.raw).toLowerCase();
+          if (status === "pass") {
+            data.cell.styles.textColor = [16, 185, 129];
+          } else if (status === "warning") {
+            data.cell.styles.textColor = [245, 158, 11];
+          } else if (status === "fail") {
+            data.cell.styles.textColor = [239, 68, 68];
+          }
+        }
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+
+    // --- Audit Checks Table ---
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Audit Analysis & Evidence", 14, y);
+    y += 6;
+    
+    autoTable(doc, {
+      startY: y,
+      head: [["Category", "Check", "Status", "Score", "Source"]],
+      body: activeReport.checks.map(c => [
+        c.category,
+        c.check,
+        c.status.toUpperCase(),
+        String(c.score),
+        c.citation ? `${c.citation.docName} (p.${c.citation.page})` : "N/A"
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9 },
+      bodyStyles: { fontSize: 8, textColor: [51, 65, 85] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        2: { halign: "center", fontStyle: "bold" },
+        3: { halign: "center" }
+      },
+      didParseCell: (data) => {
+        if (data.column.index === 2 && data.section === "body") {
+          const status = String(data.cell.raw).toLowerCase();
+          if (status === "passed") {
+            data.cell.styles.textColor = [16, 185, 129];
+          } else if (status === "warning") {
+            data.cell.styles.textColor = [245, 158, 11];
+          } else if (status === "failed") {
+            data.cell.styles.textColor = [239, 68, 68];
+          }
+        }
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+
+    // --- Recommendations ---
+    if (y < 250) {
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Recommendations", 14, y);
+      y += 8;
+      
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(71, 85, 105);
+      activeReport.recommendations.forEach((rec, i) => {
+        if (y < 280) {
+          const lines = doc.splitTextToSize(`${i + 1}. ${rec}`, pageWidth - 28);
+          doc.text(lines, 14, y);
+          y += lines.length * 5 + 3;
+        }
+      });
+    }
+
+    // --- Footer ---
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 290, { align: "center" });
+      doc.text("Aegis • Automated Due Diligence Platform", 14, 290);
+    }
+
+    if (mode === "preview") {
+      const pdfBlob = doc.output("blob");
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPdfPreviewUrl(pdfUrl);
+    } else {
+      doc.save(`aegis-audit-report-${activeReport.loanId}.pdf`);
+      toast.success("PDF exported successfully!");
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "passed":
@@ -272,9 +484,23 @@ export default function DueDiligenceDetailPage() {
               
               {!isGenerating && activeReport && (
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="h-9 px-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-9 px-4"
+                    onClick={() => handleExportPDF("download")}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Export PDF
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-9 px-3"
+                    onClick={() => handleExportPDF("preview")}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Preview
                   </Button>
                   <Button className="h-9 px-4 bg-blue-600 hover:bg-blue-700">
                     Express Interest
@@ -693,6 +919,58 @@ export default function DueDiligenceDetailPage() {
                 </Button>
               </div>
             </div>
+          </div>
+        </WideModalContent>
+      </WideModal>
+
+      {/* --- PDF PREVIEW MODAL --- */}
+      <WideModal open={!!pdfPreviewUrl} onOpenChange={(open) => !open && setPdfPreviewUrl(null)}>
+        <WideModalContent showCloseButton={false} className="max-w-7xl h-[90vh] bg-background border-none overflow-hidden flex flex-col">
+          {/* Modal Header */}
+          <div className="shrink-0 bg-background border-b px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-blue-600/10 flex items-center justify-center border border-blue-500/20">
+                <FileText className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold">PDF Preview</h3>
+                <p className="text-[10px] text-muted-foreground">
+                  Audit Report • {activeReport?.borrower}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                className="h-8 px-4 bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  handleExportPDF("download");
+                  setPdfPreviewUrl(null);
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-8" 
+                onClick={() => setPdfPreviewUrl(null)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+
+          {/* PDF Viewer */}
+          <div className="flex-1 bg-muted/30 p-4">
+            {pdfPreviewUrl && (
+              <iframe
+                src={pdfPreviewUrl}
+                className="w-full h-full rounded-lg border shadow-sm bg-white"
+                title="PDF Preview"
+              />
+            )}
           </div>
         </WideModalContent>
       </WideModal>
