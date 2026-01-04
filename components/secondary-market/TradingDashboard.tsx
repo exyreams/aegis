@@ -178,7 +178,7 @@ export function TradingDashboard() {
                <div className="font-bold text-2xl">
                  {portfolioPositions.filter(p => p.covenantStatus === 'PASS').length}/{portfolioPositions.length}
                </div>
-               <Badge count={portfolioPositions.filter(p => p.covenantStatus === 'FAIL').length} variant={portfolioPositions.some(p => p.covenantStatus === 'FAIL') ? "destructive" : "secondary"}>
+               <Badge variant={portfolioPositions.some(p => p.covenantStatus === 'FAIL') ? "destructive" : "secondary"}>
                  {portfolioPositions.filter(p => p.covenantStatus === 'FAIL').length} Critical
                </Badge>
             </div>

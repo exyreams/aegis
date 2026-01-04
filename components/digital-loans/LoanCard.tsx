@@ -145,7 +145,7 @@ export function LoanCard({
                 </Badge>
                 <Badge
                   variant="outline"
-                  className={riskColors[loan.riskRating]}
+                  className={(riskColors as Record<string, string>)[loan.riskRating] || "text-gray-600 bg-gray-50 border-gray-200"}
                 >
                   {loan.riskRating}
                 </Badge>

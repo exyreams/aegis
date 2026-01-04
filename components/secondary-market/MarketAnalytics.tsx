@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import {
   Select,
   SelectContent,
@@ -13,8 +12,6 @@ import {
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   XAxis,
   YAxis,
@@ -25,13 +22,9 @@ import {
   Legend,
   ResponsiveContainer,
   ScatterChart,
-  Scatter,
-  ZAxis
-} from "recharts";
+  Scatter} from "recharts";
 import {
   ChartContainer,
-  ChartLege, // Typo fix: ChartLegend
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -39,14 +32,11 @@ import {
 import {
   TrendingUp,
   Users,
-  Clock,
   Target,
   BarChart3,
   Activity,
-  DollarSign,
   Zap,
   ShieldCheck,
-  AlertTriangle,
   FileText
 } from "lucide-react";
 import { 
@@ -54,11 +44,7 @@ import {
     marketTrends, 
     industryDistribution, 
     covenantHealthData, 
-    riskYieldCorrelation,
-    tradingActivity,
-    yieldByRating,
-    formatCurrency
-} from "./data/analytics";
+    riskYieldCorrelation} from "./data/analytics";
 
 // Chart Configs
 const volumeYieldConfig = {
@@ -166,7 +152,7 @@ export function MarketAnalytics() {
                             </Pie>
                             <Tooltip 
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                formatter={(value: number) => [`${value}%`, 'Loans']}
+                                formatter={(value: number | undefined) => [`${value}%`, 'Loans']}
                             />
                         </PieChart>
                     </ResponsiveContainer>
@@ -305,7 +291,7 @@ export function MarketAnalytics() {
                                     <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                                 ))}
                             </Pie>
-                            <Tooltip formatter={(value: number, name: string) => [`${value}%`, name]} />
+                            <Tooltip formatter={(value: number | undefined, name: any) => [`${value}%`, name]} />
                             <Legend layout="vertical" verticalAlign="middle" align="right" />
                          </PieChart>
                     </ResponsiveContainer>

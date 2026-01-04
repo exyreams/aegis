@@ -97,3 +97,11 @@ export const yieldByRating = [
   { rating: "BB", yield: 11.2, count: 28 },
   { rating: "B", yield: 14.5, count: 18 },
 ];
+
+export const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(amount);
+};

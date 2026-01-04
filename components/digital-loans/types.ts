@@ -16,17 +16,7 @@ export interface LoanData {
     | "completed"
     | "defaulted";
   purpose: string;
-  riskRating:
-    | "AAA"
-    | "AA"
-    | "A"
-    | "BBB"
-    | "BB"
-    | "B"
-    | "CCC"
-    | "CC"
-    | "C"
-    | "D";
+  riskRating: string;
   covenants: Array<{
     type: string;
     description: string;

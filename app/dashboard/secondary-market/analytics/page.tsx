@@ -5,7 +5,6 @@ import { AppSidebar } from "@/components/navigation";
 import { SiteHeader } from "@/components/layout";
 import { SidebarInset, SidebarProvider } from "@/components/ui/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import {
   Select,
   SelectContent,
@@ -36,14 +35,11 @@ import {
 } from "@/components/ui/Chart";
 import {
   TrendingUp,
-  Users,
   Zap,
   ShieldCheck,
   Activity,
   FileText,
-  PieChart as PieChartIcon,
   ArrowUpRight,
-  TrendingDown,
   BarChart3
 } from "lucide-react";
 import { 
@@ -204,7 +200,7 @@ export default function AnalyticsPage() {
                                 </Pie>
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', backgroundColor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))' }}
-                                    formatter={(value: number) => [<span className="font-bold">{value}%</span>, 'Loans']}
+                                    formatter={(value: number | undefined) => [`${value}%`, 'Loans']}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
@@ -343,7 +339,7 @@ export default function AnalyticsPage() {
                                 </Pie>
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    formatter={(value: number, name: string) => [<span className="font-bold">{value}%</span>, name]} 
+                                    formatter={(value: number | undefined, name: string | undefined) => [`${value}%`, name || '']} 
                                 />
                                 <Legend 
                                     layout="vertical" 
