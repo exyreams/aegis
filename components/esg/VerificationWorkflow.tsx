@@ -239,16 +239,16 @@ export function VerificationWorkflow({
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center">
-                  <User className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-gray-600">Requested by:</span>
-                  <span className="ml-1 font-medium">
+                  <User className="h-4 w-4 mr-2 text-slate-400" />
+                  <span className="text-slate-500 dark:text-slate-400">Requested by:</span>
+                  <span className="ml-1 font-semibold text-slate-900 dark:text-slate-100">
                     {request.requestedBy}
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-gray-600">Date:</span>
-                  <span className="ml-1 font-medium">
+                  <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+                  <span className="text-slate-500 dark:text-slate-400">Date:</span>
+                  <span className="ml-1 font-semibold text-slate-900 dark:text-slate-100">
                     {request.requestDate}
                   </span>
                 </div>
@@ -256,24 +256,24 @@ export function VerificationWorkflow({
 
               {request.verifier && (
                 <div className="flex items-center text-sm">
-                  <Shield className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-gray-600">Verifier:</span>
-                  <span className="ml-1 font-medium">{request.verifier}</span>
+                  <Shield className="h-4 w-4 mr-2 text-slate-400" />
+                  <span className="text-slate-500 dark:text-slate-400">Verifier:</span>
+                  <span className="ml-1 font-semibold text-slate-900 dark:text-slate-100">{request.verifier}</span>
                 </div>
               )}
 
               <div className="flex items-center text-sm">
-                <FileCheck className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-gray-600">Documents:</span>
-                <span className="ml-1 font-medium">
+                <FileCheck className="h-4 w-4 mr-2 text-slate-400" />
+                <span className="text-slate-500 dark:text-slate-400">Documents:</span>
+                <span className="ml-1 font-semibold text-slate-900 dark:text-slate-100">
                   {request.documents.length} files
                 </span>
               </div>
 
               {request.notes && (
-                <div className="text-sm">
-                  <span className="text-gray-600">Notes:</span>
-                  <p className="mt-1 text-gray-800">{request.notes}</p>
+                <div className="text-sm p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Notes:</span>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{request.notes}</p>
                 </div>
               )}
 

@@ -11,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
 import {
@@ -21,8 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 import {
   BarChart,
   Bar,
@@ -39,17 +36,17 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
   Target,
   Award,
   Building,
-  Globe,
   Leaf,
   Users,
   Shield,
   ArrowUp,
   ArrowDown,
   Minus,
+  DollarSign,
+  Zap,
 } from "lucide-react";
 
 interface BenchmarkData {
@@ -69,9 +66,6 @@ interface IndustryComparison {
 }
 
 export default function ESGBenchmarksPage() {
-  const { auth } = useAuth();
-  const user = auth.user;
-
   const [selectedIndustry, setSelectedIndustry] = useState("technology");
   const [selectedRegion, setSelectedRegion] = useState("global");
 
@@ -261,7 +255,7 @@ export default function ESGBenchmarksPage() {
               {/* Overview Cards */}
               <div className="px-4 lg:px-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card>
+                  <Card className="backdrop-blur-md bg-white/50 dark:bg-zinc-900/50 border-white/10 shadow-lg transition-all duration-300 hover:scale-[1.01]">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-blue-100 rounded-lg">
@@ -313,17 +307,31 @@ export default function ESGBenchmarksPage() {
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="bg-linear-to-br from-indigo-500/10 to-blue-500/10 border-indigo-500/20 backdrop-blur-md">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-purple-100 rounded-lg">
-                          <Globe className="h-6 w-6 text-purple-600" />
+                        <div className="p-3 bg-indigo-500/20 rounded-lg">
+                          <DollarSign className="h-6 w-6 text-indigo-600" />
                         </div>
                         <div>
-                          <div className="text-2xl font-bold">77%</div>
-                          <div className="text-sm text-muted-foreground">
-                            Percentile
+                          <div className="text-2xl font-black font-mono text-indigo-700">-18.5bps</div>
+                          <div className="text-[10px] uppercase font-bold text-indigo-600/70 tracking-tighter">
+                            Potential Green Premium
                           </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-indigo-500/10 space-y-2">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-muted-foreground">Carbon Efficiency</span>
+                          <span className="font-bold text-emerald-600">-8.0bps</span>
+                        </div>
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-muted-foreground">Social Governance</span>
+                          <span className="font-bold text-blue-600">-6.5bps</span>
+                        </div>
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-muted-foreground">Transparency Rating</span>
+                          <span className="font-bold text-purple-600">-4.0bps</span>
                         </div>
                       </div>
                     </CardContent>
@@ -391,7 +399,7 @@ export default function ESGBenchmarksPage() {
                             <Progress value={item.yourScore} className="h-2" />
                             <div className="flex justify-between text-xs text-muted-foreground">
                               <span>Industry Avg: {item.industryAverage}%</span>
-                              <span>Top Performer: {item.topPerformer}%</span>
+                              <span className="text-emerald-600 font-medium">Est. Margin Impact: {item.yourScore > item.industryAverage ? "-" : "+"}{(Math.abs(item.yourScore - item.industryAverage) * 0.5).toFixed(1)} bps</span>
                             </div>
                           </div>
                         </div>

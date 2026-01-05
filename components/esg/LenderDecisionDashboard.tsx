@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Progress } from "@/components/ui/Progress";
+import { Label } from "@/components/ui/Label";
 import {
   Select,
   SelectContent,
@@ -31,15 +37,10 @@ import {
 import {
   TrendingUp,
   TrendingDown,
-  AlertTriangle,
-  CheckCircle,
-  DollarSign,
-  Target,
   Shield,
-  Zap,
-  Building,
   Users,
   Leaf,
+  Target,
 } from "lucide-react";
 
 interface BorrowerProfile {
@@ -77,9 +78,10 @@ interface LendingRecommendation {
 
 export function LenderDecisionDashboard() {
   const [selectedBorrower, setSelectedBorrower] = useState<string>("1");
-  const [viewMode, setViewMode] = useState<"overview" | "risk" | "comparison">(
+  const [viewMode, setViewMode] = useState<"overview" | "risk" | "comparison" | "simulator">(
     "overview"
   );
+  const [simulatorScore, setSimulatorScore] = useState<number>(75);
 
   // Mock borrower profiles
   const borrowers: BorrowerProfile[] = [
@@ -284,6 +286,14 @@ export function LenderDecisionDashboard() {
     }
   };
 
+  const getRatchetAdjustment = (score: number) => {
+    if (score >= 80) return "-25";
+    if (score >= 65) return "-12.5";
+    if (score >= 40) return "0";
+    if (score >= 30) return "+15";
+    return "+25";
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -314,6 +324,7 @@ export function LenderDecisionDashboard() {
               <SelectItem value="overview">Overview</SelectItem>
               <SelectItem value="risk">Risk Analysis</SelectItem>
               <SelectItem value="comparison">Comparison</SelectItem>
+              <SelectItem value="simulator">Ratchet Simulator</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -575,6 +586,102 @@ export function LenderDecisionDashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+      )}
+      {viewMode === "simulator" && (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Simulator Controls */}
+            <Card className="backdrop-blur-xl bg-white/40 dark:bg-zinc-900/40 border-emerald-500/20 shadow-2xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-emerald-600" />
+                  Score Adjustment Simulation
+                </CardTitle>
+                <CardDescription>
+                  Model the impact of ESG performance on the loan margin
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <Label className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Target ESG Score</Label>
+                    <span className="text-3xl font-black text-emerald-600 tabular-nums">{simulatorScore}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={simulatorScore}
+                    onChange={(e) => setSimulatorScore(parseInt(e.target.value))}
+                    className="w-full h-2 bg-emerald-200 dark:bg-emerald-900/30 rounded-lg appearance-none cursor-pointer accent-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                    <span>Critical (0)</span>
+                    <span>Average (50)</span>
+                    <span>Elite (100)</span>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-linear-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 backdrop-blur-sm">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Margin Adjustment</p>
+                      <p className="text-xs text-emerald-600/70">Based on LMA Green Principles</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-2xl font-black tabular-nums ${getRatchetAdjustment(simulatorScore).startsWith('-') ? 'text-emerald-600' : getRatchetAdjustment(simulatorScore) === '0' ? 'text-muted-foreground' : 'text-rose-600'}`}>
+                        {getRatchetAdjustment(simulatorScore)} bps
+                      </span>
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter mt-1">
+                        {simulatorScore >= 80 ? "Elite Performance Tier" : simulatorScore < 30 ? "Critical Risk Uplift" : "Standard Compliance"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ratchet Tiers */}
+            <Card className="backdrop-blur-xl bg-white/40 dark:bg-zinc-900/40 border-white/10 shadow-2xl border-opacity-20 transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold tracking-tight">Ratchet Tiers & Documentation</CardTitle>
+                <CardDescription>Official Margin Grid for Facility A</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { range: "80 - 100", adj: "-25 bps", label: "Elite", color: "text-emerald-600", bg: "bg-emerald-500/5", min: 80, max: 100 },
+                    { range: "65 - 79", adj: "-12.5 bps", label: "Strong", color: "text-teal-600", bg: "bg-teal-500/5", min: 65, max: 79 },
+                    { range: "40 - 64", adj: "0 bps", label: "Benchmark", color: "text-muted-foreground", bg: "bg-gray-500/5", min: 40, max: 64 },
+                    { range: "30 - 39", adj: "+15 bps", label: "Sub-par", color: "text-amber-600", bg: "bg-amber-500/5", min: 30, max: 39 },
+                    { range: "0 - 29", adj: "+25 bps", label: "Critical", color: "text-rose-600", bg: "bg-rose-500/5", min: 0, max: 29 },
+                  ].map((tier, idx) => (
+                    <div key={idx} className={`flex justify-between items-center p-3 rounded-xl border transition-all duration-200 ${simulatorScore >= tier.min && simulatorScore <= tier.max ? 'border-emerald-500 bg-emerald-500/10 scale-[1.02] shadow-sm' : 'border-white/5 ' + tier.bg + ' hover:border-white/20'}`}>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">{tier.label}</span>
+                        <span className="text-sm font-semibold">{tier.range} Score</span>
+                      </div>
+                      <span className={`text-sm font-black ${tier.color}`}>{tier.adj}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 backdrop-blur-sm flex items-start gap-4">
+            <Shield className="h-5 w-5 text-blue-600 mt-1" />
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-1">Audit-Ready Documentation</h4>
+              <p className="text-xs text-blue-700/80 dark:text-blue-300/80 leading-relaxed">
+                Adjusting the simulator generates a draft **Sustainability-Linked Loan (SLL) Amendment**. Margin changes are verifiable against the Aegis Oracle and second-party opinions.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="border-blue-500/20 bg-white/50 dark:bg-zinc-900/50 hover:bg-blue-500/10">
+              Preview Draft
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

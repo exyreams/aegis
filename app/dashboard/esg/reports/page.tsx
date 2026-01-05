@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   FileBarChart,
@@ -34,12 +33,22 @@ import {
   TrendingUp,
   FileText,
   Clock,
+  Shield,
+  FileSearch,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  WideModal,
+  WideModalContent,
+  WideModalTitle,
+  WideModalDescription,
+} from "@/components/ui/WideModal";
 
 interface ESGReport {
   id: string;
   title: string;
-  type: "quarterly" | "annual" | "custom";
+  type: "quarterly" | "annual" | "custom" | "regulatory";
   period: string;
   status: "draft" | "published" | "archived";
   createdAt: string;
@@ -50,9 +59,6 @@ interface ESGReport {
 }
 
 export default function ESGReportsPage() {
-  const { auth } = useAuth();
-  const user = auth.user;
-
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,18 +112,30 @@ export default function ESGReportsPage() {
       pages: 38,
       downloadUrl: "/reports/q3-2024-esg.pdf",
     },
+    {
+      id: "5",
+      title: "EU Taxonomy & SFDR Alignment Pack",
+      type: "regulatory",
+      period: "FY 2024",
+      status: "published",
+      createdAt: "2024-12-15",
+      updatedAt: "2024-12-18",
+      metrics: 154,
+      pages: 120,
+      downloadUrl: "/reports/regulatory-alignment-2024.pdf",
+    },
   ]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "published":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-500/10 text-emerald-700 border-emerald-200 dark:text-emerald-400 dark:border-emerald-800 font-bold";
       case "draft":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-amber-500/10 text-amber-700 border-amber-200 dark:text-amber-400 dark:border-amber-800 font-bold";
       case "archived":
-        return "bg-gray-100 text-gray-800";
+        return "bg-zinc-500/10 text-zinc-700 border-zinc-200 dark:text-zinc-400 dark:border-zinc-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-zinc-500/10 text-zinc-700 border-zinc-200 dark:text-zinc-400 dark:border-zinc-800";
     }
   };
 
@@ -129,29 +147,91 @@ export default function ESGReportsPage() {
         return <BarChart3 className="h-4 w-4" />;
       case "custom":
         return <FileText className="h-4 w-4" />;
+      case "regulatory":
+        return <Shield className="h-4 w-4 text-emerald-600" />;
       default:
         return <FileBarChart className="h-4 w-4" />;
     }
-  };
+};
+
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [activeReport, setActiveReport] = useState<ESGReport | null>(null);
 
   const handleGenerateReport = () => {
-    toast.success("Report generation started! You'll be notified when ready.");
+    toast.success("Regulatory Alignment Pack generated!");
+  };
+
+  const handleExportPDF = async (report: ESGReport) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 15;
+
+    // --- Header ---
+    doc.setFillColor(15, 23, 42); // Navy / Navy
+    doc.rect(0, 0, pageWidth, 40, "F");
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("AEGIS ESG", 14, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(report.title, 14, 33);
+    doc.text(`Period: ${report.period}`, pageWidth - 14, 33, { align: "right" });
+
+    y = 55;
+
+    // --- Summary Section ---
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Regulatory Summary", 14, y);
+    y += 10;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Framework", "Status", "Alignment Score", "Data Trust"]],
+      body: [
+        ["SFDR Article 8", "ALIGNED", "92%", "HIGH"],
+        ["EU Taxonomy", "PARTIAL", "74%", "MEDIUM"],
+        ["TCFD Disclosures", "ALIGNED", "88%", "HIGH"],
+      ],
+      headStyles: { fillColor: [5, 150, 105], textColor: [255, 255, 255] },
+    });
+
+    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+
+    // --- Detail Table ---
+    doc.text("Metric Breakdown", 14, y);
+    y += 6;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Metric Category", "Score", "vs Industry", "Verification"]],
+      body: [
+        ["Carbon Intensity", "85/100", "+12%", "SATELLITE"],
+        ["Supply Chain Risk", "72/100", "-5%", "IOT/AUDIT"],
+        ["Board Diversity", "90/100", "+15%", "LEGAL"],
+      ],
+      theme: "striped",
+    });
+
+    doc.save(`${report.title.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+    toast.success("PDF exported successfully!");
   };
 
   const handleDownloadReport = (report: ESGReport) => {
-    if (report.downloadUrl) {
-      toast.success(`Downloading ${report.title}...`);
-    } else {
-      toast.error("Report not available for download");
-    }
+    handleExportPDF(report);
   };
 
   const handleViewReport = (report: ESGReport) => {
-    toast.info("Opening report viewer...");
+    setActiveReport(report);
+    setIsPreviewOpen(true);
   };
 
-  const handleShareReport = (report: ESGReport) => {
-    toast.success("Report sharing link copied to clipboard!");
+  const handleShareReport = (_report: ESGReport) => {
+    toast.success("Immutable report hash shared to facility explorer!");
   };
 
   const filteredReports = reports.filter((report) => {
@@ -189,10 +269,34 @@ export default function ESGReportsPage() {
                     Generate and manage comprehensive ESG performance reports
                   </p>
                 </div>
-                <Button onClick={handleGenerateReport}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="border-emerald-500/20 bg-emerald-500/5 text-emerald-700 hover:bg-emerald-500/10" onClick={() => toast.success("Scanning portfolio for regulatory gaps...")}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Regulatory Alignment Pack
+                  </Button>
+                  <Button onClick={handleGenerateReport}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                </div>
+              </div>
+
+              {/* Regulatory Banner */}
+              <div className="px-4 lg:px-6">
+                <div className="bg-linear-to-r from-emerald-600/10 to-teal-600/10 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-emerald-500/20 rounded-full">
+                      <Shield className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">Institutional ESG Reporting</h3>
+                      <p className="text-sm text-emerald-700/80 dark:text-emerald-300/80">Your portfolio is currently **84% aligned** with SFDR Article 8 requirements. Generate a gap analysis report.</p>
+                    </div>
+                  </div>
+                  <Button variant="secondary" size="sm" onClick={() => toast.info("Generating Gap Analysis...")}>
+                    Gap Analysis
+                  </Button>
+                </div>
               </div>
 
               {/* Stats Cards */}
@@ -304,9 +408,10 @@ export default function ESGReportsPage() {
                           <SelectContent>
                             <SelectItem value="all">All Types</SelectItem>
                             <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="annual">Annual</SelectItem>
-                            <SelectItem value="custom">Custom</SelectItem>
-                          </SelectContent>
+                             <SelectItem value="annual">Annual</SelectItem>
+                             <SelectItem value="custom">Custom</SelectItem>
+                             <SelectItem value="regulatory">Regulatory</SelectItem>
+                           </SelectContent>
                         </Select>
 
                         <Select
@@ -429,6 +534,110 @@ export default function ESGReportsPage() {
           </div>
         </div>
       </SidebarInset>
+
+      {/* --- REPORT PREVIEW MODAL --- */}
+      <WideModal open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <WideModalContent className="max-w-5xl bg-[#F8FAFC] dark:bg-[#0F172A] p-0 flex flex-col overflow-hidden">
+          {/* Modal Header */}
+          <div className="p-6 bg-white dark:bg-slate-900 border-b flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <Shield className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <WideModalTitle className="text-xl font-bold">
+                  Report Preview: {activeReport?.title}
+                </WideModalTitle>
+                <WideModalDescription className="text-xs font-mono uppercase tracking-widest text-emerald-600/70">
+                  Regulatory Alignment Pack • Immutable Audit Trail
+                </WideModalDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => activeReport && handleExportPDF(activeReport)}>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+            </div>
+          </div>
+
+          {/* Modal Content - PDF-like view */}
+          <div className="flex-1 overflow-auto p-8 flex flex-col items-center">
+            <div className="w-full max-w-[800px] bg-white dark:bg-slate-900 shadow-2xl border border-border/50 p-12 min-h-[1000px] flex flex-col">
+              {/* Report Title Page Simulation */}
+              <div className="flex justify-between items-start mb-12">
+                <h2 className="text-3xl font-black tracking-tighter">AEGIS <span className="text-emerald-600">ESG</span></h2>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground">Generated On</p>
+                  <p className="text-sm font-medium">{new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div className="mb-12">
+                <h1 className="text-4xl font-bold mb-4">{activeReport?.title}</h1>
+                <p className="text-muted-foreground leading-relaxed">
+                  This report provides a comprehensive analysis of ESG performance metrics aligned with SFDR and EU Taxonomy frameworks for the period {activeReport?.period}.
+                </p>
+              </div>
+
+              {/* Mock Analysis Section */}
+              <div className="grid grid-cols-3 gap-6 mb-12">
+                <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                  <p className="text-[10px] font-bold uppercase text-emerald-600 mb-1">Alignment Score</p>
+                  <p className="text-3xl font-black">92%</p>
+                </div>
+                <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10">
+                  <p className="text-[10px] font-bold uppercase text-blue-600 mb-1">Data Quality</p>
+                  <p className="text-3xl font-black">High</p>
+                </div>
+                <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10">
+                  <p className="text-[10px] font-bold uppercase text-purple-600 mb-1">Review Status</p>
+                  <p className="text-3xl font-black">Verified</p>
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-lg font-bold mb-4 border-b pb-2 flex items-center gap-2">
+                    <FileSearch className="h-5 w-5 text-emerald-600" />
+                    Regulatory Mapping
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      { f: "SFDR Article 8", s: "Aligned", d: "8/8 indicators disclosed" },
+                      { f: "EU Taxonomy", s: "Partial", d: "Climate mitigation criteria met" },
+                      { f: "TCFD Disclosures", s: "Aligned", d: "Scenario analysis completed" },
+                    ].map((row, i) => (
+                      <div key={i} className="flex justify-between items-center p-3 rounded-lg border bg-muted/30">
+                        <div>
+                          <p className="font-bold text-sm">{row.f}</p>
+                          <p className="text-[10px] text-muted-foreground">{row.d}</p>
+                        </div>
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 border-emerald-200 uppercase text-[9px]">
+                          {row.s}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-8 rounded-3xl bg-linear-to-br from-slate-900 to-slate-800 text-white flex justify-between items-center">
+                  <div>
+                    <h4 className="text-xl font-bold mb-1">Immutable Verification Hash</h4>
+                    <p className="text-xs text-white/50 font-mono">SHA-256: 8a7c2c9d...e1f8a2b3</p>
+                  </div>
+                  <Shield className="h-12 w-12 text-emerald-500/50" />
+                </div>
+              </div>
+
+              <div className="mt-auto pt-12 text-[10px] text-muted-foreground flex justify-between border-t uppercase tracking-widest font-bold">
+                <span>Aegis Institutional Asset Management</span>
+                <span>Page 1 of 42</span>
+              </div>
+            </div>
+          </div>
+        </WideModalContent>
+      </WideModal>
     </SidebarProvider>
   );
 }

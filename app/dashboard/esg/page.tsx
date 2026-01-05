@@ -24,27 +24,28 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-import { ESGDashboard } from "@/components/esg/ESGDashboard";
+import { ESGDashboard, type ESGMetric } from "@/components/esg/ESGDashboard";
 import { AddMetricModal } from "@/components/esg/AddMetricModal";
 import { VerificationWorkflow } from "@/components/esg/VerificationWorkflow";
 import { DataSharingHub } from "@/components/esg/DataSharingHub";
 import { LenderDecisionDashboard } from "@/components/esg/LenderDecisionDashboard";
 import { ESGCovenantTracker } from "@/components/esg/ESGCovenantTracker";
-import type { ESGMetric } from "@/components/esg/ESGMetricCard";
+import esgData from "@/data/esg.json";
 import {
-  Plus,
-  Search,
-  X,
   Leaf,
   Users,
   Shield,
   TrendingUp,
+  Clock,
+  Plus,
+  Search,
+  X,
   Target,
   BarChart3,
   FileBarChart,
-  Award,
   Globe,
+  Zap,
+  Sparkles,
 } from "lucide-react";
 
 export default function ESGReportingPage() {
@@ -62,79 +63,8 @@ export default function ESGReportingPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Mock ESG metrics data - replace with real API calls later
-  const [metrics, setMetrics] = useState<ESGMetric[]>([
-    {
-      id: "1",
-      name: "Carbon Emissions",
-      category: "environmental",
-      description: "Total CO2 equivalent emissions from operations",
-      currentValue: 850,
-      targetValue: 750,
-      unit: "tonnes CO2e",
-      status: "at_risk",
-      trend: "down",
-      lastUpdated: "2024-12-15",
-      dataSource: "Environmental Management System",
-      verified: true,
-    },
-    {
-      id: "2",
-      name: "Employee Diversity",
-      category: "social",
-      description: "Percentage of diverse employees in leadership roles",
-      currentValue: 35,
-      targetValue: 40,
-      unit: "%",
-      status: "on_track",
-      trend: "up",
-      lastUpdated: "2024-12-10",
-      dataSource: "HR Records",
-      verified: true,
-    },
-    {
-      id: "3",
-      name: "Board Independence",
-      category: "governance",
-      description: "Percentage of independent board members",
-      currentValue: 60,
-      targetValue: 50,
-      unit: "%",
-      status: "achieved",
-      trend: "stable",
-      lastUpdated: "2024-12-01",
-      dataSource: "Board Records",
-      verified: true,
-    },
-    {
-      id: "4",
-      name: "Renewable Energy Usage",
-      category: "environmental",
-      description: "Percentage of energy from renewable sources",
-      currentValue: 25,
-      targetValue: 50,
-      unit: "%",
-      status: "behind",
-      trend: "up",
-      lastUpdated: "2024-12-12",
-      dataSource: "Utility Bills",
-      verified: false,
-    },
-    {
-      id: "5",
-      name: "Employee Training Hours",
-      category: "social",
-      description: "Average training hours per employee annually",
-      currentValue: 42,
-      targetValue: 40,
-      unit: "hours",
-      status: "achieved",
-      trend: "up",
-      lastUpdated: "2024-12-08",
-      dataSource: "Learning Management System",
-      verified: true,
-    },
-  ]);
+  // ESG metrics data from JSON
+  const [metrics, setMetrics] = useState<ESGMetric[]>(esgData.metrics as ESGMetric[]);
 
   const stats = {
     totalMetrics: metrics.length,
@@ -147,13 +77,7 @@ export default function ESGReportingPage() {
     setMetrics((prev) => [...prev, newMetric]);
   };
 
-  const handleEditMetric = (metric: ESGMetric) => {
-    toast.info("Edit metric functionality coming soon!");
-  };
-
-  const handleViewMetricDetails = (metric: ESGMetric) => {
-    toast.info("Metric details view coming soon!");
-  };
+  // handleMetricAdded used in AddMetricModal
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -179,32 +103,135 @@ export default function ESGReportingPage() {
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 lg:px-6">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">
-                    ESG Reporting
-                  </h1>
-                  <p className="text-muted-foreground">
-                    {user?.role === "borrower"
-                      ? "Track and report your sustainability performance"
-                      : user?.role === "lender"
-                      ? "Factor ESG metrics into lending decisions"
-                      : "Oversee ESG reporting and sustainable lending platform-wide"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setAddMetricModalOpen(true)}
-                  >
-                    <FileBarChart className="h-4 w-4 mr-2" />
-                    Generate Report
-                  </Button>
-                  <Button onClick={() => setAddMetricModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Metric
-                  </Button>
+              {/* HERO SECTION */}
+              <div className="px-4 lg:px-6">
+                <div className="relative overflow-hidden rounded-4xl bg-slate-950 text-white shadow-2xl border border-white/5">
+                  {/* Abstract Background Elements */}
+                  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
+                  <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-600/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-teal-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl max-h-4xl bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
+
+                  <div className="relative z-10 p-4 md:p-6 lg:p-8">
+                    <div className="grid lg:grid-cols-12 gap-6 items-center">
+                      {/* Hero Content */}
+                      <div className="lg:col-span-7 space-y-4">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-[9px] font-bold uppercase tracking-widest text-emerald-300">
+                          <Shield className="h-2.5 w-2.5" />
+                          <span>LMA Framework v3.1</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">
+                            Greener Lending <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 via-teal-100 to-blue-400">Hub</span>
+                          </h1>
+                          <p className="text-sm text-slate-400 max-w-lg leading-relaxed">
+                            {user?.role === "borrower"
+                                ? "Scale your sustainability data, automate regulatory verification, and access preferred capital rates."
+                                : "Advanced ESG decision support. Analyze 'Greensium' spreads and monitor transition risk."}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3 pt-1">
+                          <Button
+                            size="sm"
+                            onClick={() => setAddMetricModalOpen(true)}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 h-9 px-5 rounded-xl font-bold transition-all"
+                          >
+                            <Plus className="h-4 w-4 mr-1.5" />
+                            Add Metric
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-white/5 border-white/10 backdrop-blur-xl h-9 px-5 rounded-xl font-bold text-white hover:bg-white/10 transition-all"
+                            onClick={() => (window.location.href = "/dashboard/esg/reports")}
+                          >
+                            <FileBarChart className="h-4 w-4 mr-1.5" />
+                            Reports
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Hero Visual / Sustainability Pulse */}
+                      <div className="lg:col-span-5 relative">
+                        <div className="relative bg-white/5 backdrop-blur-3xl border border-white/10 rounded-2xl p-5 shadow-2xl overflow-hidden group">
+                          <div className="absolute top-0 right-0 p-3 opacity-5">
+                            <Sparkles className="h-16 w-16 text-emerald-400" />
+                          </div>
+                          
+                          <div className="absolute top-2.5 right-2.5 bg-emerald-500/90 text-white text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm shadow-lg z-20 backdrop-blur-md border border-emerald-400/50">
+                            LIVE
+                          </div>
+
+                          <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div>
+                                <h3 className="text-sm font-bold text-white tracking-tight">
+                                Sustainability Pulse
+                                </h3>
+                            </div>
+                            <div className="h-8 w-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                                <TrendingUp className="h-4 w-4 text-emerald-400" />
+                            </div>
+                          </div>
+
+                          <div className="space-y-4 relative z-10">
+                            <div className="flex justify-between items-end">
+                              <div>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                                  Portfolio Score
+                                </p>
+                                <p className="text-2xl font-black text-white">
+                                  92.4
+                                </p>
+                              </div>
+                              <Badge className="bg-emerald-500/20 text-emerald-300 border-0 text-[8px] font-bold px-2 py-0">
+                                PLATINUM
+                              </Badge>
+                            </div>
+
+                            {/* High-Density Full-Width Bar Chart */}
+                            <div className="h-12 flex items-end gap-[1.5px] px-1 ring-1 ring-white/5 rounded-lg bg-black/30 p-1.5 overflow-hidden">
+                              {Array.from({ length: 80 }).map((_, i) => {
+                                // Deterministic pattern to avoid lint error and ensure stability
+                                const h = 40 + Math.sin(i / 5) * 20 + (i % 3 === 0 ? 15 : 0) + (i % 7 === 0 ? 25 : 0);
+                                return (
+                                  <div
+                                    key={i}
+                                    className="flex-1 min-w-[2px] bg-linear-to-t from-emerald-600/20 via-emerald-500 to-teal-400 rounded-t-[0.5px] opacity-70 hover:opacity-100 transition-all"
+                                    style={{ height: `${(h / 140) * 100}%` }}
+                                  />
+                                );
+                              })}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
+                              <div className="flex items-center gap-2">
+                                <Zap className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                                <div>
+                                    <p className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider">Reduction</p>
+                                    <p className="text-xs font-bold text-white">-18.5%</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Globe className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                                <div>
+                                    <p className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider">GAR Align</p>
+                                    <p className="text-xs font-bold text-white">84.2%</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Smaller Floating Badge - Fixed bold text */}
+                        <div className="absolute -bottom-3 -left-3 bg-white dark:bg-slate-900 text-slate-950 dark:text-white rounded-xl py-1.5 px-3 shadow-xl flex items-center gap-2 border border-border/50">
+                          <Clock className="h-3 w-3 text-emerald-500" />
+                          <p className="text-[9px] font-semibold uppercase tracking-tight">Verified 14m ago</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -242,8 +269,8 @@ export default function ESGReportingPage() {
                       </CardTitle>
                       <CardAction>
                         <Badge
-                          variant="outline"
-                          className="text-green-600 border-green-200"
+                          variant="secondary"
+                          className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 font-bold"
                         >
                           <Leaf className="h-3 w-3 mr-1" />
                           Green
@@ -268,8 +295,8 @@ export default function ESGReportingPage() {
                       </CardTitle>
                       <CardAction>
                         <Badge
-                          variant="outline"
-                          className="text-blue-600 border-blue-200"
+                          variant="secondary"
+                          className="bg-blue-500/15 text-blue-600 dark:text-blue-400 border-0 font-bold"
                         >
                           <Users className="h-3 w-3 mr-1" />
                           People
@@ -294,8 +321,8 @@ export default function ESGReportingPage() {
                       </CardTitle>
                       <CardAction>
                         <Badge
-                          variant="outline"
-                          className="text-purple-600 border-purple-200"
+                          variant="secondary"
+                          className="bg-purple-500/15 text-purple-600 dark:text-purple-400 border-0 font-bold"
                         >
                           <Shield className="h-3 w-3 mr-1" />
                           Ethics
@@ -463,8 +490,12 @@ export default function ESGReportingPage() {
                     {activeTab === "dashboard" && (
                       <ESGDashboard
                         metrics={metrics}
-                        onEditMetric={handleEditMetric}
-                        onViewMetricDetails={handleViewMetricDetails}
+                        onUpdateMetric={(updated) => {
+                          setMetrics(prev => prev.map(m => m.id === updated.id ? updated : m));
+                        }}
+                        onDeleteMetric={(id) => {
+                          setMetrics(prev => prev.filter(m => m.id !== id));
+                        }}
                       />
                     )}
                     {activeTab === "verification" && <VerificationWorkflow />}
@@ -479,105 +510,6 @@ export default function ESGReportingPage() {
                 </Card>
               </div>
 
-              {/* ESG Features */}
-              <div className="px-4 lg:px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <Target className="h-5 w-5 text-green-500" />
-                        Goal Tracking
-                      </CardTitle>
-                      <CardDescription>
-                        Set and monitor sustainability targets
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setAddMetricModalOpen(true)}
-                      >
-                        Set Goals
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <FileBarChart className="h-5 w-5 text-blue-500" />
-                        Impact Reports
-                      </CardTitle>
-                      <CardDescription>
-                        Generate comprehensive ESG reports
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          (window.location.href = "/dashboard/esg/reports")
-                        }
-                      >
-                        View Reports
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <Award className="h-5 w-5 text-purple-500" />
-                        Certifications
-                      </CardTitle>
-                      <CardDescription>
-                        Track ESG certifications and ratings
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          (window.location.href =
-                            "/dashboard/esg/certifications")
-                        }
-                      >
-                        View Certifications
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <TrendingUp className="h-5 w-5 text-emerald-500" />
-                        Benchmarking
-                      </CardTitle>
-                      <CardDescription>
-                        Compare performance against industry standards
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          (window.location.href = "/dashboard/esg/benchmarks")
-                        }
-                      >
-                        View Benchmarks
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
             </div>
           </div>
         </div>

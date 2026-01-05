@@ -5,51 +5,87 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import { ESGMetricCard, type ESGMetric } from "./ESGMetricCard";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-} from "recharts";
+import { MetricDetailsModal } from "./MetricDetailsModal";
+import { toast } from "sonner";
 import {
   Leaf,
   Users,
   Shield,
-  TrendingUp,
   Award,
   Target,
   AlertTriangle,
   CheckCircle,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/AlertDialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
+
+// Re-export ESGMetric type for consumers
+export interface ESGMetric {
+  id: string;
+  name: string;
+  category: "environmental" | "social" | "governance";
+  description: string;
+  currentValue: number;
+  targetValue: number;
+  unit: string;
+  status: "on_track" | "at_risk" | "behind" | "achieved";
+  trend: "up" | "down" | "stable";
+  lastUpdated: string;
+  dataSource: string;
+  verified: boolean;
+}
 
 interface ESGDashboardProps {
   metrics: ESGMetric[];
   onEditMetric?: (metric: ESGMetric) => void;
   onViewMetricDetails?: (metric: ESGMetric) => void;
+  onDeleteMetric?: (metricId: string) => void;
+  onUpdateMetric?: (metric: ESGMetric) => void;
 }
 
 export function ESGDashboard({
   metrics,
   onEditMetric,
   onViewMetricDetails,
+  onDeleteMetric,
+  onUpdateMetric,
 }: ESGDashboardProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<ESGMetric | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [metricToDelete, setMetricToDelete] = useState<ESGMetric | null>(null);
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const environmental = metrics.filter((m) => m.category === "environmental");
-    const social = metrics.filter((m) => m.category === "social");
-    const governance = metrics.filter((m) => m.category === "governance");
-
     const onTrack = metrics.filter(
       (m) => m.status === "on_track" || m.status === "achieved"
     );
@@ -63,9 +99,6 @@ export function ESGDashboard({
 
     return {
       total: metrics.length,
-      environmental: environmental.length,
-      social: social.length,
-      governance: governance.length,
       onTrack: onTrack.length,
       atRisk: atRisk.length,
       behind: behind.length,
@@ -74,244 +107,251 @@ export function ESGDashboard({
     };
   }, [metrics]);
 
-  // Filter metrics based on selected category
-  const filteredMetrics = useMemo(() => {
-    if (selectedCategory === "all") return metrics;
-    return metrics.filter((m) => m.category === selectedCategory);
-  }, [metrics, selectedCategory]);
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "environmental":
+        return <Leaf className="h-4 w-4 text-emerald-600" />;
+      case "social":
+        return <Users className="h-4 w-4 text-blue-600" />;
+      case "governance":
+        return <Shield className="h-4 w-4 text-purple-600" />;
+      default:
+        return <Target className="h-4 w-4" />;
+    }
+  };
 
-  // Prepare chart data
-  const categoryData = [
-    { name: "Environmental", value: stats.environmental, color: "#10b981" },
-    { name: "Social", value: stats.social, color: "#3b82f6" },
-    { name: "Governance", value: stats.governance, color: "#8b5cf6" },
-  ];
+  const getCategoryBadge = (category: string) => {
+    const styles = {
+      environmental: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+      social: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      governance: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    };
+    return styles[category as keyof typeof styles] || "bg-gray-100 text-gray-700";
+  };
 
-  const statusData = [
-    { name: "On Track", value: stats.onTrack, color: "#10b981" },
-    { name: "At Risk", value: stats.atRisk, color: "#f59e0b" },
-    { name: "Behind", value: stats.behind, color: "#ef4444" },
-  ];
+  const getStatusBadge = (status: string) => {
+    const config = {
+      achieved: { label: "Achieved", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+      on_track: { label: "On Track", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+      at_risk: { label: "At Risk", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+      behind: { label: "Behind", className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+    };
+    return config[status as keyof typeof config] || { label: status, className: "bg-gray-100 text-gray-700" };
+  };
 
-  // Mock trend data
-  const trendData = [
-    { month: "Jan", score: 72 },
-    { month: "Feb", score: 75 },
-    { month: "Mar", score: 78 },
-    { month: "Apr", score: 82 },
-    { month: "May", score: 85 },
-    { month: "Jun", score: stats.overallScore },
-  ];
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case "up":
+        return <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />;
+      case "down":
+        return <ArrowDownRight className="h-3.5 w-3.5 text-red-600" />;
+      default:
+        return <Minus className="h-3.5 w-3.5 text-gray-400" />;
+    }
+  };
+
+  const handleViewDetails = (metric: ESGMetric) => {
+    setSelectedMetric(metric);
+    setIsDetailsOpen(true);
+    onViewMetricDetails?.(metric);
+  };
+
+  const handleEdit = (metric: ESGMetric) => {
+    setSelectedMetric(metric);
+    setIsDetailsOpen(true);
+    onEditMetric?.(metric);
+  };
+
+  const handleDelete = (metric: ESGMetric) => {
+    setMetricToDelete(metric);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (metricToDelete) {
+      onDeleteMetric?.(metricToDelete.id);
+      toast.success("Metric deleted successfully");
+      setMetricToDelete(null);
+    }
+    setDeleteConfirmOpen(false);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Target className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats.overallScore}%</div>
-                <div className="text-sm text-muted-foreground">ESG Score</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats.onTrack}</div>
-                <div className="text-sm text-muted-foreground">On Track</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <AlertTriangle className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">
-                  {stats.atRisk + stats.behind}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Needs Attention
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Award className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats.verified}</div>
-                <div className="text-sm text-muted-foreground">Verified</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+          <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+            <Target className="h-4 w-4 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-semibold">{stats.overallScore}%</p>
+            <p className="text-xs text-muted-foreground">Overall Score</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+            <CheckCircle className="h-4 w-4 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-semibold text-emerald-600">{stats.onTrack}</p>
+            <p className="text-xs text-muted-foreground">On Track</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+          <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-semibold text-amber-600">{stats.atRisk}</p>
+            <p className="text-xs text-muted-foreground">At Risk</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+          <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+            <Award className="h-4 w-4 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-semibold">{stats.verified}</p>
+            <p className="text-xs text-muted-foreground">Verified</p>
+          </div>
+        </div>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>ESG Score Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={{ fill: "#3b82f6" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Category Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex justify-center gap-4 mt-4">
-              {categoryData.map((entry) => (
-                <div key={entry.name} className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: entry.color }}
-                  />
-                  <span className="text-sm">{entry.name}</span>
-                </div>
-              ))}
+      {/* Metrics Table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-medium">ESG Metrics</CardTitle>
+            <Badge variant="secondary">{metrics.length} total</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[250px]">Metric</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Trend</TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {metrics.map((metric) => {
+                const progress = Math.min(100, (metric.currentValue / metric.targetValue) * 100);
+                const statusConfig = getStatusBadge(metric.status);
+                
+                return (
+                  <TableRow key={metric.id} className="group">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-md bg-muted">
+                          {getCategoryIcon(metric.category)}
+                        </div>
+                        <div>
+                          <p className="font-medium">{metric.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {metric.currentValue} / {metric.targetValue} {metric.unit}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={getCategoryBadge(metric.category)}>
+                        {metric.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 min-w-[120px]">
+                        <Progress value={progress} className="h-2 flex-1" />
+                        <span className="text-xs text-muted-foreground w-10">
+                          {Math.round(progress)}%
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={statusConfig.className}>
+                        {statusConfig.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {getTrendIcon(metric.trend)}
+                        <span className="text-xs capitalize text-muted-foreground">
+                          {metric.trend}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm text-muted-foreground truncate max-w-[120px]">
+                          {metric.dataSource}
+                        </span>
+                        {metric.verified && (
+                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewDetails(metric)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(metric)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(metric)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          
+          {metrics.length === 0 && (
+            <div className="text-center py-12">
+              <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <h3 className="text-lg font-medium mb-2">No Metrics Found</h3>
+              <p className="text-muted-foreground">
+                Start tracking your ESG performance by adding metrics.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Status Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={statusData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Category Filter */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Filter by category:</span>
-        <Button
-          variant={selectedCategory === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCategory("all")}
-        >
-          All ({stats.total})
-        </Button>
-        <Button
-          variant={selectedCategory === "environmental" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCategory("environmental")}
-          className="text-green-600"
-        >
-          <Leaf className="h-4 w-4 mr-1" />
-          Environmental ({stats.environmental})
-        </Button>
-        <Button
-          variant={selectedCategory === "social" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCategory("social")}
-          className="text-blue-600"
-        >
-          <Users className="h-4 w-4 mr-1" />
-          Social ({stats.social})
-        </Button>
-        <Button
-          variant={selectedCategory === "governance" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCategory("governance")}
-          className="text-purple-600"
-        >
-          <Shield className="h-4 w-4 mr-1" />
-          Governance ({stats.governance})
-        </Button>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMetrics.map((metric) => (
-          <ESGMetricCard
-            key={metric.id}
-            metric={metric}
-            onEdit={onEditMetric}
-            onViewDetails={onViewMetricDetails}
-          />
-        ))}
-      </div>
-
-      {filteredMetrics.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No Metrics Found</h3>
-            <p className="text-muted-foreground">
-              {selectedCategory === "all"
-                ? "Start tracking your ESG performance by adding metrics."
-                : `No ${selectedCategory} metrics found. Try a different category.`}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <MetricDetailsModal
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+        metric={selectedMetric}
+        onMetricUpdated={(m) => {
+          onUpdateMetric?.(m);
+          setSelectedMetric(m);
+        }}
+      />
     </div>
   );
 }
