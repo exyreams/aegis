@@ -30,15 +30,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/AlertDialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
 import {
   Table,
   TableBody,
@@ -344,14 +342,41 @@ export function ESGDashboard({
       </Card>
 
       <MetricDetailsModal
+        metric={selectedMetric}
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        metric={selectedMetric}
-        onMetricUpdated={(m) => {
-          onUpdateMetric?.(m);
-          setSelectedMetric(m);
-        }}
+        onMetricUpdated={onUpdateMetric || (() => {})}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none shadow-2xl">
+          <div className="bg-red-50 dark:bg-red-950/20 p-6 flex flex-col items-center text-center space-y-4">
+            <div className="h-14 w-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+              <Trash2 className="h-7 w-7" />
+            </div>
+            <div className="space-y-1">
+               <DialogTitle className="text-xl font-bold text-red-900 dark:text-red-400">Confirm Deletion</DialogTitle>
+               <DialogDescription className="text-red-700/70 dark:text-red-400/60 font-medium">
+                  This action cannot be undone. Permanent data loss will occur for the metric:
+               </DialogDescription>
+            </div>
+            {metricToDelete && (
+              <div className="px-4 py-2 rounded-lg bg-red-100/50 dark:bg-red-900/40 border border-red-200 dark:border-red-800">
+                <p className="text-sm font-bold text-red-900 dark:text-red-300">{metricToDelete.name}</p>
+              </div>
+            )}
+          </div>
+          <div className="p-4 bg-white dark:bg-zinc-950 flex gap-3">
+            <Button variant="ghost" onClick={() => setDeleteConfirmOpen(false)} className="flex-1 font-bold">
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} className="flex-1 font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20">
+              Delete Metric
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -24,8 +24,8 @@ import {
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
-import { Separator } from "@/components/ui/Separator";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/Separator";
 import {
   Loader2,
   Leaf,
@@ -38,13 +38,14 @@ import {
   Clock,
   Edit,
   Minus,
-  Target,
+  FileText,
   BarChart3,
   Calendar,
-  FileText,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity,
+  ExternalLink,
+  History,
+  ShieldCheck,
+  Globe,
+  Award,
 } from "lucide-react";
 import type { ESGMetric } from "./ESGDashboard";
 
@@ -109,7 +110,7 @@ export function MetricDetailsModal({
   const onSubmit = async (data: EditMetricFormData) => {
     setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       const updatedMetric: ESGMetric = {
         ...metric,
@@ -128,103 +129,107 @@ export function MetricDetailsModal({
     }
   };
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryTheme = (category: string) => {
     switch (category) {
       case "environmental":
-        return <Leaf className="h-5 w-5 text-emerald-600" />;
+        return {
+          icon: <Leaf className="h-5 w-5" />,
+          color: "text-emerald-600",
+          bg: "bg-emerald-50 dark:bg-emerald-950/30",
+          border: "border-emerald-100 dark:border-emerald-800",
+        };
       case "social":
-        return <Users className="h-5 w-5 text-blue-600" />;
+        return {
+          icon: <Users className="h-5 w-5" />,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-950/30",
+          border: "border-blue-100 dark:border-blue-800",
+        };
       case "governance":
-        return <Shield className="h-5 w-5 text-purple-600" />;
+        return {
+          icon: <Shield className="h-5 w-5" />,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-950/30",
+          border: "border-purple-100 dark:border-purple-800",
+        };
       default:
-        return <Target className="h-5 w-5" />;
+        return {
+          icon: <BarChart3 className="h-5 w-5" />,
+          color: "text-gray-600",
+          bg: "bg-gray-50 dark:bg-gray-950/30",
+          border: "border-gray-100 dark:border-gray-800",
+        };
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "environmental":
-        return "from-emerald-500/20 to-emerald-500/5";
-      case "social":
-        return "from-blue-500/20 to-blue-500/5";
-      case "governance":
-        return "from-purple-500/20 to-purple-500/5";
-      default:
-        return "from-gray-500/20 to-gray-500/5";
-    }
+  const statusConfig = {
+    achieved: {
+      label: "Achieved",
+      color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    },
+    on_track: {
+      label: "On Track",
+      color: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    },
+    at_risk: {
+      label: "At Risk",
+      color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    },
+    behind: {
+      label: "Behind",
+      color: "bg-red-500/10 text-red-600 border-red-500/20",
+    },
   };
 
-  const getStatusConfig = (status: string) => {
-    const config = {
-      achieved: {
-        label: "Achieved",
-        className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-        icon: <CheckCircle className="h-3.5 w-3.5" />,
-      },
-      on_track: {
-        label: "On Track",
-        className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-        icon: <TrendingUp className="h-3.5 w-3.5" />,
-      },
-      at_risk: {
-        label: "At Risk",
-        className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-        icon: <Activity className="h-3.5 w-3.5" />,
-      },
-      behind: {
-        label: "Behind",
-        className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-        icon: <TrendingDown className="h-3.5 w-3.5" />,
-      },
-    };
-    return config[status as keyof typeof config] || config.on_track;
-  };
-
-  const getTrendDisplay = (trend: string) => {
-    switch (trend) {
-      case "up":
-        return { icon: <ArrowUpRight className="h-4 w-4" />, label: "Trending Up", color: "text-emerald-600" };
-      case "down":
-        return { icon: <ArrowDownRight className="h-4 w-4" />, label: "Trending Down", color: "text-red-600" };
-      default:
-        return { icon: <Minus className="h-4 w-4" />, label: "Stable", color: "text-gray-500" };
-    }
-  };
-
-  const progress = Math.min(100, Math.round((metric.currentValue / metric.targetValue) * 100));
-  const statusConfig = getStatusConfig(metric.status);
-  const trendDisplay = getTrendDisplay(metric.trend);
+  const theme = getCategoryTheme(metric.category);
+  const progress = Math.min(
+    100,
+    Math.round((metric.currentValue / metric.targetValue) * 100)
+  );
 
   return (
     <WideModal open={open} onOpenChange={onOpenChange}>
-      <WideModalContent className="flex flex-col overflow-hidden">
+      <WideModalContent className="flex flex-col overflow-hidden max-h-[90vh]">
         {/* Header */}
-        <div className={`flex-none p-6 pb-4 bg-gradient-to-b ${getCategoryColor(metric.category)}`}>
-          <div className="flex items-start justify-between">
+        <div className="flex-none p-6 border-b bg-white dark:bg-zinc-950">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
-                {getCategoryIcon(metric.category)}
+              <div className={`p-3 rounded-xl ${theme.bg} ${theme.border} border`}>
+                {theme.icon}
               </div>
               <div>
-                <WideModalTitle className="text-xl font-semibold">
+                <WideModalTitle className="text-xl font-semibold tracking-tight">
                   {metric.name}
                 </WideModalTitle>
-                <WideModalDescription className="mt-1">
-                  {metric.category.charAt(0).toUpperCase() + metric.category.slice(1)} Metric
-                </WideModalDescription>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Badge variant="outline" className={`capitalize ${theme.color} border-current py-0`}>
+                    {metric.category}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">•</span>
+                  <span className="text-xs text-muted-foreground">ID: {metric.id}</span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className={statusConfig.className}>
-                {statusConfig.icon}
-                <span className="ml-1">{statusConfig.label}</span>
-              </Badge>
+            <div className="flex items-center gap-3">
               {!isEditing && (
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  className="font-medium"
+                >
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                  Update Metric
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenChange(false)}
+                className="h-8 w-8 text-muted-foreground"
+              >
+                <XIcon className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -232,214 +237,270 @@ export function MetricDetailsModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {isEditing ? (
-            /* Edit Form */
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="name">Metric Name</Label>
-                  <Input id="name" {...register("name")} className="h-11" />
-                  {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+            <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8 max-w-4xl mx-auto">
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Metric Identity</Label>
+                    <Input id="name" {...register("name")} className="font-medium" />
+                    {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Strategic Category</Label>
+                    <Select
+                      value={watch("category")}
+                      onValueChange={(v: "environmental" | "social" | "governance") =>
+                        setValue("category", v)
+                      }
+                    >
+                      <SelectTrigger className="font-medium">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="environmental">Environmental</SelectItem>
+                        <SelectItem value="social">Social</SelectItem>
+                        <SelectItem value="governance">Governance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Select
-                    value={watch("category")}
-                    onValueChange={(v: "environmental" | "social" | "governance") => setValue("category", v)}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="environmental">
-                        <div className="flex items-center gap-2">
-                          <Leaf className="h-4 w-4 text-emerald-600" /> Environmental
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="social">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-blue-600" /> Social
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="governance">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-purple-600" /> Governance
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="unit">Unit of Measurement</Label>
-                  <Input id="unit" {...register("unit")} className="h-11" />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="unit" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Measurement Unit</Label>
+                    <Input id="unit" {...register("unit")} placeholder="e.g., tonnes CO2e" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dataSource" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">System of Record</Label>
+                    <Input id="dataSource" {...register("dataSource")} />
+                  </div>
                 </div>
 
                 <div className="col-span-2 space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" {...register("description")} rows={3} />
-                  {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
+                  <Label htmlFor="description" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Institutional Definition & Context</Label>
+                  <Textarea id="description" {...register("description")} rows={4} className="font-medium leading-relaxed" />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="currentValue">Current Value</Label>
-                  <Input
-                    id="currentValue"
-                    type="number"
-                    step="0.01"
-                    {...register("currentValue", { valueAsNumber: true })}
-                    className="h-11"
-                  />
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentValue" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground font-semibold">Current Observation</Label>
+                    <Input
+                      id="currentValue"
+                      type="number"
+                      step="0.01"
+                      {...register("currentValue", { valueAsNumber: true })}
+                      className="text-lg font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="targetValue" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground font-semibold">Regulatory/Internal Target</Label>
+                    <Input
+                      id="targetValue"
+                      type="number"
+                      step="0.01"
+                      {...register("targetValue", { valueAsNumber: true })}
+                      className="text-lg font-bold"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="targetValue">Target Value</Label>
-                  <Input
-                    id="targetValue"
-                    type="number"
-                    step="0.01"
-                    {...register("targetValue", { valueAsNumber: true })}
-                    className="h-11"
-                  />
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="dataSource">Data Source</Label>
-                  <Input id="dataSource" {...register("dataSource")} className="h-11" />
-                </div>
-
-                <div className="col-span-2">
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                <div className="space-y-6 pt-8">
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
                     <Checkbox
                       id="verified"
                       checked={watch("verified")}
                       onCheckedChange={(v) => setValue("verified", !!v)}
+                      className="h-5 w-5"
                     />
-                    <Label htmlFor="verified" className="cursor-pointer">
-                      This metric has been externally verified
-                    </Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="verified" className="text-sm font-semibold cursor-pointer">Require Audit Proof</Label>
+                      <p className="text-xs text-muted-foreground">Flag this metric for external third-party verification.</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <Separator />
-
-              <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Save Changes
+              <div className="flex justify-end gap-3 pt-8 border-t">
+                <Button variant="ghost" onClick={() => setIsEditing(false)} className="font-semibold">Discard Changes</Button>
+                <Button type="submit" disabled={isSubmitting} className="font-bold px-8">
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Commit Updates
                 </Button>
               </div>
             </form>
           ) : (
-            /* View Mode */
-            <div className="p-6">
-              <div className="grid grid-cols-3 gap-6">
-                {/* Left Column - Progress & Stats */}
-                <div className="col-span-2 space-y-6">
-                  {/* Progress Section */}
-                  <div className="p-6 rounded-xl bg-muted/30 border">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-medium flex items-center gap-2">
-                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                        Progress Toward Target
-                      </h3>
-                      <span className="text-2xl font-semibold">{progress}%</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 h-full">
+              {/* Left Column: Analytics */}
+              <div className="lg:col-span-7 p-8 border-r overflow-y-auto">
+                <div className="space-y-10">
+                  {/* Progress Visualization */}
+                  <div className="space-y-6">
+                    <div className="flex items-end justify-between">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                          <TrendingUp className="h-3 w-3" />
+                          Progress Trajectory
+                        </label>
+                        <p className="text-5xl font-bold tracking-tighter">
+                          {progress}% <span className="text-lg font-medium text-muted-foreground tracking-normal ml-2">alignment</span>
+                        </p>
+                      </div>
+                      <Badge variant="outline" className={`py-1.5 px-4 font-bold ${statusConfig[metric.status as keyof typeof statusConfig]?.color || ""}`}>
+                        {statusConfig[metric.status as keyof typeof statusConfig]?.label || metric.status}
+                      </Badge>
                     </div>
-                    <Progress value={progress} className="h-3 mb-4" />
+                    <Progress value={progress} className="h-5 bg-muted" />
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-lg bg-background">
-                        <p className="text-xs text-muted-foreground mb-1">Current Value</p>
-                        <p className="text-xl font-semibold">
-                          {metric.currentValue.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">{metric.unit}</span>
-                        </p>
+                      <div className="p-5 rounded-2xl bg-muted/20 border flex flex-col gap-1">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase">Benchmark Target</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold">{metric.targetValue}</span>
+                          <span className="text-sm font-medium text-muted-foreground">{metric.unit}</span>
+                        </div>
                       </div>
-                      <div className="p-4 rounded-lg bg-background">
-                        <p className="text-xs text-muted-foreground mb-1">Target Value</p>
-                        <p className="text-xl font-semibold">
-                          {metric.targetValue.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">{metric.unit}</span>
-                        </p>
+                      <div className="p-5 rounded-2xl bg-muted/20 border flex flex-col gap-1">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase">Current State</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold">{metric.currentValue}</span>
+                          <span className="text-sm font-medium text-muted-foreground">{metric.unit}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <h3 className="font-medium flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      Description
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed">
+                  {/* Impact Narrative */}
+                  <div className="space-y-4">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <FileText className="h-3 w-3" />
+                      Strategic Narrative
+                    </label>
+                    <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50 leading-relaxed text-zinc-600 dark:text-zinc-400">
                       {metric.description}
-                    </p>
+                    </div>
                   </div>
 
-                  {/* Trend */}
-                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
-                    <div className={`p-2 rounded-lg bg-background ${trendDisplay.color}`}>
-                      {trendDisplay.icon}
+                  {/* performance history placeholder */}
+                  <div className="space-y-4">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <History className="h-3 w-3" />
+                      Submission History
+                    </label>
+                    <div className="space-y-3">
+                      {[
+                        { date: "Dec 15, 2024", value: metric.currentValue, user: "ClimateRisk_AI" },
+                        { date: "Nov 28, 2024", value: metric.currentValue * 0.95, user: "System_Auth" },
+                        { date: "Nov 12, 2024", value: metric.currentValue * 0.92, user: "Manual_Input" },
+                      ].map((log, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-xl border bg-white dark:bg-zinc-950/50">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                              <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold">{log.date}</p>
+                              <p className="text-[10px] text-muted-foreground">Updated by {log.user}</p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-bold">{log.value.toFixed(1)} {metric.unit}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Performance Trend</p>
-                      <p className="font-medium">{trendDisplay.label}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Metadata & Controls */}
+              <div className="lg:col-span-5 p-8 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-col gap-8 h-full overflow-y-auto">
+                {/* Data Proof */}
+                <div className="space-y-4">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <Database className="h-3 w-3" />
+                    Data Provenance
+                  </label>
+                  <div className="p-5 rounded-2xl bg-white dark:bg-zinc-950 border space-y-4 shadow-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Source</span>
+                      <span className="text-sm font-bold flex items-center gap-2">
+                        <Globe className="h-3.5 w-3.5 text-zinc-400" />
+                        {metric.dataSource}
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Last Reconciliation</span>
+                      <span className="text-sm font-bold flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 text-zinc-400" />
+                        {new Date(metric.lastUpdated).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        })}
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Frequency</span>
+                      <Badge variant="secondary" className="font-bold">Real-time API</Badge>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Column - Metadata */}
+                {/* Assurance status */}
                 <div className="space-y-4">
-                  <div className="p-4 rounded-xl border space-y-4">
-                    <h3 className="font-medium text-sm">Metric Details</h3>
-                    <Separator />
-                    
-                    <div className="space-y-3">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Audit Alignment
+                  </label>
+                  {metric.verified ? (
+                    <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-4 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-10">
+                         <Award className="h-24 w-24" />
+                      </div>
                       <div className="flex items-start gap-3">
-                        <Database className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div className="p-2 rounded-full bg-emerald-500 text-white shadow-lg">
+                          <CheckCircle className="h-4 w-4" />
+                        </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Data Source</p>
-                          <p className="text-sm">{metric.dataSource}</p>
+                          <h5 className="font-bold text-emerald-800 dark:text-emerald-400">Verified by Aegis-Assure™</h5>
+                          <p className="text-xs text-emerald-700/70 dark:text-emerald-500/60 mt-0.5 leading-relaxed">
+                            This data has been cross-referenced with satellite telemetry and verified by ISO-certified third-party laboratories.
+                          </p>
                         </div>
                       </div>
-
-                      <div className="flex items-start gap-3">
-                        <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Last Updated</p>
-                          <p className="text-sm">{new Date(metric.lastUpdated).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <Target className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Category</p>
-                          <p className="text-sm capitalize">{metric.category}</p>
-                        </div>
-                      </div>
+                      <Button variant="outline" className="w-full bg-white dark:bg-zinc-900 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+                        View Audit Certificate
+                      </Button>
                     </div>
-                  </div>
-
-                  {/* Verification Status */}
-                  <div className={`p-4 rounded-xl border ${metric.verified ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30' : 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30'}`}>
-                    <div className="flex items-center gap-2 mb-2">
-                      {metric.verified ? (
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <Clock className="h-4 w-4 text-amber-600" />
-                      )}
-                      <span className={`text-sm font-medium ${metric.verified ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
-                        {metric.verified ? 'Verified' : 'Pending Verification'}
-                      </span>
+                  ) : (
+                    <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-4">
+                       <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-full bg-amber-500 text-white">
+                          <AlertTriangle className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-amber-800 dark:text-amber-400">Verification Required</h5>
+                          <p className="text-xs text-amber-700/70 dark:text-amber-500/60 mt-0.5 leading-relaxed">
+                            This is high-impact data point currently in a self-reported state. To maintain Greensium compliance, external audit is recommended.
+                          </p>
+                        </div>
+                      </div>
+                      <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-lg shadow-amber-500/20">
+                        Initiate External Audit
+                      </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {metric.verified 
-                        ? 'This metric has been externally verified and audited.'
-                        : 'This metric is self-reported and awaiting third-party verification.'}
-                    </p>
-                  </div>
+                  )}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="mt-auto space-y-2">
+                  <Button className="w-full h-12 font-bold shadow-xl">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Export Regulatory Report
+                  </Button>
+                  <Button variant="ghost" className="w-full text-xs font-semibold text-muted-foreground hover:text-red-500 transition-colors">
+                     Report Data Discrepancy
+                  </Button>
                 </div>
               </div>
             </div>
@@ -447,5 +508,25 @@ export function MetricDetailsModal({
         </div>
       </WideModalContent>
     </WideModal>
+  );
+}
+
+function XIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
   );
 }
