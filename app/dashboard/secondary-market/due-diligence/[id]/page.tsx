@@ -415,6 +415,140 @@ export default function DueDiligenceDetailPage() {
     setTimeout(() => {
       setIsGenerating(false);
 
+      // Build financial metrics from actual loan covenants
+      const financials: FinancialMetric[] = loan.financialCovenants?.map(cov => ({
+        metric: cov.covenant.replace("Maximum ", "").replace("Minimum ", ""),
+        actual: cov.current,
+        covenant: cov.threshold,
+        headroom: cov.headroom,
+        status: cov.status.toLowerCase() as "pass" | "fail" | "warning"
+      })) || [
+        { metric: "Net Leverage", actual: `${loan.leverageRatio}x`, covenant: "< 4.50x", headroom: "N/A", status: "pass" }
+      ];
+
+      // Build documents from actual loan VDR
+      const documentsAnalyzed = loan.availableDocuments?.map(doc => ({
+        name: doc.name,
+        type: doc.type,
+        status: doc.status as "verified" | "pending"
+      })) || [
+        { name: "Senior Facility Agreement", type: "Legal", status: "verified" as const }
+      ];
+
+      // Build checks from actual loan data
+      const checks: DueDiligenceCheck[] = [];
+      
+      // Financial checks from actual covenants
+      loan.financialCovenants?.forEach((cov, i) => {
+        checks.push({
+          id: `f${i + 1}`,
+          category: "Financial",
+          subCategory: "Covenant Compliance",
+          check: cov.covenant,
+          status: cov.status === "PASS" ? "passed" : cov.status === "WARNING" ? "warning" : "failed",
+          score: cov.status === "PASS" ? 85 + Math.floor(Math.random() * 10) : cov.status === "WARNING" ? 65 + Math.floor(Math.random() * 10) : 40 + Math.floor(Math.random() * 15),
+          automated: true,
+          details: `Current: ${cov.current} vs Threshold: ${cov.threshold}. Headroom: ${cov.headroom}. Last tested: ${cov.testingDate}.`,
+          citation: {
+            docName: "Compliance Certificate",
+            page: Math.floor(Math.random() * 10) + 1,
+            clause: cov.clause,
+            textSnippet: `${cov.covenant} shall not exceed ${cov.threshold}`
+          }
+        });
+      });
+
+      // Legal check from transfer rights
+      if (loan.transferRights) {
+        checks.push({
+          id: "l1",
+          category: "Legal",
+          subCategory: "Transferability",
+          check: "Assignment & Transfer Rights",
+          status: loan.transferRights.borrowerConsentRequired ? "warning" : "passed",
+          score: loan.transferRights.borrowerConsentRequired ? 75 : 100,
+          automated: true,
+          details: `Minimum transfer: ${loan.transferRights.minimumTransferAmount}. Borrower consent: ${loan.transferRights.borrowerConsentRequired ? "Required" : "Not required"}. Assignment fee: ${loan.transferRights.assignmentFee}. Eligible assignees: ${loan.transferRights.eligibleAssignees || "Approved Lenders"}.`,
+          citation: {
+            docName: "Facility Agreement",
+            page: 142,
+            clause: loan.transferRights.clauseReference,
+            textSnippet: loan.transferRights.borrowerConsentRequired 
+              ? "The consent of the Borrower is required for any assignment..." 
+              : "The consent of the Borrower is not required for any assignment..."
+          }
+        });
+      }
+
+      // Market check from pricing
+      if (loan.marketMetrics) {
+        checks.push({
+          id: "m1",
+          category: "Market",
+          subCategory: "Valuation",
+          check: "Secondary Market Pricing",
+          status: "passed",
+          score: 92,
+          automated: true,
+          details: `Last trade: ${loan.marketMetrics.lastTrade?.price || 'N/A'} on ${loan.marketMetrics.lastTrade?.date || 'N/A'}. Bid/Ask spread: ${loan.marketMetrics.bidAskSpread}. 30-day volume: ${loan.marketMetrics.tradingVolume30d} trades.`,
+          citation: {
+            docName: "Bloomberg Pricing Feed",
+            page: 1,
+            textSnippet: `${loan.industry} ${loan.creditRating}: ${loan.marketMetrics.lastTrade?.price || 99} / ${(loan.marketMetrics.lastTrade?.price || 99) + 0.5}`
+          }
+        });
+      }
+
+      // Security check
+      if (loan.security) {
+        checks.push({
+          id: "l2",
+          category: "Legal",
+          subCategory: "Security Package",
+          check: "Collateral Verification",
+          status: "passed",
+          score: 88,
+          automated: true,
+          details: `Security type: ${loan.security.type}. Collateral: ${loan.security.collateral}. Guarantors: ${loan.security.guarantors?.join(", ") || "N/A"}. Perfection: ${loan.security.perfection}.`,
+          citation: {
+            docName: "Security Agreement",
+            page: 15,
+            textSnippet: `All present and future assets pledged as security...`
+          }
+        });
+      }
+
+      // ESG check if available
+      const esgDoc = loan.availableDocuments?.find(d => d.type === "ESG");
+      if (esgDoc) {
+        checks.push({
+          id: "e1",
+          category: "ESG",
+          subCategory: "Sustainability",
+          check: "ESG Compliance Review",
+          status: esgDoc.status === "verified" ? "passed" : "warning",
+          score: esgDoc.status === "verified" ? 85 : 60,
+          automated: true,
+          details: `${esgDoc.name} reviewed. Status: ${esgDoc.status}. ${esgDoc.description || ""}`,
+          citation: {
+            docName: esgDoc.name,
+            page: 1,
+            textSnippet: "Sustainability targets and environmental commitments verified."
+          }
+        });
+      }
+
+      // Build recommendations from risk factors
+      const recommendations = loan.riskFactors?.map(rf => `Monitor: ${rf}`) || [
+        "Standard monitoring recommended for all covenant metrics."
+      ];
+
+      // Add standard recommendations
+      const headroomWarnings = loan.financialCovenants?.filter(c => parseFloat(c.headroom) < 15);
+      if (headroomWarnings && headroomWarnings.length > 0) {
+        recommendations.unshift(`Covenant headroom below 15% on ${headroomWarnings.length} metric(s) - enhanced monitoring advised.`);
+      }
+
       const mockReport: DueDiligenceReport = {
         loanId: loan.id,
         borrower: loan.borrower,
@@ -422,81 +556,19 @@ export default function DueDiligenceDetailPage() {
         overallScore: loan.dueDiligenceScore,
         riskLevel: loan.riskLevel as "low" | "medium" | "high",
         generatedAt: new Date().toISOString(),
-        estimatedAt: "Q4 2023",
+        estimatedAt: loan.keyDates?.closeDate || "N/A",
         estimatedValue: loan.askingPrice,
-        confidenceLevel: 96,
-        documentsAnalyzed: [
-          { name: "Senior Facility Agreement", type: "Legal", status: "verified" },
-          { name: "FY23 Audited Accounts", type: "Financial", status: "verified" },
-          { name: "Q3 Compliance Cert", type: "Financial", status: "verified" },
-          { name: "Intercreditor Agreement", type: "Legal", status: "verified" },
-          { name: "ESG Impact Report 2024", type: "ESG", status: "pending" },
-        ],
-        financials: [
-          { metric: "Net Leverage", actual: "3.8x", covenant: "< 4.50x", headroom: "15.5%", status: "pass" },
-          { metric: "Interest Cover", actual: "4.2x", covenant: "> 3.00x", headroom: "40.0%", status: "pass" },
-          { metric: "Capex Spend", actual: "$12.5M", covenant: "< $15.0M", headroom: "16.6%", status: "warning" },
-          { metric: "Fixed Charge", actual: "2.1x", covenant: "> 1.10x", headroom: "90.9%", status: "pass" },
-        ],
-        checks: [
-          {
-            id: "f1",
-            category: "Financial",
-            subCategory: "Covenant Compliance",
-            check: "Net Leverage Headroom",
-            status: loan.dueDiligenceScore > 80 ? "passed" : "warning",
-            score: 88,
-            automated: true,
-            details: "Leverage remains within agreed parameters, though recent acquisition of Subsidiary B has increased debt load by 12%.",
-            citation: {
-              docName: "Compliance Cert Q3",
-              page: 4,
-              clause: "12.1 (Financial Condition)",
-              textSnippet: "Consolidated Total Net Debt shall not exceed 4.50:1",
-            },
-          },
-          {
-            id: "l1",
-            category: "Legal",
-            subCategory: "Transferability",
-            check: "Assignment & Transfer",
-            status: "passed",
-            score: 100,
-            automated: true,
-            details: "Standard LMA transfer provisions. No Borrower consent required for transfers to Approved Lenders or during an Event of Default.",
-            citation: {
-              docName: "Facility Agreement",
-              page: 142,
-              clause: "25.2 (Conditions of Assignment)",
-              textSnippet: "The consent of the Borrower is not required for any assignment...",
-            },
-          },
-          {
-            id: "m1",
-            category: "Market",
-            subCategory: "Valuation",
-            check: "Market Price Verification",
-            status: "passed",
-            score: 92,
-            automated: true,
-            details: `Bid/Ask spread in secondary market for ${loan.industry} B+ credits has tightened to 50bps. Asset is priced inline.`,
-            citation: {
-              docName: "Bloomberg Pricing Feed",
-              page: 1,
-              textSnippet: "Sector Curve B+ 3Y: 98.50 / 99.00",
-            },
-          },
-        ],
-        recommendations: [
-          "Monitor Capex spend; currently at 84% of covenant limit with one quarter remaining.",
-          "Verify validity of 'Portability' clause given current leverage exceeds the 3.25x threshold.",
-          "Request waiver for delayed SBTi submission to avoid margin ratchet penalty (+5 bps).",
-        ],
+        confidenceLevel: Math.min(98, 85 + Math.floor(loan.dueDiligenceScore / 10)),
+        documentsAnalyzed,
+        financials,
+        checks,
+        recommendations,
       };
       setActiveReport(mockReport);
       toast.success(`Due diligence completed for ${loan.borrower}`);
     }, 500);
   };
+
 
   useEffect(() => {
     if (!selectedLoan) {

@@ -1,342 +1,2099 @@
 [
   {
-    "id": "1",
-    "borrower": "Meridian Holdings PLC",
-    "originalLender": "Barclays Bank PLC",
-    "loanAmount": 75000000,
-    "outstandingAmount": 68500000,
+    "id": "L-734",
+    "borrower": "Vertex Cloud Dynamics",
+    "tickerSymbol": "VCX",
+    "originalLender": "Morgan Stanley",
+    "loanAmount": 350000000,
+    "outstandingAmount": 342000000,
     "interestRate": 8.25,
-    "maturityDate": "2028-06-15",
+    "maturityDate": "2029-09-30",
     "creditRating": "BB+",
-    "industry": "Industrial Services",
-    "askingPrice": 67825000,
+    "industry": "Enterprise SaaS Platform",
+    "sectorRegion": "North America",
+    "askingPrice": 339500000,
     "yieldToMaturity": 8.65,
+    "dueDiligenceScore": 92,
+    "listingDate": "2025-12-18",
+    "status": "active",
+    "riskLevel": "low",
+    "description": "Leading provider of cloud-native ERP solutions for mid-market manufacturing with 95% recurring revenue retention.",
+    "highlights": ["ARR growth of 22% YoY", "Churn rate < 4%", "Recently upgraded by Moody's"],
+    "revenue": 550000000,
+    "ebitda": 145000000,
+    "leverageRatio": 3.2,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "7 years",
+    "remainingTerm": "3.8 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "375bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 375 bps",
+      "margin": 3.75,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Substantially all assets including IP portfolio and accounts receivable",
+      "guarantors": ["Vertex Holdings", "Vertex US Ops"],
+      "perfection": "UCC-1 filings completed"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "4.50:1.00",
+        "current": "3.20:1.00",
+        "headroom": "28.8%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$2,500,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Approved Funds"
+    },
+    "availableDocuments": [
+      {
+        "name": "Senior Facilities Agreement",
+        "type": "Legal",
+        "date": "2023-09-30",
+        "pages": 210,
+        "status": "verified",
+        "description": "Primary credit agreement"
+      },
+      {
+        "name": "SaaS Metrics Dashboard Q3 2025",
+        "type": "Financial",
+        "date": "2025-10-15",
+        "pages": 15,
+        "status": "verified",
+        "description": "CAC, LTV, and Churn analysis"
+      }
+    ],
+    "useOfProceeds": "Refinancing existing debt and funding R&D expansion",
+    "administrativeAgent": "Morgan Stanley Senior Funding",
+    "bookrunners": ["Morgan Stanley", "JP Morgan"],
+    "syndication": {
+      "totalLenders": 8,
+      "leadArrangers": ["Morgan Stanley"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.25,
+        "date": "2025-12-10"
+      },
+      "bidAskSpread": "25bps",
+      "tradingVolume30d": 5,
+      "averageLifeYTM": 8.50
+    },
+    "keyDates": {
+      "closeDate": "2023-09-30",
+      "firstPaymentDate": "2023-12-30",
+      "nextPaymentDate": "2026-03-30",
+      "maturityDate": "2029-09-30",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Competitive pressure from large hyperscalers",
+      "Integration risks from recent tuck-in acquisition"
+    ]
+  },
+  {
+    "id": "L-735",
+    "borrower": "Nordic Wind Holdings",
+    "tickerSymbol": "NWH",
+    "originalLender": "Deutsche Bank",
+    "loanAmount": 600000000,
+    "outstandingAmount": 585000000,
+    "interestRate": 6.75,
+    "maturityDate": "2030-03-15",
+    "creditRating": "BBB-",
+    "industry": "Renewable Energy Infrastructure",
+    "sectorRegion": "EMEA",
+    "askingPrice": 578000000,
+    "yieldToMaturity": 7.10,
+    "dueDiligenceScore": 89,
+    "listingDate": "2025-12-16",
+    "status": "active",
+    "riskLevel": "low",
+    "description": "Operator of offshore wind farms in the North Sea with long-term government PPAs.",
+    "highlights": ["State-backed PPAs for 15 years", "High ESG rating", "Stable cash flow"],
+    "revenue": 820000000,
+    "ebitda": 310000000,
+    "leverageRatio": 3.8,
+    "facilityType": "Green Term Loan",
+    "currency": "EUR",
+    "originalTerm": "10 years",
+    "remainingTerm": "4.2 years",
+    "pricing": {
+      "baseRate": "EURIBOR",
+      "spread": "250bps",
+      "floor": "0.00%",
+      "allInRate": "EURIBOR + 250 bps",
+      "margin": 2.50,
+      "paymentFrequency": "Semi-Annual"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Wind turbines, transmission cables, and assignment of PPA contracts",
+      "guarantors": ["Nordic Wind Parent"],
+      "perfection": "Registered with local maritime authorities"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Debt Service Coverage Ratio",
+        "clause": "12.3",
+        "threshold": "1.20:1.00",
+        "current": "1.45:1.00",
+        "headroom": "20.8%",
+        "status": "PASS",
+        "testingDate": "2025-06-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "€2,000,000",
+      "minimumHoldAmount": "€5,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required unless Event of Default",
+      "yieldProtection": "None",
+      "assignmentFee": "€2,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Banks and Infrastructure Funds"
+    },
+    "availableDocuments": [
+      {
+        "name": "Technical Due Diligence Report",
+        "type": "Technical",
+        "date": "2024-12-15",
+        "pages": 145,
+        "status": "verified",
+        "description": "Turbine efficiency and maintenance logs"
+      },
+      {
+        "name": "Power Purchase Agreement",
+        "type": "Legal",
+        "date": "2020-03-15",
+        "pages": 88,
+        "status": "verified",
+        "description": "Contract with National Grid"
+      }
+    ],
+    "useOfProceeds": "Construction of Phase 2 offshore farm",
+    "administrativeAgent": "Deutsche Bank AG",
+    "bookrunners": ["Deutsche Bank", "Nordea", "BNP Paribas"],
+    "syndication": {
+      "totalLenders": 15,
+      "leadArrangers": ["Deutsche Bank"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 98.80,
+        "date": "2025-11-28"
+      },
+      "bidAskSpread": "40bps",
+      "tradingVolume30d": 2,
+      "averageLifeYTM": 7.05
+    },
+    "keyDates": {
+      "closeDate": "2020-03-15",
+      "firstPaymentDate": "2020-09-15",
+      "nextPaymentDate": "2026-03-15",
+      "maturityDate": "2030-03-15",
+      "lastCovenantTest": "2025-06-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Weather dependency impacting output",
+      "Maintenance costs increasing with turbine age"
+    ]
+  },
+  {
+    "id": "L-736",
+    "borrower": "Heritage Department Stores",
+    "tickerSymbol": "HDS",
+    "originalLender": "Citigroup",
+    "loanAmount": 180000000,
+    "outstandingAmount": 175000000,
+    "interestRate": 11.50,
+    "maturityDate": "2027-01-15",
+    "creditRating": "B-",
+    "industry": "Big Box Retail",
+    "sectorRegion": "North America",
+    "askingPrice": 148750000,
+    "yieldToMaturity": 18.20,
+    "dueDiligenceScore": 52,
+    "listingDate": "2025-12-19",
+    "status": "active",
+    "riskLevel": "high",
+    "description": "Legacy brick-and-mortar retail chain undergoing digital transformation amid declining foot traffic.",
+    "highlights": ["Real estate assets valued at $200M", "New e-commerce leadership"],
+    "revenue": 950000000,
+    "ebitda": 45000000,
+    "leverageRatio": 5.8,
+    "facilityType": "Unitranche",
+    "currency": "USD",
+    "originalTerm": "5 years",
+    "remainingTerm": "1.1 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "700bps",
+      "floor": "1.00%",
+      "allInRate": "SOFR + 700 bps",
+      "margin": 7.00,
+      "paymentFrequency": "Monthly"
+    },
+    "security": {
+      "type": "Second Lien",
+      "collateral": "Inventory and Real Estate (Subordinated to ABL)",
+      "guarantors": ["HDS OpCo"],
+      "perfection": "UCC-1 filings verified"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Minimum Interest Coverage Ratio",
+        "clause": "12.1(b)",
+        "threshold": "1.75:1.00",
+        "current": "1.80:1.00",
+        "headroom": "2.8%",
+        "status": "WARNING",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      },
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "6.00:1.00",
+        "current": "5.80:1.00",
+        "headroom": "3.3%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$500,000",
+      "minimumHoldAmount": "$1,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "$2,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Any financial institution"
+    },
+    "availableDocuments": [
+      {
+        "name": "Restructuring Consultant Report",
+        "type": "Advisory",
+        "date": "2025-08-20",
+        "pages": 65,
+        "status": "verified",
+        "description": "AlixPartners operational review"
+      },
+      {
+        "name": "Real Estate Appraisal",
+        "type": "Valuation",
+        "date": "2025-06-30",
+        "pages": 120,
+        "status": "verified",
+        "description": "Appraisal of owned store locations"
+      }
+    ],
+    "useOfProceeds": "Working capital and store refurbishment",
+    "administrativeAgent": "Citigroup Global Markets",
+    "bookrunners": ["Citigroup"],
+    "syndication": {
+      "totalLenders": 6,
+      "leadArrangers": ["Citigroup"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 85.00,
+        "date": "2025-12-12"
+      },
+      "bidAskSpread": "250bps",
+      "tradingVolume30d": 10,
+      "averageLifeYTM": 18.00
+    },
+    "keyDates": {
+      "closeDate": "2022-01-15",
+      "firstPaymentDate": "2022-02-15",
+      "nextPaymentDate": "2026-01-15",
+      "maturityDate": "2027-01-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Secular decline in department store revenue",
+      "Tight liquidity position",
+      "Inventory obsolescence risk"
+    ]
+  },
+  {
+    "id": "L-737",
+    "borrower": "Heartland Logistics Group",
+    "tickerSymbol": "HLG",
+    "originalLender": "Wells Fargo",
+    "loanAmount": 220000000,
+    "outstandingAmount": 205000000,
+    "interestRate": 9.10,
+    "maturityDate": "2028-11-20",
+    "creditRating": "BB",
+    "industry": "Transportation & Logistics",
+    "sectorRegion": "North America",
+    "askingPrice": 202950000,
+    "yieldToMaturity": 9.45,
+    "dueDiligenceScore": 82,
+    "listingDate": "2025-12-15",
+    "status": "active",
+    "riskLevel": "medium",
+    "description": "National trucking and last-mile delivery provider servicing major e-commerce platforms.",
+    "highlights": ["Fleet utilization at 92%", "Fuel surcharge mechanism in place"],
+    "revenue": 620000000,
+    "ebitda": 88000000,
+    "leverageRatio": 3.9,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "6 years",
+    "remainingTerm": "2.9 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "450bps",
+      "floor": "0.75%",
+      "allInRate": "SOFR + 450 bps",
+      "margin": 4.50,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Fleet vehicles, logistics centers, and receivables",
+      "guarantors": ["Heartland OpCo"],
+      "perfection": "DMV Liens and UCC-1"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "4.50:1.00",
+        "current": "3.90:1.00",
+        "headroom": "13.3%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$2,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Reasonable",
+      "yieldProtection": "Soft call protection 101",
+      "assignmentFee": "$3,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Banks and Funds"
+    },
+    "availableDocuments": [
+      {
+        "name": "Fleet Appraisal Report",
+        "type": "Valuation",
+        "date": "2025-01-15",
+        "pages": 56,
+        "status": "verified",
+        "description": "Valuation of tractor-trailer assets"
+      }
+    ],
+    "useOfProceeds": "Fleet modernization and acquisition of regional carrier",
+    "administrativeAgent": "Wells Fargo Bank",
+    "bookrunners": ["Wells Fargo", "BofA Securities"],
+    "syndication": {
+      "totalLenders": 10,
+      "leadArrangers": ["Wells Fargo"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.00,
+        "date": "2025-12-05"
+      },
+      "bidAskSpread": "50bps",
+      "tradingVolume30d": 4,
+      "averageLifeYTM": 9.40
+    },
+    "keyDates": {
+      "closeDate": "2022-11-20",
+      "firstPaymentDate": "2023-02-20",
+      "nextPaymentDate": "2026-02-20",
+      "maturityDate": "2028-11-20",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Rising fuel costs not fully recoverable",
+      "Driver shortage impacting capacity"
+    ]
+  },
+  {
+    "id": "L-738",
+    "borrower": "BioGen Pharmaceuticals",
+    "tickerSymbol": "BGP",
+    "originalLender": "Goldman Sachs",
+    "loanAmount": 450000000,
+    "outstandingAmount": 440000000,
+    "interestRate": 7.90,
+    "maturityDate": "2031-06-30",
+    "creditRating": "BB+",
+    "industry": "Pharmaceutical Manufacturing",
+    "sectorRegion": "North America",
+    "askingPrice": 435600000,
+    "yieldToMaturity": 8.15,
     "dueDiligenceScore": 94,
-    "listingDate": "2025-01-02",
+    "listingDate": "2025-12-20",
     "status": "active",
-    "riskLevel": "low"
+    "riskLevel": "low",
+    "description": "Contract Development and Manufacturing Organization (CDMO) for biologics and gene therapies.",
+    "highlights": ["3 FDA approved facilities", "Long-term contracts with Big Pharma", "High barriers to entry"],
+    "revenue": 600000000,
+    "ebitda": 180000000,
+    "leverageRatio": 3.0,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "7 years",
+    "remainingTerm": "5.5 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "325bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 325 bps",
+      "margin": 3.25,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Manufacturing plants, IP, and equipment",
+      "guarantors": ["BioGen Holdings"],
+      "perfection": "UCC-1 and Patent Office filings"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "4.00:1.00",
+        "current": "3.00:1.00",
+        "headroom": "25.0%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$5,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Approved Funds"
+    },
+    "availableDocuments": [
+      {
+        "name": "FDA Compliance Audit",
+        "type": "Regulatory",
+        "date": "2025-04-10",
+        "pages": 42,
+        "status": "verified",
+        "description": "Summary of recent facility inspections"
+      }
+    ],
+    "useOfProceeds": "Expansion of cell therapy production lines",
+    "administrativeAgent": "Goldman Sachs Bank USA",
+    "bookrunners": ["Goldman Sachs", "Jefferies"],
+    "syndication": {
+      "totalLenders": 14,
+      "leadArrangers": ["Goldman Sachs"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.75,
+        "date": "2025-12-18"
+      },
+      "bidAskSpread": "20bps",
+      "tradingVolume30d": 8,
+      "averageLifeYTM": 8.00
+    },
+    "keyDates": {
+      "closeDate": "2024-06-30",
+      "firstPaymentDate": "2024-09-30",
+      "nextPaymentDate": "2026-03-30",
+      "maturityDate": "2031-06-30",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Regulatory risk regarding FDA approvals",
+      "Customer concentration with top 2 clients"
+    ]
   },
   {
-    "id": "2",
-    "borrower": "TechFlow Solutions Ltd",
-    "originalLender": "HSBC Bank PLC",
-    "loanAmount": 45000000,
-    "outstandingAmount": 42300000,
-    "interestRate": 7.85,
+    "id": "L-739",
+    "borrower": "EuroSteel Works GmbH",
+    "tickerSymbol": "ESW",
+    "originalLender": "Commerzbank",
+    "loanAmount": 275000000,
+    "outstandingAmount": 260000000,
+    "interestRate": 7.50,
+    "maturityDate": "2028-05-15",
+    "creditRating": "BB",
+    "industry": "Industrial Manufacturing",
+    "sectorRegion": "EMEA",
+    "askingPrice": 252200000,
+    "yieldToMaturity": 8.25,
+    "dueDiligenceScore": 76,
+    "listingDate": "2025-12-17",
+    "status": "active",
+    "riskLevel": "medium",
+    "description": "Specialized steel manufacturer for automotive and aerospace sectors in Central Europe.",
+    "highlights": ["Strategic supplier to major German auto OEMs", "Modern electric arc furnace technology"],
+    "revenue": 520000000,
+    "ebitda": 68000000,
+    "leverageRatio": 4.1,
+    "facilityType": "Term Loan B",
+    "currency": "EUR",
+    "originalTerm": "5 years",
+    "remainingTerm": "2.4 years",
+    "pricing": {
+      "baseRate": "EURIBOR",
+      "spread": "375bps",
+      "floor": "0.00%",
+      "allInRate": "EURIBOR + 375 bps",
+      "margin": 3.75,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Plant, machinery, and real estate in Germany",
+      "guarantors": ["ESW Holdings"],
+      "perfection": "Notarized land charges"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "4.50:1.00",
+        "current": "4.10:1.00",
+        "headroom": "8.8%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "€1,000,000",
+      "minimumHoldAmount": "€2,500,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "None",
+      "assignmentFee": "€2,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Banks"
+    },
+    "availableDocuments": [
+      {
+        "name": "Environmental Impact Assessment",
+        "type": "ESG",
+        "date": "2023-05-15",
+        "pages": 78,
+        "status": "verified",
+        "description": "Carbon footprint analysis"
+      }
+    ],
+    "useOfProceeds": "Refinancing and facility modernization",
+    "administrativeAgent": "Commerzbank AG",
+    "bookrunners": ["Commerzbank", "UniCredit"],
+    "syndication": {
+      "totalLenders": 9,
+      "leadArrangers": ["Commerzbank"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 97.00,
+        "date": "2025-11-15"
+      },
+      "bidAskSpread": "75bps",
+      "tradingVolume30d": 1,
+      "averageLifeYTM": 8.10
+    },
+    "keyDates": {
+      "closeDate": "2023-05-15",
+      "firstPaymentDate": "2023-08-15",
+      "nextPaymentDate": "2026-02-15",
+      "maturityDate": "2028-05-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Energy price volatility in Europe",
+      "Cyclical automotive demand"
+    ]
+  },
+  {
+    "id": "L-740",
+    "borrower": "SoCal Hospitality REIT",
+    "tickerSymbol": "SCR",
+    "originalLender": "Bank of America",
+    "loanAmount": 125000000,
+    "outstandingAmount": 125000000,
+    "interestRate": 8.50,
+    "maturityDate": "2027-06-15",
+    "creditRating": "B+",
+    "industry": "Real Estate (Hospitality)",
+    "sectorRegion": "North America",
+    "askingPrice": 118750000,
+    "yieldToMaturity": 9.80,
+    "dueDiligenceScore": 68,
+    "listingDate": "2025-12-14",
+    "status": "active",
+    "riskLevel": "medium",
+    "description": "Owner of 12 full-service hotel properties in Southern California.",
+    "highlights": ["Prime locations", "RevPAR recovering to pre-pandemic levels"],
+    "revenue": 180000000,
+    "ebitda": 35000000,
+    "leverageRatio": 5.2,
+    "facilityType": "Mezzanine",
+    "currency": "USD",
+    "originalTerm": "4 years",
+    "remainingTerm": "1.5 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "550bps",
+      "floor": "1.00%",
+      "allInRate": "SOFR + 550 bps",
+      "margin": 5.50,
+      "paymentFrequency": "Monthly"
+    },
+    "security": {
+      "type": "Second Lien",
+      "collateral": "Equity pledge of property holding companies",
+      "guarantors": ["SoCal Parent"],
+      "perfection": "UCC-1 on Equity Interests"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Debt Yield",
+        "clause": "12.4",
+        "threshold": "8.0%",
+        "current": "8.2%",
+        "headroom": "2.5%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$500,000",
+      "minimumHoldAmount": "$1,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "Exit fee 1%",
+      "assignmentFee": "$2,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "REITs and Private Equity"
+    },
+    "availableDocuments": [
+      {
+        "name": "STR Reports",
+        "type": "Market Data",
+        "date": "2025-10-31",
+        "pages": 25,
+        "status": "verified",
+        "description": "Occupancy and ADR benchmarking"
+      }
+    ],
+    "useOfProceeds": "Portfolio renovation program",
+    "administrativeAgent": "Bank of America N.A.",
+    "bookrunners": ["Bank of America"],
+    "syndication": {
+      "totalLenders": 5,
+      "leadArrangers": ["Bank of America"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 95.00,
+        "date": "2025-12-01"
+      },
+      "bidAskSpread": "150bps",
+      "tradingVolume30d": 2,
+      "averageLifeYTM": 9.75
+    },
+    "keyDates": {
+      "closeDate": "2023-06-15",
+      "firstPaymentDate": "2023-07-15",
+      "nextPaymentDate": "2026-01-15",
+      "maturityDate": "2027-06-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "High leverage at 5.2x",
+      "Sensitivity to discretionary travel spending"
+    ]
+  },
+  {
+    "id": "L-741",
+    "borrower": "Pacific Deep Sea Mining",
+    "tickerSymbol": "PDS",
+    "originalLender": "ANZ Bank",
+    "loanAmount": 150000000,
+    "outstandingAmount": 145000000,
+    "interestRate": 10.25,
+    "maturityDate": "2026-09-30",
+    "creditRating": "B",
+    "industry": "Mining & Metals",
+    "sectorRegion": "Asia Pacific",
+    "askingPrice": 123250000,
+    "yieldToMaturity": 14.50,
+    "dueDiligenceScore": 58,
+    "listingDate": "2025-12-21",
+    "status": "active",
+    "riskLevel": "high",
+    "description": "Exploration and extraction of polymetallic nodules in the Clarion-Clipperton Zone.",
+    "highlights": ["Large proven reserves of Nickel and Cobalt", "High regulatory scrutiny"],
+    "revenue": 120000000,
+    "ebitda": 25000000,
+    "leverageRatio": 5.8,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "4 years",
+    "remainingTerm": "0.8 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "600bps",
+      "floor": "1.00%",
+      "allInRate": "SOFR + 600 bps",
+      "margin": 6.00,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Mining vessels and exploration licenses",
+      "guarantors": ["PDS Australia"],
+      "perfection": "Filed with International Seabed Authority"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Minimum Liquidity",
+        "clause": "12.5",
+        "threshold": "$10,000,000",
+        "current": "$12,000,000",
+        "headroom": "20.0%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$1,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Hedge Funds and Distressed Desks"
+    },
+    "availableDocuments": [
+      {
+        "name": "Resource Reserve Report (NI 43-101)",
+        "type": "Technical",
+        "date": "2024-01-20",
+        "pages": 180,
+        "status": "verified",
+        "description": "Independent verification of mineral deposits"
+      }
+    ],
+    "useOfProceeds": "Vessel retrofitting",
+    "administrativeAgent": "ANZ Bank",
+    "bookrunners": ["ANZ", "Macquarie"],
+    "syndication": {
+      "totalLenders": 7,
+      "leadArrangers": ["ANZ"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 85.00,
+        "date": "2025-11-05"
+      },
+      "bidAskSpread": "300bps",
+      "tradingVolume30d": 1,
+      "averageLifeYTM": 14.25
+    },
+    "keyDates": {
+      "closeDate": "2022-09-30",
+      "firstPaymentDate": "2022-12-30",
+      "nextPaymentDate": "2026-03-30",
+      "maturityDate": "2026-09-30",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Environmental regulation potentially halting operations",
+      "Volatile commodity prices",
+      "Refinancing risk high"
+    ]
+  },
+  {
+    "id": "L-742",
+    "borrower": "CyberDefend Corp",
+    "tickerSymbol": "CYB",
+    "originalLender": "Barclays",
+    "loanAmount": 200000000,
+    "outstandingAmount": 195000000,
+    "interestRate": 8.10,
+    "maturityDate": "2029-02-28",
+    "creditRating": "BB",
+    "industry": "Cybersecurity Software",
+    "sectorRegion": "North America",
+    "askingPrice": 193050000,
+    "yieldToMaturity": 8.40,
+    "dueDiligenceScore": 90,
+    "listingDate": "2025-12-18",
+    "status": "active",
+    "riskLevel": "low",
+    "description": "Provider of endpoint security and threat intelligence for federal agencies.",
+    "highlights": ["FedRAMP authorized", "Zero churn in government contracts"],
+    "revenue": 380000000,
+    "ebitda": 95000000,
+    "leverageRatio": 3.5,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "6 years",
+    "remainingTerm": "3.2 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "350bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 350 bps",
+      "margin": 3.50,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "IP and Government Contracts (subject to assignment restrictions)",
+      "guarantors": ["CyberDefend Gov"],
+      "perfection": "UCC-1"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "4.50:1.00",
+        "current": "3.50:1.00",
+        "headroom": "22.2%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$2,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required (National Security restrictions)",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "US Persons Only"
+    },
+    "availableDocuments": [
+      {
+        "name": "Quality of Earnings Report",
+        "type": "Financial",
+        "date": "2023-12-31",
+        "pages": 90,
+        "status": "verified",
+        "description": "KPMG audit"
+      }
+    ],
+    "useOfProceeds": "M&A war chest",
+    "administrativeAgent": "Barclays Bank PLC",
+    "bookrunners": ["Barclays", "RBC Capital Markets"],
+    "syndication": {
+      "totalLenders": 11,
+      "leadArrangers": ["Barclays"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.00,
+        "date": "2025-12-15"
+      },
+      "bidAskSpread": "35bps",
+      "tradingVolume30d": 6,
+      "averageLifeYTM": 8.35
+    },
+    "keyDates": {
+      "closeDate": "2023-02-28",
+      "firstPaymentDate": "2023-05-31",
+      "nextPaymentDate": "2026-02-28",
+      "maturityDate": "2029-02-28",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "High R&D spend required to stay competitive",
+      "Government budget cycles"
+    ]
+  },
+  {
+    "id": "L-743",
+    "borrower": "London Fintech Payment Rails",
+    "tickerSymbol": "LFP",
+    "originalLender": "HSBC",
+    "loanAmount": 80000000,
+    "outstandingAmount": 80000000,
+    "interestRate": 9.50,
     "maturityDate": "2027-11-30",
-    "creditRating": "A-",
-    "industry": "Technology",
-    "askingPrice": 41500000,
-    "yieldToMaturity": 8.12,
-    "dueDiligenceScore": 96,
-    "listingDate": "2025-01-01",
+    "creditRating": "B",
+    "industry": "Fintech / Payments",
+    "sectorRegion": "EMEA",
+    "askingPrice": 72000000,
+    "yieldToMaturity": 12.50,
+    "dueDiligenceScore": 60,
+    "listingDate": "2025-12-12",
     "status": "active",
-    "riskLevel": "low"
+    "riskLevel": "high",
+    "description": "Cross-border payment processor focusing on emerging markets.",
+    "highlights": ["Transaction volume up 40% YoY", "Facing regulatory fines in 2 jurisdictions"],
+    "revenue": 150000000,
+    "ebitda": -10000000,
+    "leverageRatio": 8.0,
+    "facilityType": "Growth Debt",
+    "currency": "GBP",
+    "originalTerm": "4 years",
+    "remainingTerm": "1.9 years",
+    "pricing": {
+      "baseRate": "SONIA",
+      "spread": "600bps",
+      "floor": "0.50%",
+      "allInRate": "SONIA + 600 bps",
+      "margin": 6.00,
+      "paymentFrequency": "Monthly"
+    },
+    "security": {
+      "type": "All Assets",
+      "collateral": "Software code and bank accounts",
+      "guarantors": ["Founders Personal Guarantee (Partial)"],
+      "perfection": "Companies House Registration"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Minimum Recurring Revenue",
+        "clause": "12.2",
+        "threshold": "£100,000,000",
+        "current": "£110,000,000",
+        "headroom": "10.0%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "£500,000",
+      "minimumHoldAmount": "£1,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "Warrant coverage",
+      "assignmentFee": "£1,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Venture Debt Funds"
+    },
+    "availableDocuments": [
+      {
+        "name": "Regulatory Settlement Agreement",
+        "type": "Legal",
+        "date": "2025-08-15",
+        "pages": 30,
+        "status": "verified",
+        "description": "Details of FCA fine payment schedule"
+      }
+    ],
+    "useOfProceeds": "Market expansion and legal costs",
+    "administrativeAgent": "HSBC Innovation Banking",
+    "bookrunners": ["HSBC"],
+    "syndication": {
+      "totalLenders": 3,
+      "leadArrangers": ["HSBC"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 90.00,
+        "date": "2025-11-30"
+      },
+      "bidAskSpread": "200bps",
+      "tradingVolume30d": 1,
+      "averageLifeYTM": 12.20
+    },
+    "keyDates": {
+      "closeDate": "2023-11-30",
+      "firstPaymentDate": "2024-02-28",
+      "nextPaymentDate": "2026-02-28",
+      "maturityDate": "2027-11-30",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Negative EBITDA",
+      "Regulatory compliance risks",
+      "FX volatility"
+    ]
   },
   {
-    "id": "3",
-    "borrower": "GreenEnergy Corp",
-    "originalLender": "Lloyds Banking Group",
-    "loanAmount": 120000000,
-    "outstandingAmount": 115000000,
-    "interestRate": 9.15,
-    "maturityDate": "2029-03-20",
+    "id": "L-744",
+    "borrower": "Midwest Auto Parts",
+    "tickerSymbol": "MAP",
+    "originalLender": "PNC Bank",
+    "loanAmount": 160000000,
+    "outstandingAmount": 140000000,
+    "interestRate": 8.00,
+    "maturityDate": "2028-04-15",
+    "creditRating": "BB",
+    "industry": "Automotive Aftermarket",
+    "sectorRegion": "North America",
+    "askingPrice": 138600000,
+    "yieldToMaturity": 8.50,
+    "dueDiligenceScore": 84,
+    "listingDate": "2025-12-16",
+    "status": "active",
+    "riskLevel": "medium",
+    "description": "Manufacturer and distributor of aftermarket brake and suspension components.",
+    "highlights": ["Consistent cash flow", "Recession-resistant business model"],
+    "revenue": 350000000,
+    "ebitda": 55000000,
+    "leverageRatio": 3.6,
+    "facilityType": "Revolving Credit Facility",
+    "currency": "USD",
+    "originalTerm": "5 years",
+    "remainingTerm": "2.3 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "300bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 300 bps",
+      "margin": 3.00,
+      "paymentFrequency": "Monthly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Inventory and Receivables (ABL structure)",
+      "guarantors": ["MAP Holdings"],
+      "perfection": "UCC-1"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Fixed Charge Coverage Ratio",
+        "clause": "12.1(b)",
+        "threshold": "1.10:1.00",
+        "current": "1.35:1.00",
+        "headroom": "22.7%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$3,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "None",
+      "assignmentFee": "$2,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Banks"
+    },
+    "availableDocuments": [
+      {
+        "name": "Inventory Appraisal",
+        "type": "Valuation",
+        "date": "2025-09-15",
+        "pages": 40,
+        "status": "verified",
+        "description": "NOLV analysis"
+      }
+    ],
+    "useOfProceeds": "Working capital",
+    "administrativeAgent": "PNC Bank",
+    "bookrunners": ["PNC", "Citizens"],
+    "syndication": {
+      "totalLenders": 6,
+      "leadArrangers": ["PNC"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.00,
+        "date": "2025-11-25"
+      },
+      "bidAskSpread": "60bps",
+      "tradingVolume30d": 3,
+      "averageLifeYTM": 8.45
+    },
+    "keyDates": {
+      "closeDate": "2023-04-15",
+      "firstPaymentDate": "2023-05-15",
+      "nextPaymentDate": "2026-01-15",
+      "maturityDate": "2028-04-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Supply chain disruptions for raw steel",
+      "Labor union contract renewal in 2026"
+    ]
+  },
+  {
+    "id": "L-745",
+    "borrower": "Southeast Solar Ventures",
+    "tickerSymbol": "SSV",
+    "originalLender": "DBS Bank",
+    "loanAmount": 110000000,
+    "outstandingAmount": 105000000,
+    "interestRate": 6.90,
+    "maturityDate": "2032-10-30",
     "creditRating": "BBB",
     "industry": "Renewable Energy",
-    "askingPrice": 112000000,
-    "yieldToMaturity": 9.45,
-    "dueDiligenceScore": 88,
-    "listingDate": "2024-12-28",
-    "status": "active",
-    "riskLevel": "medium"
-  },
-  {
-    "id": "4",
-    "borrower": "Healthcare Innovations Inc",
-    "originalLender": "NatWest Group",
-    "loanAmount": 85000000,
-    "outstandingAmount": 78200000,
-    "interestRate": 7.65,
-    "maturityDate": "2028-09-12",
-    "creditRating": "A",
-    "industry": "Healthcare",
-    "askingPrice": 76800000,
-    "yieldToMaturity": 7.95,
-    "dueDiligenceScore": 92,
-    "listingDate": "2025-01-03",
-    "status": "active",
-    "riskLevel": "low"
-  },
-  {
-    "id": "5",
-    "borrower": "Atlantic Manufacturing",
-    "originalLender": "Santander UK",
-    "loanAmount": 65000000,
-    "outstandingAmount": 58900000,
-    "interestRate": 8.95,
-    "maturityDate": "2027-07-18",
-    "creditRating": "BB",
-    "industry": "Manufacturing",
-    "askingPrice": 56500000,
-    "yieldToMaturity": 9.85,
-    "dueDiligenceScore": 79,
-    "listingDate": "2024-12-30",
-    "status": "active",
-    "riskLevel": "medium"
-  },
-  {
-    "id": "6",
-    "borrower": "Urban Retail Group",
-    "originalLender": "Standard Chartered",
-    "loanAmount": 35000000,
-    "outstandingAmount": 32100000,
-    "interestRate": 9.45,
-    "maturityDate": "2026-12-05",
-    "creditRating": "B+",
-    "industry": "Retail",
-    "askingPrice": 30200000,
-    "yieldToMaturity": 10.25,
-    "dueDiligenceScore": 72,
-    "listingDate": "2025-01-01",
-    "status": "active",
-    "riskLevel": "high"
-  },
-  {
-    "id": "7",
-    "borrower": "Northern Construction Ltd",
-    "originalLender": "Royal Bank of Scotland",
-    "loanAmount": 95000000,
-    "outstandingAmount": 89500000,
-    "interestRate": 8.75,
-    "maturityDate": "2028-04-25",
-    "creditRating": "BBB-",
-    "industry": "Construction",
-    "askingPrice": 87200000,
-    "yieldToMaturity": 9.15,
-    "dueDiligenceScore": 85,
-    "listingDate": "2024-12-29",
-    "status": "active",
-    "riskLevel": "medium"
-  },
-  {
-    "id": "8",
-    "borrower": "Global Logistics Partners",
-    "originalLender": "Deutsche Bank UK",
-    "loanAmount": 55000000,
-    "outstandingAmount": 51800000,
-    "interestRate": 8.35,
-    "maturityDate": "2027-10-14",
-    "creditRating": "A-",
-    "industry": "Transportation & Logistics",
-    "askingPrice": 50900000,
-    "yieldToMaturity": 8.65,
+    "sectorRegion": "Asia Pacific",
+    "askingPrice": 104000000,
+    "yieldToMaturity": 7.20,
     "dueDiligenceScore": 91,
-    "listingDate": "2025-01-02",
+    "listingDate": "2025-12-19",
     "status": "active",
-    "riskLevel": "low"
+    "riskLevel": "low",
+    "description": "Portfolio of 5 solar photovoltaic plants in Vietnam and Thailand.",
+    "highlights": ["Guaranteed Feed-in-Tariffs", "Asian Development Bank backing"],
+    "revenue": 45000000,
+    "ebitda": 38000000,
+    "leverageRatio": 4.0,
+    "facilityType": "Project Finance",
+    "currency": "USD",
+    "originalTerm": "10 years",
+    "remainingTerm": "6.8 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "275bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 275 bps",
+      "margin": 2.75,
+      "paymentFrequency": "Semi-Annual"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Project assets and revenue accounts",
+      "guarantors": ["None (Non-recourse)"],
+      "perfection": "Local registration"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Debt Service Coverage Ratio",
+        "clause": "12.3",
+        "threshold": "1.15:1.00",
+        "current": "1.30:1.00",
+        "headroom": "13.0%",
+        "status": "PASS",
+        "testingDate": "2025-06-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$2,000,000",
+      "minimumHoldAmount": "$5,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Financial Institutions"
+    },
+    "availableDocuments": [
+      {
+        "name": "Independent Engineer Report",
+        "type": "Technical",
+        "date": "2022-09-30",
+        "pages": 110,
+        "status": "verified",
+        "description": "Solar irradiance study"
+      }
+    ],
+    "useOfProceeds": "Project construction",
+    "administrativeAgent": "DBS Bank",
+    "bookrunners": ["DBS", "Standard Chartered"],
+    "syndication": {
+      "totalLenders": 5,
+      "leadArrangers": ["DBS"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.05,
+        "date": "2025-11-10"
+      },
+      "bidAskSpread": "45bps",
+      "tradingVolume30d": 1,
+      "averageLifeYTM": 7.15
+    },
+    "keyDates": {
+      "closeDate": "2022-10-30",
+      "firstPaymentDate": "2023-04-30",
+      "nextPaymentDate": "2026-04-30",
+      "maturityDate": "2032-10-30",
+      "lastCovenantTest": "2025-06-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Curtailment risk from local grid operators",
+      "Political risk in emerging markets"
+    ]
   },
   {
-    "id": "9",
-    "borrower": "Premier Hospitality Group",
-    "originalLender": "Barclays Bank PLC",
-    "loanAmount": 42000000,
-    "outstandingAmount": 38700000,
-    "interestRate": 9.85,
-    "maturityDate": "2026-08-30",
-    "creditRating": "B",
-    "industry": "Hospitality",
-    "askingPrice": 36500000,
-    "yieldToMaturity": 11.15,
-    "dueDiligenceScore": 68,
-    "listingDate": "2024-12-31",
-    "status": "active",
-    "riskLevel": "high"
-  },
-  {
-    "id": "10",
-    "borrower": "Copper Ridge Mining",
-    "originalLender": "HSBC Bank PLC",
-    "loanAmount": 180000000,
-    "outstandingAmount": 165000000,
-    "interestRate": 10.25,
-    "maturityDate": "2029-01-15",
-    "creditRating": "BB-",
-    "industry": "Mining",
-    "askingPrice": 158000000,
-    "yieldToMaturity": 11.45,
-    "dueDiligenceScore": 76,
-    "listingDate": "2025-01-01",
-    "status": "active",
-    "riskLevel": "high"
-  },
-  {
-    "id": "11",
-    "borrower": "Metropolitan Real Estate",
-    "originalLender": "Lloyds Banking Group",
-    "loanAmount": 125000000,
-    "outstandingAmount": 118500000,
-    "interestRate": 7.95,
-    "maturityDate": "2028-12-10",
-    "creditRating": "A",
-    "industry": "Real Estate",
-    "askingPrice": 116200000,
-    "yieldToMaturity": 8.25,
-    "dueDiligenceScore": 93,
-    "listingDate": "2025-01-03",
-    "status": "active",
-    "riskLevel": "low"
-  },
-  {
-    "id": "12",
-    "borrower": "Quantum Energy Solutions",
-    "originalLender": "NatWest Group",
-    "loanAmount": 78000000,
-    "outstandingAmount": 72400000,
-    "interestRate": 8.55,
-    "maturityDate": "2027-05-22",
-    "creditRating": "BBB+",
-    "industry": "Energy",
-    "askingPrice": 70800000,
-    "yieldToMaturity": 8.85,
-    "dueDiligenceScore": 87,
-    "listingDate": "2024-12-30",
-    "status": "active",
-    "riskLevel": "medium"
-  },
-  {
-    "id": "13",
-    "borrower": "Digital Media Ventures",
-    "originalLender": "Santander UK",
-    "loanAmount": 28000000,
-    "outstandingAmount": 25600000,
+    "id": "L-746",
+    "borrower": "Global Shipping Containers Ltd",
+    "tickerSymbol": "GSC",
+    "originalLender": "ING Bank",
+    "loanAmount": 400000000,
+    "outstandingAmount": 390000000,
     "interestRate": 9.25,
-    "maturityDate": "2026-11-08",
-    "creditRating": "BB+",
-    "industry": "Technology",
-    "askingPrice": 24800000,
-    "yieldToMaturity": 9.75,
-    "dueDiligenceScore": 82,
-    "listingDate": "2025-01-02",
+    "maturityDate": "2027-08-15",
+    "creditRating": "BB-",
+    "industry": "Marine Transportation",
+    "sectorRegion": "EMEA",
+    "askingPrice": 370500000,
+    "yieldToMaturity": 11.50,
+    "dueDiligenceScore": 65,
+    "listingDate": "2025-12-20",
     "status": "active",
-    "riskLevel": "medium"
+    "riskLevel": "medium",
+    "description": "Container leasing and management company.",
+    "highlights": ["Fleet of 1.5M TEU", "Utilization dropping post-pandemic peak"],
+    "revenue": 700000000,
+    "ebitda": 280000000,
+    "leverageRatio": 4.8,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "5 years",
+    "remainingTerm": "1.7 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "475bps",
+      "floor": "0.75%",
+      "allInRate": "SOFR + 475 bps",
+      "margin": 4.75,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Shipping containers",
+      "guarantors": ["GSC Parent"],
+      "perfection": "Filed"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "5.00:1.00",
+        "current": "4.80:1.00",
+        "headroom": "4.0%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$5,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "$2,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Any"
+    },
+    "availableDocuments": [
+      {
+        "name": "Fleet Utilization Report",
+        "type": "Operational",
+        "date": "2025-11-01",
+        "pages": 12,
+        "status": "verified",
+        "description": "Monthly utilization stats"
+      }
+    ],
+    "useOfProceeds": "Container acquisition",
+    "administrativeAgent": "ING Bank N.V.",
+    "bookrunners": ["ING", "ABN AMRO"],
+    "syndication": {
+      "totalLenders": 12,
+      "leadArrangers": ["ING"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 95.00,
+        "date": "2025-12-05"
+      },
+      "bidAskSpread": "100bps",
+      "tradingVolume30d": 5,
+      "averageLifeYTM": 11.20
+    },
+    "keyDates": {
+      "closeDate": "2022-08-15",
+      "firstPaymentDate": "2022-11-15",
+      "nextPaymentDate": "2026-02-15",
+      "maturityDate": "2027-08-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Global trade slowdown",
+      "Overcapacity in shipping market"
+    ]
   },
   {
-    "id": "14",
-    "borrower": "Coastal Shipping Ltd",
-    "originalLender": "Standard Chartered",
-    "loanAmount": 62000000,
-    "outstandingAmount": 57300000,
-    "interestRate": 8.85,
-    "maturityDate": "2027-09-16",
-    "creditRating": "BBB-",
-    "industry": "Transportation & Logistics",
-    "askingPrice": 55600000,
-    "yieldToMaturity": 9.25,
-    "dueDiligenceScore": 84,
-    "listingDate": "2024-12-29",
-    "status": "active",
-    "riskLevel": "medium"
-  },
-  {
-    "id": "15",
-    "borrower": "Precision Manufacturing Co",
-    "originalLender": "Royal Bank of Scotland",
-    "loanAmount": 48000000,
-    "outstandingAmount": 44200000,
-    "interestRate": 8.15,
-    "maturityDate": "2028-02-28",
-    "creditRating": "A-",
-    "industry": "Manufacturing",
-    "askingPrice": 43100000,
-    "yieldToMaturity": 8.45,
-    "dueDiligenceScore": 89,
-    "listingDate": "2025-01-01",
-    "status": "active",
-    "riskLevel": "low"
-  },
-  {
-    "id": "16",
-    "borrower": "BioTech Research Labs",
-    "originalLender": "Deutsche Bank UK",
-    "loanAmount": 92000000,
-    "outstandingAmount": 86800000,
-    "interestRate": 7.75,
-    "maturityDate": "2028-08-14",
-    "creditRating": "A+",
-    "industry": "Healthcare",
-    "askingPrice": 85200000,
-    "yieldToMaturity": 8.05,
-    "dueDiligenceScore": 95,
-    "listingDate": "2025-01-03",
-    "status": "active",
-    "riskLevel": "low"
-  },
-  {
-    "id": "17",
-    "borrower": "Riverside Development Corp",
-    "originalLender": "Barclays Bank PLC",
-    "loanAmount": 135000000,
-    "outstandingAmount": 128000000,
-    "interestRate": 9.05,
-    "maturityDate": "2029-06-30",
-    "creditRating": "BBB",
-    "industry": "Real Estate",
-    "askingPrice": 124500000,
-    "yieldToMaturity": 9.35,
-    "dueDiligenceScore": 86,
-    "listingDate": "2024-12-31",
-    "status": "active",
-    "riskLevel": "medium"
-  },
-  {
-    "id": "18",
-    "borrower": "Alpine Ski Resorts",
-    "originalLender": "HSBC Bank PLC",
-    "loanAmount": 38000000,
-    "outstandingAmount": 34500000,
-    "interestRate": 10.15,
-    "maturityDate": "2026-10-12",
-    "creditRating": "B+",
-    "industry": "Hospitality",
-    "askingPrice": 32200000,
-    "yieldToMaturity": 11.25,
-    "dueDiligenceScore": 71,
-    "listingDate": "2025-01-01",
-    "status": "active",
-    "riskLevel": "high"
-  },
-  {
-    "id": "19",
-    "borrower": "Smart Grid Technologies",
-    "originalLender": "Lloyds Banking Group",
-    "loanAmount": 67000000,
-    "outstandingAmount": 62100000,
-    "interestRate": 8.45,
-    "maturityDate": "2027-12-18",
-    "creditRating": "A-",
-    "industry": "Technology",
-    "askingPrice": 60800000,
-    "yieldToMaturity": 8.75,
-    "dueDiligenceScore": 90,
-    "listingDate": "2024-12-30",
-    "status": "active",
-    "riskLevel": "low"
-  },
-  {
-    "id": "20",
-    "borrower": "Industrial Waste Solutions",
-    "originalLender": "NatWest Group",
-    "loanAmount": 52000000,
-    "outstandingAmount": 47800000,
-    "interestRate": 9.35,
-    "maturityDate": "2027-04-05",
+    "id": "L-747",
+    "borrower": "PureFoods Organic Inc",
+    "tickerSymbol": "PFO",
+    "originalLender": "Bank of Montreal",
+    "loanAmount": 130000000,
+    "outstandingAmount": 125000000,
+    "interestRate": 8.00,
+    "maturityDate": "2029-01-15",
     "creditRating": "BB",
-    "industry": "Industrial Services",
-    "askingPrice": 45900000,
-    "yieldToMaturity": 10.15,
-    "dueDiligenceScore": 78,
-    "listingDate": "2025-01-02",
+    "industry": "Food & Beverage",
+    "sectorRegion": "North America",
+    "askingPrice": 123750000,
+    "yieldToMaturity": 8.55,
+    "dueDiligenceScore": 86,
+    "listingDate": "2025-12-15",
     "status": "active",
-    "riskLevel": "medium"
+    "riskLevel": "medium",
+    "description": "Producer of plant-based snacks and organic beverages.",
+    "highlights": ["Distribution in Whole Foods and Costco", "25% CAGR in beverage segment"],
+    "revenue": 280000000,
+    "ebitda": 42000000,
+    "leverageRatio": 3.7,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "6 years",
+    "remainingTerm": "3.1 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "350bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 350 bps",
+      "margin": 3.50,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Inventory, brand trademarks, and production equipment",
+      "guarantors": ["PureFoods Holdings"],
+      "perfection": "UCC-1"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "4.25:1.00",
+        "current": "3.70:1.00",
+        "headroom": "12.9%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$2,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Banks"
+    },
+    "availableDocuments": [
+      {
+        "name": "Nielsen Market Share Report",
+        "type": "Market Data",
+        "date": "2025-10-15",
+        "pages": 35,
+        "status": "verified",
+        "description": "Category performance analysis"
+      }
+    ],
+    "useOfProceeds": "Capacity expansion",
+    "administrativeAgent": "BMO Harris Bank",
+    "bookrunners": ["BMO", "Rabobank"],
+    "syndication": {
+      "totalLenders": 7,
+      "leadArrangers": ["BMO"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.00,
+        "date": "2025-12-10"
+      },
+      "bidAskSpread": "40bps",
+      "tradingVolume30d": 3,
+      "averageLifeYTM": 8.50
+    },
+    "keyDates": {
+      "closeDate": "2023-01-15",
+      "firstPaymentDate": "2023-04-15",
+      "nextPaymentDate": "2026-01-15",
+      "maturityDate": "2029-01-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Ingredient cost inflation",
+      "Changing consumer tastes"
+    ]
+  },
+  {
+    "id": "L-748",
+    "borrower": "Telco Towers India Pvt Ltd",
+    "tickerSymbol": "TTI",
+    "originalLender": "Standard Chartered",
+    "loanAmount": 300000000,
+    "outstandingAmount": 290000000,
+    "interestRate": 8.80,
+    "maturityDate": "2030-06-30",
+    "creditRating": "BB+",
+    "industry": "Telecommunications Infrastructure",
+    "sectorRegion": "Asia Pacific",
+    "askingPrice": 287100000,
+    "yieldToMaturity": 9.20,
+    "dueDiligenceScore": 83,
+    "listingDate": "2025-12-18",
+    "status": "active",
+    "riskLevel": "medium",
+    "description": "Independent tower company with 25,000 sites across India.",
+    "highlights": ["Tenancy ratio 1.8x", "5G rollout driving demand"],
+    "revenue": 400000000,
+    "ebitda": 200000000,
+    "leverageRatio": 4.2,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "7 years",
+    "remainingTerm": "4.5 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "425bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 425 bps",
+      "margin": 4.25,
+      "paymentFrequency": "Semi-Annual"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Tower assets and master lease agreements",
+      "guarantors": ["TTI Parent"],
+      "perfection": "Registrar of Companies India"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "5.00:1.00",
+        "current": "4.20:1.00",
+        "headroom": "16.0%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$5,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Financial Institutions"
+    },
+    "availableDocuments": [
+      {
+        "name": "Tower Portfolio Audit",
+        "type": "Technical",
+        "date": "2024-12-31",
+        "pages": 200,
+        "status": "verified",
+        "description": "Asset verification"
+      }
+    ],
+    "useOfProceeds": "Tower acquisition from carrier",
+    "administrativeAgent": "Standard Chartered Bank",
+    "bookrunners": ["Standard Chartered", "Citi"],
+    "syndication": {
+      "totalLenders": 8,
+      "leadArrangers": ["Standard Chartered"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.00,
+        "date": "2025-11-20"
+      },
+      "bidAskSpread": "50bps",
+      "tradingVolume30d": 2,
+      "averageLifeYTM": 9.15
+    },
+    "keyDates": {
+      "closeDate": "2023-06-30",
+      "firstPaymentDate": "2023-12-30",
+      "nextPaymentDate": "2026-06-30",
+      "maturityDate": "2030-06-30",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Consolidation of telecom operators reducing tenancy",
+      "Regulatory changes in India"
+    ]
+  },
+  {
+    "id": "L-749",
+    "borrower": "MediCare Hospital Systems",
+    "tickerSymbol": "MHS",
+    "originalLender": "JPMorgan",
+    "loanAmount": 500000000,
+    "outstandingAmount": 480000000,
+    "interestRate": 7.50,
+    "maturityDate": "2028-09-30",
+    "creditRating": "BBB-",
+    "industry": "Healthcare Providers",
+    "sectorRegion": "North America",
+    "askingPrice": 475200000,
+    "yieldToMaturity": 7.80,
+    "dueDiligenceScore": 93,
+    "listingDate": "2025-12-19",
+    "status": "active",
+    "riskLevel": "low",
+    "description": "Regional hospital network with 8 acute care facilities.",
+    "highlights": ["Dominant market share in region", "Profitable outpatient surgery centers"],
+    "revenue": 1200000000,
+    "ebitda": 220000000,
+    "leverageRatio": 3.1,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "5 years",
+    "remainingTerm": "2.8 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "275bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 275 bps",
+      "margin": 2.75,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Receivables (Medicare/Medicaid) and Equipment",
+      "guarantors": ["MHS Foundation"],
+      "perfection": "UCC-1"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "4.00:1.00",
+        "current": "3.10:1.00",
+        "headroom": "22.5%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$5,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,500",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Approved Funds"
+    },
+    "availableDocuments": [
+      {
+        "name": "Quality of Care Report",
+        "type": "Operational",
+        "date": "2025-06-30",
+        "pages": 45,
+        "status": "verified",
+        "description": "JCAHO Accreditation status"
+      }
+    ],
+    "useOfProceeds": "EMR system upgrade",
+    "administrativeAgent": "JPMorgan Chase Bank N.A.",
+    "bookrunners": ["JPMorgan", "BofA"],
+    "syndication": {
+      "totalLenders": 15,
+      "leadArrangers": ["JPMorgan"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.00,
+        "date": "2025-12-15"
+      },
+      "bidAskSpread": "30bps",
+      "tradingVolume30d": 7,
+      "averageLifeYTM": 7.75
+    },
+    "keyDates": {
+      "closeDate": "2023-09-30",
+      "firstPaymentDate": "2023-12-30",
+      "nextPaymentDate": "2026-03-30",
+      "maturityDate": "2028-09-30",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Reimbursement rate pressure from payers",
+      "Nursing staff shortages driving up costs"
+    ]
+  },
+  {
+    "id": "L-750",
+    "borrower": "Arctic Oil Services ASA",
+    "tickerSymbol": "AOS",
+    "originalLender": "DNB Bank",
+    "loanAmount": 100000000,
+    "outstandingAmount": 95000000,
+    "interestRate": 12.00,
+    "maturityDate": "2026-12-31",
+    "creditRating": "CCC+",
+    "industry": "Oil & Gas Services",
+    "sectorRegion": "EMEA",
+    "askingPrice": 71250000,
+    "yieldToMaturity": 22.00,
+    "dueDiligenceScore": 54,
+    "listingDate": "2025-12-16",
+    "status": "active",
+    "riskLevel": "high",
+    "description": "Seismic exploration services in the North Sea and Arctic regions.",
+    "highlights": ["Vessel laid up for 6 months", "Restructuring discussions active"],
+    "revenue": 80000000,
+    "ebitda": 15000000,
+    "leverageRatio": 7.5,
+    "facilityType": "Term Loan B",
+    "currency": "NOK",
+    "originalTerm": "5 years",
+    "remainingTerm": "1.0 years",
+    "pricing": {
+      "baseRate": "NIBOR",
+      "spread": "850bps",
+      "floor": "1.00%",
+      "allInRate": "NIBOR + 850 bps",
+      "margin": 8.50,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Seismic vessels",
+      "guarantors": ["AOS Parent"],
+      "perfection": "Norwegian Ship Register"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Minimum Liquidity",
+        "clause": "12.5",
+        "threshold": "NOK 50,000,000",
+        "current": "NOK 55,000,000",
+        "headroom": "10.0%",
+        "status": "WARNING",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "NOK 5,000,000",
+      "minimumHoldAmount": "NOK 10,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "NOK 20,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Any"
+    },
+    "availableDocuments": [
+      {
+        "name": "Forbearance Agreement Draft",
+        "type": "Legal",
+        "date": "2025-11-20",
+        "pages": 40,
+        "status": "verified",
+        "description": "Terms of potential waiver"
+      }
+    ],
+    "useOfProceeds": "General corporate purposes",
+    "administrativeAgent": "DNB Bank",
+    "bookrunners": ["DNB", "Pareto Securities"],
+    "syndication": {
+      "totalLenders": 4,
+      "leadArrangers": ["DNB"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 75.00,
+        "date": "2025-11-28"
+      },
+      "bidAskSpread": "500bps",
+      "tradingVolume30d": 1,
+      "averageLifeYTM": 21.50
+    },
+    "keyDates": {
+      "closeDate": "2021-12-31",
+      "firstPaymentDate": "2022-03-31",
+      "nextPaymentDate": "2026-03-31",
+      "maturityDate": "2026-12-31",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "ESG mandates reducing oil exploration",
+      "Imminent liquidity crunch"
+    ]
+  },
+  {
+    "id": "L-751",
+    "borrower": "Urban Fashion Brands",
+    "tickerSymbol": "UFB",
+    "originalLender": "Wells Fargo",
+    "loanAmount": 180000000,
+    "outstandingAmount": 160000000,
+    "interestRate": 9.00,
+    "maturityDate": "2028-02-15",
+    "creditRating": "B+",
+    "industry": "Apparel Retail",
+    "sectorRegion": "North America",
+    "askingPrice": 152000000,
+    "yieldToMaturity": 10.10,
+    "dueDiligenceScore": 72,
+    "listingDate": "2025-12-15",
+    "status": "active",
+    "riskLevel": "medium",
+    "description": "Streetwear brand with strong DTC channel and mall presence.",
+    "highlights": ["DTC sales 40% of revenue", "Inventory buildup concern"],
+    "revenue": 320000000,
+    "ebitda": 45000000,
+    "leverageRatio": 4.5,
+    "facilityType": "ABL Term Loan",
+    "currency": "USD",
+    "originalTerm": "5 years",
+    "remainingTerm": "2.2 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "450bps",
+      "floor": "0.50%",
+      "allInRate": "SOFR + 450 bps",
+      "margin": 4.50,
+      "paymentFrequency": "Monthly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Inventory and IP",
+      "guarantors": ["UFB Holdings"],
+      "perfection": "UCC-1"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Fixed Charge Coverage Ratio",
+        "clause": "12.1(b)",
+        "threshold": "1.00:1.00",
+        "current": "1.15:1.00",
+        "headroom": "15.0%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$2,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Banks and Finance Companies"
+    },
+    "availableDocuments": [
+      {
+        "name": "Inventory Aging Report",
+        "type": "Financial",
+        "date": "2025-11-30",
+        "pages": 20,
+        "status": "verified",
+        "description": "Aged stock analysis"
+      }
+    ],
+    "useOfProceeds": "Working capital",
+    "administrativeAgent": "Wells Fargo Capital Finance",
+    "bookrunners": ["Wells Fargo"],
+    "syndication": {
+      "totalLenders": 5,
+      "leadArrangers": ["Wells Fargo"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 95.00,
+        "date": "2025-12-08"
+      },
+      "bidAskSpread": "100bps",
+      "tradingVolume30d": 2,
+      "averageLifeYTM": 10.05
+    },
+    "keyDates": {
+      "closeDate": "2023-02-15",
+      "firstPaymentDate": "2023-03-15",
+      "nextPaymentDate": "2026-01-15",
+      "maturityDate": "2028-02-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Fashion risk",
+      "Heavy reliance on Q4 holiday sales"
+    ]
+  },
+  {
+    "id": "L-752",
+    "borrower": "Quantum Chipset Fab",
+    "tickerSymbol": "QCF",
+    "originalLender": "Mizuho",
+    "loanAmount": 600000000,
+    "outstandingAmount": 590000000,
+    "interestRate": 6.50,
+    "maturityDate": "2031-05-30",
+    "creditRating": "A-",
+    "industry": "Semiconductors",
+    "sectorRegion": "Asia Pacific",
+    "askingPrice": 587050000,
+    "yieldToMaturity": 6.70,
+    "dueDiligenceScore": 96,
+    "listingDate": "2025-12-21",
+    "status": "active",
+    "riskLevel": "low",
+    "description": "Specialized foundry for power management ICs.",
+    "highlights": ["Strategic partnership with major EV makers", "Government subsidy recipient"],
+    "revenue": 950000000,
+    "ebitda": 380000000,
+    "leverageRatio": 2.2,
+    "facilityType": "Term Loan A",
+    "currency": "USD",
+    "originalTerm": "7 years",
+    "remainingTerm": "5.4 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "200bps",
+      "floor": "0.00%",
+      "allInRate": "SOFR + 200 bps",
+      "margin": 2.00,
+      "paymentFrequency": "Semi-Annual"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Fab equipment and land",
+      "guarantors": ["QCF Holdings"],
+      "perfection": "Local filing"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Maximum Net Leverage Ratio",
+        "clause": "12.1(a)",
+        "threshold": "3.50:1.00",
+        "current": "2.20:1.00",
+        "headroom": "37.1%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$5,000,000",
+      "minimumHoldAmount": "$10,000,000",
+      "borrowerConsentRequired": true,
+      "borrowerConsentThreshold": "Required",
+      "yieldProtection": "None",
+      "assignmentFee": "$2,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Investment Grade Banks"
+    },
+    "availableDocuments": [
+      {
+        "name": "Technology Roadmap",
+        "type": "Technical",
+        "date": "2025-01-15",
+        "pages": 60,
+        "status": "verified",
+        "description": "5nm process development plan"
+      }
+    ],
+    "useOfProceeds": "New fab construction",
+    "administrativeAgent": "Mizuho Bank",
+    "bookrunners": ["Mizuho", "SMBC"],
+    "syndication": {
+      "totalLenders": 10,
+      "leadArrangers": ["Mizuho"],
+      "participationStructure": "Club Deal"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 99.50,
+        "date": "2025-12-19"
+      },
+      "bidAskSpread": "15bps",
+      "tradingVolume30d": 4,
+      "averageLifeYTM": 6.65
+    },
+    "keyDates": {
+      "closeDate": "2024-05-30",
+      "firstPaymentDate": "2024-11-30",
+      "nextPaymentDate": "2026-05-30",
+      "maturityDate": "2031-05-30",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Geopolitical tension affecting supply chain",
+      "Cyclical semiconductor demand"
+    ]
+  },
+  {
+    "id": "L-753",
+    "borrower": "Atlantic Aviation Leases",
+    "tickerSymbol": "AAL",
+    "originalLender": "Citigroup",
+    "loanAmount": 250000000,
+    "outstandingAmount": 240000000,
+    "interestRate": 10.50,
+    "maturityDate": "2027-04-15",
+    "creditRating": "B",
+    "industry": "Aviation Finance",
+    "sectorRegion": "North America",
+    "askingPrice": 216000000,
+    "yieldToMaturity": 13.50,
+    "dueDiligenceScore": 62,
+    "listingDate": "2025-12-18",
+    "status": "active",
+    "riskLevel": "high",
+    "description": "Lessor of mid-life narrowbody aircraft to tier 2 airlines.",
+    "highlights": ["Exposure to 3 airlines currently in restructuring", "Asset values softening"],
+    "revenue": 400000000,
+    "ebitda": 150000000,
+    "leverageRatio": 6.0,
+    "facilityType": "Term Loan B",
+    "currency": "USD",
+    "originalTerm": "5 years",
+    "remainingTerm": "1.3 years",
+    "pricing": {
+      "baseRate": "SOFR",
+      "spread": "600bps",
+      "floor": "1.00%",
+      "allInRate": "SOFR + 600 bps",
+      "margin": 6.00,
+      "paymentFrequency": "Quarterly"
+    },
+    "security": {
+      "type": "First Lien Secured",
+      "collateral": "Specific aircraft portfolio (15 Boeing 737-800s)",
+      "guarantors": ["AAL Holdco"],
+      "perfection": "International Registry (Cape Town Convention)"
+    },
+    "financialCovenants": [
+      {
+        "covenant": "Loan to Value",
+        "clause": "12.4",
+        "threshold": "85.0%",
+        "current": "82.0%",
+        "headroom": "3.5%",
+        "status": "PASS",
+        "testingDate": "2025-09-30",
+        "nextTestDate": "2025-12-31"
+      }
+    ],
+    "transferRights": {
+      "minimumTransferAmount": "$1,000,000",
+      "minimumHoldAmount": "$1,000,000",
+      "borrowerConsentRequired": false,
+      "borrowerConsentThreshold": "None",
+      "yieldProtection": "None",
+      "assignmentFee": "$3,000",
+      "clauseReference": "25.2",
+      "eligibleAssignees": "Any"
+    },
+    "availableDocuments": [
+      {
+        "name": "Aircraft Appraisal Report",
+        "type": "Valuation",
+        "date": "2025-09-01",
+        "pages": 120,
+        "status": "verified",
+        "description": "Desktop appraisal by mba"
+      }
+    ],
+    "useOfProceeds": "Refinancing",
+    "administrativeAgent": "Citigroup",
+    "bookrunners": ["Citigroup", "PK AirFinance"],
+    "syndication": {
+      "totalLenders": 8,
+      "leadArrangers": ["Citigroup"],
+      "participationStructure": "Pro-rata"
+    },
+    "marketMetrics": {
+      "lastTrade": {
+        "price": 90.00,
+        "date": "2025-12-05"
+      },
+      "bidAskSpread": "200bps",
+      "tradingVolume30d": 3,
+      "averageLifeYTM": 13.25
+    },
+    "keyDates": {
+      "closeDate": "2022-04-15",
+      "firstPaymentDate": "2022-07-15",
+      "nextPaymentDate": "2026-01-15",
+      "maturityDate": "2027-04-15",
+      "lastCovenantTest": "2025-09-30",
+      "nextCovenantTest": "2025-12-31"
+    },
+    "riskFactors": [
+      "Counterparty credit risk",
+      "Residual value risk on older aircraft"
+    ]
   }
 ]

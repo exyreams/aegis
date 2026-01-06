@@ -321,56 +321,127 @@ export default function LoanDetailsPage() {
                   </div>
                 </div>
 
-                {/* 5. Analysis Section */}
+                {/* 5. Analysis Section - Now using actual loan data */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <h4 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
-                      <PieChart className="h-4 w-4" /> Capital Structure
-                      Analysis
+                      <PieChart className="h-4 w-4" /> Security & Collateral
                     </h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      This loan sits in a senior secured position. The borrower
-                      maintains a healthy debt-to-equity ratio of 1.2x.
-                      Collateral includes all fixed assets and IP of{" "}
-                      {loan.borrower}, valued at 150% of the loan amount at
-                      origination. Recent quarterly reports indicate stable
-                      EBITDA margins of 18%.
-                    </p>
+                    {loan.security ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">Security Type</span>
+                          <span className="font-medium">{loan.security.type}</span>
+                        </div>
+                        <Separator />
+                        <div className="text-sm">
+                          <span className="text-muted-foreground block text-xs uppercase tracking-wider mb-1">Collateral</span>
+                          <span className="text-neutral-700 dark:text-neutral-300">{loan.security.collateral}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">Guarantors</span>
+                          <span className="font-medium">{loan.security.guarantors?.join(", ") || "N/A"}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Security details not available</p>
+                    )}
                   </div>
                   <div>
                     <h4 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4" /> Risk Assessment
+                      <AlertCircle className="h-4 w-4" /> Risk Factors
                     </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">
-                          Industry Volatility
-                        </span>
-                        <span className="font-medium text-emerald-600">
-                          Low
-                        </span>
+                    {loan.riskFactors && loan.riskFactors.length > 0 ? (
+                      <div className="space-y-2">
+                        {loan.riskFactors.map((risk, i) => (
+                          <div key={i} className="flex items-start gap-2 text-sm">
+                            <span className="text-amber-500 mt-0.5">•</span>
+                            <span className="text-muted-foreground">{risk}</span>
+                          </div>
+                        ))}
                       </div>
-                      <Separator />
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">
-                          Collateral Quality
-                        </span>
-                        <span className="font-medium text-emerald-600">
-                          High
-                        </span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">
-                          Liquidity Ratio
-                        </span>
-                        <span className="font-medium text-amber-600">
-                          Moderate
-                        </span>
-                      </div>
-                    </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No specific risk factors identified</p>
+                    )}
                   </div>
                 </div>
+
+                {/* Pricing Details */}
+                {loan.pricing && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-neutral-500" />
+                        Pricing Structure
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Base Rate</p>
+                          <p className="font-semibold mt-1">{loan.pricing.baseRate}</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Spread</p>
+                          <p className="font-semibold mt-1">{loan.pricing.spread}</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">All-In Rate</p>
+                          <p className="font-semibold mt-1">{loan.pricing.allInRate}</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Payment</p>
+                          <p className="font-semibold mt-1">{loan.pricing.paymentFrequency}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Financial Covenants */}
+                {loan.financialCovenants && loan.financialCovenants.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-neutral-500" />
+                        Financial Covenants
+                      </h3>
+                      <div className="rounded-lg border overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-neutral-50 dark:bg-neutral-900 text-muted-foreground font-medium border-b">
+                            <tr>
+                              <th className="px-4 py-2 text-left">Covenant</th>
+                              <th className="px-4 py-2 text-center">Current</th>
+                              <th className="px-4 py-2 text-center">Threshold</th>
+                              <th className="px-4 py-2 text-center">Headroom</th>
+                              <th className="px-4 py-2 text-center">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {loan.financialCovenants.map((cov, i) => (
+                              <tr key={i} className="bg-white dark:bg-neutral-950">
+                                <td className="px-4 py-2 font-medium">{cov.covenant}</td>
+                                <td className="px-4 py-2 text-center font-mono">{cov.current}</td>
+                                <td className="px-4 py-2 text-center font-mono text-muted-foreground">{cov.threshold}</td>
+                                <td className="px-4 py-2 text-center">{cov.headroom}</td>
+                                <td className="px-4 py-2 text-center">
+                                  <Badge variant="outline" className={`text-xs ${
+                                    cov.status === "PASS" ? "text-emerald-600 bg-emerald-50 border-emerald-200" :
+                                    cov.status === "WARNING" ? "text-amber-600 bg-amber-50 border-amber-200" :
+                                    "text-red-600 bg-red-50 border-red-200"
+                                  }`}>
+                                    {cov.status}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* --- RIGHT COLUMN: Sticky Action Panel (4 Cols) --- */}

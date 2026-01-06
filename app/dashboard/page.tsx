@@ -16,10 +16,8 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import {
   FileText,
-  FileSearch,
   ArrowLeftRight,
   ClipboardCheck,
-  Leaf,
   Plus,
   ArrowRight,
   TrendingUp,
@@ -100,53 +98,13 @@ export default function DashboardPage() {
                 </Card>
               </div>
 
-              {/* Platform Features - 5 Hackathon Categories */}
+                {/* Platform Features */}
               <div>
                 <h2 className="text-lg font-semibold mb-4">
                   Platform Features
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Digital Loans */}
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <FileSearch className="h-5 w-5 text-blue-500" />
-                        Digital Loans
-                      </CardTitle>
-                      <CardDescription>
-                        Extract and digitize loan agreement data using AI
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href="/dashboard/loans">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Loans <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-
-                  {/* Loan Documents */}
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <FileText className="h-5 w-5 text-purple-500" />
-                        Loan Documents
-                      </CardTitle>
-                      <CardDescription>
-                        Create and negotiate loan agreements faster
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href="/dashboard/loans">
-                        <Button variant="outline" size="sm" className="w-full">
-                          View Documents <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-
-                  {/* Loan Trading */}
+                  {/* Loan Trading - Primary Feature */}
                   <Card className="hover:border-primary transition-colors">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-base">
@@ -161,47 +119,6 @@ export default function DashboardPage() {
                       <Link href="/dashboard/secondary-market">
                         <Button variant="outline" size="sm" className="w-full">
                           Trade Loans <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-
-                  {/* Compliance Tracking */}
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <ClipboardCheck className="h-5 w-5 text-orange-500" />
-                        Compliance
-                      </CardTitle>
-                      <CardDescription>
-                        Track covenants and obligations automatically
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href="/dashboard/loans">
-                        <Button variant="outline" size="sm" className="w-full">
-                          View Compliance{" "}
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-
-                  {/* ESG Reporting */}
-                  <Card className="hover:border-primary transition-colors">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <Leaf className="h-5 w-5 text-emerald-500" />
-                        ESG Reporting
-                      </CardTitle>
-                      <CardDescription>
-                        Capture and verify sustainability metrics
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href="/dashboard/loans">
-                        <Button variant="outline" size="sm" className="w-full">
-                          ESG Dashboard <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
                       </Link>
                     </CardContent>

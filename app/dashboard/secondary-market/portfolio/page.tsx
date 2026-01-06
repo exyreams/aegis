@@ -236,7 +236,9 @@ export default function PortfolioPage() {
                       <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Weighted Avg Yield</p>
                           <p className="text-2xl font-bold text-purple-600">
-                              {(portfolioPositions.reduce((sum, pos) => sum + pos.yieldToMaturity, 0) / portfolioPositions.length).toFixed(1)}%
+                              {portfolioPositions.length > 0 
+                                ? (portfolioPositions.reduce((sum, pos) => sum + pos.yieldToMaturity, 0) / portfolioPositions.length).toFixed(1)
+                                : "0.0"}%
                           </p>
                       </div>
                        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
@@ -250,7 +252,9 @@ export default function PortfolioPage() {
                       <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Risk Health</p>
                           <div className="flex items-center gap-2">
-                             <p className="text-2xl font-bold">{((portfolioPositions.filter(p => p.covenantStatus === 'PASS').length / portfolioPositions.length) * 100).toFixed(0)}%</p>
+                             <p className="text-2xl font-bold">{portfolioPositions.length > 0 
+                               ? ((portfolioPositions.filter(p => p.covenantStatus === 'PASS').length / portfolioPositions.length) * 100).toFixed(0)
+                               : "100"}%</p>
                              <span className="text-sm text-emerald-600 font-medium">Passing</span>
                           </div>
                       </div>
