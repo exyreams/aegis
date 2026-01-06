@@ -3,21 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  Compliance,
   Dashboard,
-  Documents,
-  ESG,
   DigitalLoans,
 } from "@/components/icons";
 import {
-  Search,
-  MessageSquare,
-  Lightbulb,
-  GitBranch,
-  Target,
-  Award,
-  Shield,
-  FileText,
   BarChart3,
   Scale,
   Settings,
@@ -52,70 +41,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard",
       icon: Dashboard,
     },
-    {
-      title: "Compliance",
-      url: "/dashboard/compliance",
-      icon: Compliance,
-    },
   ];
 
-  // ESG section as a separate collapsible group
-  const esgItems = [
-    {
-      title: "Overview",
-      url: "/dashboard/esg",
-      icon: ESG,
-    },
-    {
-      title: "Performance Benchmarks",
-      url: "/dashboard/esg/benchmarks",
-      icon: Target,
-    },
-    {
-      title: "Green Certifications",
-      url: "/dashboard/esg/certifications",
-      icon: Award,
-    },
-    {
-      title: "Regulatory Compliance",
-      url: "/dashboard/esg/compliance",
-      icon: Shield,
-    },
-    {
-      title: "Sustainability Reports",
-      url: "/dashboard/esg/reports",
-      icon: FileText,
-    },
-  ];
-
-  // Documents section as a separate collapsible group
-  const documentsItems = [
-    {
-      title: "Overview",
-      url: "/dashboard/documents",
-      icon: Documents,
-    },
-    {
-      title: "Document Analysis",
-      url: "/dashboard/documents/analyze",
-      icon: Search,
-    },
-    {
-      title: "Contract Negotiation",
-      url: "/dashboard/documents/negotiate",
-      icon: MessageSquare,
-    },
-    {
-      title: "AI Suggestions",
-      url: "/dashboard/documents/suggestions",
-      icon: Lightbulb,
-    },
-    {
-      title: "Version Control",
-      url: "/dashboard/documents/versions",
-      icon: GitBranch,
-    },
-  ];
 
   // Loans section as a separate collapsible group
   const loansItems = [
@@ -189,8 +116,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain
           items={navMain}
-          esgItems={esgItems}
-          documentsItems={documentsItems}
           loansItems={loansItems}
           secondaryMarketItems={secondaryMarketItems}
         />
