@@ -21,9 +21,42 @@ import {
   Filter
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/Dialog";
+import { Label } from "@/components/ui/Label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/Select";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 export default function DueDiligenceDashboard() {
+  const router = useRouter();
   const listings = useMarketStore((state) => state.listings);
+  const [isNewAuditOpen, setIsNewAuditOpen] = useState(false);
+  const [selectedLoanId, setSelectedLoanId] = useState("");
+  const [isStarting, setIsStarting] = useState(false);
+
+  const handleStartAudit = () => {
+    if (!selectedLoanId) return;
+    setIsStarting(true);
+    // Simulate initial setup delay
+    setTimeout(() => {
+        router.push(`/dashboard/secondary-market/due-diligence/${selectedLoanId}`);
+    }, 1500);
+  };
 
   // Group listings by status to simulate "Active Audits" vs "Completed"
   // For demo: High score = Completed/Pass, Medium = In Progress/Review, Low = Failed
@@ -55,10 +88,62 @@ export default function DueDiligenceDashboard() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="outline" className="gap-2">
-                    <Filter className="h-4 w-4" /> Filter
-                </Button>
-                <div className="relative">
+                <Dialog open={isNewAuditOpen} onOpenChange={setIsNewAuditOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="gap-2 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
+                            <FileSearch className="h-4 w-4" /> New Audit
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Start New Due Diligence</DialogTitle>
+                            <DialogDescription>
+                                Select a loan or asset to begin an automated comprehensive risk analysis.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label>Select Asset</Label>
+                                <Select onValueChange={setSelectedLoanId} value={selectedLoanId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Choose a loan..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {listings.map((loan) => (
+                                            <SelectItem key={loan.id} value={loan.id}>
+                                                {loan.borrower} ({loan.industry})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Audit Framework</Label>
+                                <Select defaultValue="comprehensive" disabled>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="comprehensive">Comprehensive (LMA Standard)</SelectItem>
+                                        <SelectItem value="financial">Financial Only</SelectItem>
+                                        <SelectItem value="legal">Legal Red Flags</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-[10px] text-muted-foreground">Only "Comprehensive" is available in this demo version.</p>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsNewAuditOpen(false)} disabled={isStarting}>Cancel</Button>
+                            <Button onClick={handleStartAudit} disabled={!selectedLoanId || isStarting} className="min-w-[100px]">
+                                {isStarting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Start Analysis"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <div className="h-8 w-px bg-border mx-1 hidden md:block"></div>
+
+                <div className="relative hidden md:block">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search reports..." className="pl-9 w-[250px]" />
                 </div>

@@ -11,6 +11,7 @@ import {
   Briefcase,
   PieChart,
   FileSearch,
+  Info,
 } from "lucide-react";
 
 import { NavMain } from "@/components/navigation/NavMain";
@@ -58,6 +59,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Analytics",
       url: "/dashboard/secondary-market/analytics",
       icon: PieChart,
+    },
+    {
+      title: "About",
+      url: "/dashboard/about",
+      icon: Info,
     },
   ];
 
