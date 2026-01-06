@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   Briefcase,
   PieChart,
+  FileSearch,
 } from "lucide-react";
 
 import { NavMain } from "@/components/navigation/NavMain";
@@ -47,6 +48,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Portfolio",
       url: "/dashboard/secondary-market/portfolio",
       icon: Briefcase,
+    },
+    {
+      title: "Due Diligence",
+      url: "/dashboard/secondary-market/due-diligence",
+      icon: FileSearch,
     },
     {
       title: "Analytics",

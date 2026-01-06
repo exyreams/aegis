@@ -47,7 +47,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import loansData from "@/components/secondary-market/data/loans.json";
+import { useMarketStore } from "@/components/secondary-market/data/store";
+import { LoanListing } from "@/components/secondary-market/data/types";
 
 interface MarketStats {
   totalVolume: number;
@@ -70,23 +71,7 @@ interface StatCardProps {
   iconColor?: string;
 }
 
-interface LoanListing {
-  id: string;
-  borrower: string;
-  originalLender: string;
-  loanAmount: number;
-  outstandingAmount: number;
-  interestRate: number;
-  maturityDate: string;
-  creditRating: string;
-  industry: string;
-  askingPrice: number;
-  yieldToMaturity: number;
-  dueDiligenceScore: number;
-  listingDate: string;
-  status: string;
-  riskLevel: string;
-}
+// LoanListing interface imported from global types
 
 function StatCard({
   title,
@@ -147,8 +132,10 @@ export default function SecondaryMarketPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const itemsPerPage = 10;
 
-  // Load loan listings from JSON data
-  const loanListings: LoanListing[] = loansData;
+  // Load loan listings from Store
+  const listings = useMarketStore((state) => state.listings);
+  const portfolio = useMarketStore((state) => state.portfolio); // To check ownership
+  const loanListings: LoanListing[] = listings;
 
   // Mock market statistics
   const marketStats: MarketStats = {
@@ -768,6 +755,11 @@ export default function SecondaryMarketPage() {
                                     <h4 className="text-sm font-semibold truncate">
                                       {listing.borrower}
                                     </h4>
+                                    {portfolio.some(p => p.id === listing.id) && (
+                                        <Badge variant="secondary" className="ml-2 text-[10px] h-5 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                            Owned
+                                        </Badge>
+                                    )}
                                     <div className="flex items-center gap-2 mt-0.5">
                                       <span className="text-xs text-muted-foreground truncate">
                                         {listing.originalLender}

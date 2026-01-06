@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/navigation";
 import { SiteHeader } from "@/components/layout";
@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import {
   ArrowLeft,
-  Building2,
   CheckCircle,
   Download,
   Share2,
@@ -21,41 +20,25 @@ import {
   FileText,
   AlertCircle,
   ChevronRight,
-  Copy,
 } from "lucide-react";
-import loansData from "@/components/secondary-market/data/loans.json";
+import { useMarketStore } from "@/components/secondary-market/data/store";
+import { TradeExecutionModal } from "@/components/secondary-market/trade/TradeExecutionModal";
 
 // --- Types ---
-interface LoanListing {
-  id: string;
-  borrower: string;
-  originalLender: string;
-  loanAmount: number;
-  outstandingAmount: number;
-  interestRate: number;
-  maturityDate: string;
-  creditRating: string;
-  industry: string;
-  askingPrice: number;
-  yieldToMaturity: number;
-  dueDiligenceScore: number;
-  listingDate: string;
-  status: string;
-  riskLevel: string;
-}
+// LoanListing type imported via store (inferred) or explicitly from types if needed
 
 export default function LoanDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const [loan, setLoan] = useState<LoanListing | null>(null);
-  const [loading, setLoading] = useState(true);
+  const listings = useMarketStore((state) => state.listings);
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+  const loanId = params.id as string;
 
-  useEffect(() => {
-    const loanId = params.id as string;
-    const foundLoan = loansData.find((l) => l.id === loanId);
-    if (foundLoan) setLoan(foundLoan);
-    setLoading(false);
-  }, [params.id]);
+  const loan = useMemo(() => {
+     return listings.find((l) => l.id === loanId) || null;
+  }, [listings, loanId]);
+
+  const loading = false; // Store is sync/persisted for this demo
 
   // --- Formatters ---
   const formatCurrency = (amount: number, compact = false) => {
@@ -438,8 +421,11 @@ export default function LoanDetailsPage() {
                     <Separator />
 
                     <div className="space-y-3">
-                      <Button className="w-full h-11 text-base font-medium shadow-md">
-                        Submit Bid
+                      <Button 
+                        className="w-full h-11 text-base font-medium shadow-md bg-emerald-600 hover:bg-emerald-500 text-white border-none"
+                        onClick={() => setIsTradeModalOpen(true)}
+                      >
+                        Trade / Bid
                       </Button>
                       <Button variant="outline" className="w-full">
                         Add to Watchlist
@@ -491,6 +477,13 @@ export default function LoanDetailsPage() {
             </div>
           </div>
         </div>
+        {loan && (
+            <TradeExecutionModal 
+                open={isTradeModalOpen} 
+                onOpenChange={setIsTradeModalOpen} 
+                listing={loan} 
+            />
+        )}
       </SidebarInset>
     </SidebarProvider>
   );

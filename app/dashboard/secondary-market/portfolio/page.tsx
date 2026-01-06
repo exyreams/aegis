@@ -42,15 +42,19 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  portfolioPositions,
-  activeOrders,
-  tradeHistory,
+  tradeHistory,     // Keep for history
   formatCurrency,
   formatPercent,
-  type PortfolioPosition,
 } from "@/components/secondary-market/data/portfolio";
+import { useMarketStore } from "@/components/secondary-market/data/store";
+import { Order, PortfolioPosition } from "@/components/secondary-market/data/types";
 
 export default function PortfolioPage() {
+  // Store State
+  const portfolioPositions = useMarketStore((state) => state.portfolio);
+  const activeOrders = useMarketStore((state) => state.orders);
+  // const tradeHistory = useMarketStore((state) => state.tradeHistory); // If we add history later
+
   const [activeTab, setActiveTab] = useState<"positions" | "orders" | "history">("positions");
   const [selectedPosition, setSelectedPosition] = useState<PortfolioPosition | null>(null);
   const [sellAmount, setSellAmount] = useState("");
@@ -83,10 +87,11 @@ export default function PortfolioPage() {
     setIsConfirmOpen(false);
   };
 
-  const getRiskBadge = (position: PortfolioPosition | any) => {
+  const getRiskBadge = (position: PortfolioPosition | Order) => {
     // Helper for badge style
     let badge = null;
-    const signal = position.tradeRiskSignal || position.riskSignal;
+     // Handle both PortfolioPosition (tradeRiskSignal) and Order (derived or undefined)
+    const signal = 'tradeRiskSignal' in position ? position.tradeRiskSignal : null;
 
     switch (signal) {
       case "SAFE":
@@ -114,7 +119,14 @@ export default function PortfolioPage() {
         return null;
     }
 
-    // Wrap in Popover for intelligence
+    // For Orders, just return the badge without popover (as we lack detailed data)
+    if (!('aiAnalysis' in position)) {
+         return badge;
+    }
+
+    const pos = position as PortfolioPosition;
+
+    // Wrap in Popover for intelligence (Positions only)
     return (
         <Popover>
             <PopoverTrigger asChild>
@@ -131,19 +143,19 @@ export default function PortfolioPage() {
                         <h4 className="font-semibold text-sm">AI Trade Intelligence</h4>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Updated {position.lastUpdated || 'just now'}</span>
-                        <span className="font-mono font-medium">Score: {position.dueDiligenceScore}/100</span>
+                        <span>Updated {pos.lastUpdated || 'just now'}</span>
+                        <span className="font-mono font-medium">Score: {pos.dueDiligenceScore}/100</span>
                     </div>
                 </div>
                 <div className="p-4 space-y-3">
                     <p className="text-sm leading-relaxed">
-                        {position.aiAnalysis || "No analysis available for this position."}
+                        {pos.aiAnalysis || "No analysis available for this position."}
                     </p>
-                    {position.riskFactors && position.riskFactors.length > 0 && (
+                    {pos.riskFactors && pos.riskFactors.length > 0 && (
                         <div className="space-y-1.5">
                             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk Factors</p>
                             <ul className="space-y-1">
-                                {position.riskFactors.map((factor: string, i: number) => (
+                                {pos.riskFactors.map((factor: string, i: number) => (
                                     <li key={i} className="text-xs flex items-center gap-1.5 text-red-600 dark:text-red-400 font-medium">
                                         <AlertTriangle className="h-3 w-3" />
                                         {factor}
@@ -153,7 +165,7 @@ export default function PortfolioPage() {
                         </div>
                     )}
                     <Button variant="secondary" size="sm" className="w-full text-xs h-8" asChild>
-                         <Link href={`/dashboard/secondary-market/due-diligence/${position.id}`}>
+                         <Link href={`/dashboard/secondary-market/due-diligence/${pos.id}`}>
                             View Full Diligence Report
                          </Link>
                     </Button>
@@ -207,7 +219,7 @@ export default function PortfolioPage() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-gradient-to-br from-blue-500/5 to-transparent border-blue-100 dark:border-blue-900/50">
+              <Card className="bg-linear-to-br from-blue-500/5 to-transparent border-blue-100 dark:border-blue-900/50">
                   <CardContent className="p-6 flex items-center justify-between">
                       <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Active Positions</p>
@@ -219,7 +231,7 @@ export default function PortfolioPage() {
                   </CardContent>
               </Card>
               
-              <Card className="bg-gradient-to-br from-purple-500/5 to-transparent border-purple-100 dark:border-purple-900/50">
+              <Card className="bg-linear-to-br from-purple-500/5 to-transparent border-purple-100 dark:border-purple-900/50">
                   <CardContent className="p-6 flex items-center justify-between">
                       <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Weighted Avg Yield</p>
@@ -233,7 +245,7 @@ export default function PortfolioPage() {
                   </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-emerald-500/5 to-transparent border-emerald-100 dark:border-emerald-900/50">
+              <Card className="bg-linear-to-br from-emerald-500/5 to-transparent border-emerald-100 dark:border-emerald-900/50">
                    <CardContent className="p-6 flex items-center justify-between">
                       <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Risk Health</p>
@@ -302,7 +314,7 @@ export default function PortfolioPage() {
                                                 {position.borrower}
                                                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
                                             </Link>
-                                            {getRiskBadge(position.tradeRiskSignal)}
+                                            {getRiskBadge(position)}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <span className="font-medium text-foreground/80">{position.creditRating}</span>

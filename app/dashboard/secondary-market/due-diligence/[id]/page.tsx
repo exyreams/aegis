@@ -24,14 +24,18 @@ import {
   LockKeyhole,
   ChevronLeft,
   Eye,
-  FileSearch
+  FileSearch,
+  ArrowUpRight,
+  BrainCircuit
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   WideModal,
   WideModalContent,
 } from "@/components/ui/WideModal";
-import loansData from "@/components/secondary-market/data/loans.json";
+import { useMarketStore } from "@/components/secondary-market/data/store";
+import { TradeExecutionModal } from "@/components/secondary-market/trade/TradeExecutionModal";
+import { LoanListing } from "@/components/secondary-market/data/types";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -97,9 +101,15 @@ export default function DueDiligenceDetailPage() {
   const [activeTab, setActiveTab] = useState<"all" | "Financial" | "Legal" | "Market" | "ESG">("all");
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  
+  // New State for Upload Simulation
+  const [isUploading, setIsUploading] = useState(false);
+  const [analyzingFile, setAnalyzingFile] = useState<string | null>(null);
 
-  const selectedLoan = loansData.find((loan) => loan.id === loanId);
+  const listings = useMarketStore((state) => state.listings);
+  const selectedLoan = listings.find((loan) => loan.id === loanId);
 
   // --- Helpers ---
   const formatCurrency = (amount: number) => {
@@ -344,7 +354,64 @@ export default function DueDiligenceDetailPage() {
     }
   };
 
-  const finishGeneration = (loan: typeof loansData[0]) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeReport) return;
+
+    setIsUploading(true);
+    // Simulate upload delay
+    setTimeout(() => {
+      setIsUploading(false);
+      setAnalyzingFile(file.name);
+      
+      toast.info(`Analyzing ${file.name}...`, {
+        description: "AI is extracting key covenants and risk factors.",
+      });
+
+      // Simulate Analysis Delay
+      setTimeout(() => {
+        setAnalyzingFile(null);
+        
+        // Update the report with "New Findings"
+        const updatedReport = { ...activeReport };
+        
+        // 1. Add to Documents Analyzed
+        updatedReport.documentsAnalyzed = [
+          { name: file.name, type: "Unknown", status: "verified" as const },
+          ...updatedReport.documentsAnalyzed
+        ];
+
+        // 2. Add a new Check
+        const newCheck: DueDiligenceCheck = {
+            id: `new-${Date.now()}`,
+            category: "ESG",
+            subCategory: "Sustainability",
+            check: "Emissions Reporting",
+            status: "passed",
+            score: 95,
+            details: "New documentation confirms Scope 1 & 2 emissions reduction targets are verified by SBTi.",
+            automated: true,
+            citation: {
+                docName: file.name,
+                page: 12,
+                textSnippet: "We commit to 50% reduction in Scope 1 & 2 emissions by 2030."
+            }
+        };
+        updatedReport.checks = [newCheck, ...updatedReport.checks];
+        
+        // 3. Improve Score
+        updatedReport.overallScore = Math.min(100, updatedReport.overallScore + 3);
+        updatedReport.confidenceLevel = Math.min(99, updatedReport.confidenceLevel + 2);
+
+        setActiveReport(updatedReport);
+        toast.success("Analysis Complete: Score Updated", {
+            description: "New ESG data improved the overall risk profile.",
+        });
+      }, 3000); // 3 seconds analysis time
+    }, 1500); // 1.5 seconds upload time
+  };
+
+  const finishGeneration = (loan: LoanListing) => {
     setTimeout(() => {
       setIsGenerating(false);
 
@@ -440,7 +507,9 @@ export default function DueDiligenceDetailPage() {
 
     // Trigger instant generation (with minimal UX buffer)
     const timer = setTimeout(() => {
-      finishGeneration(selectedLoan as typeof loansData[0]);
+      if (selectedLoan) {
+          finishGeneration(selectedLoan);
+      }
     }, MOCK_DELAY);
 
     return () => clearTimeout(timer);
@@ -502,8 +571,11 @@ export default function DueDiligenceDetailPage() {
                     <Eye className="h-4 w-4 mr-1" />
                     Preview
                   </Button>
-                  <Button className="h-9 px-4 bg-blue-600 hover:bg-blue-700">
-                    Express Interest
+                  <Button 
+                    className="h-9 px-4 bg-blue-600 hover:bg-blue-700"
+                    onClick={() => setIsTradeModalOpen(true)}
+                  >
+                    Proceed to Trade
                   </Button>
                 </div>
               )}
@@ -617,18 +689,57 @@ export default function DueDiligenceDetailPage() {
 
                   {/* VDR Inventory */}
                   <Card>
-                    <CardHeader className="pb-2 bg-muted/20 border-b py-3">
+                    <CardHeader className="pb-2 bg-muted/20 border-b py-3 flex flex-row items-center justify-between">
                       <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                         <FileText className="h-3.5 w-3.5" /> VDR Inventory
                       </CardTitle>
+                      
+                        <div className="relative">
+                            <input
+                                type="file"
+                                id="vdr-upload"
+                                className="hidden"
+                                onChange={handleFileUpload}
+                                disabled={isUploading || !!analyzingFile}
+                            />
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-6 text-[10px] gap-1 px-2"
+                                disabled={isUploading || !!analyzingFile}
+                                onClick={() => document.getElementById('vdr-upload')?.click()}
+                            >
+                                {isUploading ? <Loader2 className="h-3 w-3 animate-spin"/> : <ArrowUpRight className="h-3 w-3" />}
+                                Upload
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent className="p-0">
+                      {/* Analysis Progress Bar */}
+                      {analyzingFile && (
+                          <div className="px-4 py-3 bg-blue-50/50 dark:bg-blue-900/10 border-b animate-in fade-in">
+                              <div className="flex items-center justify-between text-[10px] mb-1.5">
+                                  <span className="font-semibold text-blue-600 flex items-center gap-1.5">
+                                      <BrainCircuit className="h-3 w-3 animate-pulse" />
+                                      analyzing {analyzingFile}...
+                                  </span>
+                                  <span className="text-blue-500">Processing</span>
+                              </div>
+                              <div className="h-1 w-full bg-blue-100 rounded-full overflow-hidden">
+                                  <div className="h-full bg-blue-500 animate-[loading_1.5s_ease-in-out_infinite]" style={{width: '60%'}}></div>
+                              </div>
+                          </div>
+                      )}
+                      
                       <div className="divide-y divide-border/50">
                         {activeReport.documentsAnalyzed.map((doc, i) => (
-                          <div key={i} className="flex items-center justify-between px-4 py-2 text-[11px]">
+                          <div key={i} className={`flex items-center justify-between px-4 py-2 text-[11px] ${doc.name === analyzingFile ? "bg-blue-50/20" : ""}`}>
                             <div className="flex items-center gap-2 truncate">
                               <div className={`h-1.5 w-1.5 rounded-full ${doc.status === "verified" ? "bg-emerald-500" : "bg-amber-500"}`} />
-                              <span className="truncate text-foreground/80">{doc.name}</span>
+                              <span className="truncate text-foreground/80 font-medium">{doc.name}</span>
+                              {i === 0 && doc.name !== "Senior Facility Agreement" && (
+                                  <Badge variant="secondary" className="h-3.5 px-1 text-[8px] bg-emerald-50 text-emerald-600 border-emerald-100">NEW</Badge>
+                              )}
                             </div>
                             <span className="text-[9px] text-muted-foreground font-mono uppercase">{doc.type}</span>
                           </div>
@@ -974,6 +1085,14 @@ export default function DueDiligenceDetailPage() {
           </div>
         </WideModalContent>
       </WideModal>
+
+      {selectedLoan && (
+        <TradeExecutionModal 
+          open={isTradeModalOpen} 
+          onOpenChange={setIsTradeModalOpen} 
+          listing={selectedLoan} 
+        />
+      )}
     </SidebarProvider>
   );
 }
