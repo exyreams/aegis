@@ -4,12 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Dashboard,
-  DigitalLoans,
+
 } from "@/components/icons";
 import {
-  BarChart3,
-  Scale,
-  Settings,
   ShoppingCart,
   Briefcase,
   PieChart,
@@ -41,35 +38,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard",
       icon: Dashboard,
     },
-  ];
-
-
-  // Loans section as a separate collapsible group
-  const loansItems = [
-    {
-      title: "Overview",
-      url: "/dashboard/loans",
-      icon: DigitalLoans,
-    },
-    {
-      title: "Loan Analytics",
-      url: "/dashboard/loans/analytics",
-      icon: BarChart3,
-    },
-    {
-      title: "Rate Comparison",
-      url: "/dashboard/loans/compare",
-      icon: Scale,
-    },
-    {
-      title: "Loan Standards",
-      url: "/dashboard/loans/standard",
-      icon: Settings,
-    },
-  ];
-
-  // Secondary Market section as a separate collapsible group
-  const secondaryMarketItems = [
     {
       title: "Marketplace",
       url: "/dashboard/secondary-market",
@@ -114,11 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain
-          items={navMain}
-          loansItems={loansItems}
-          secondaryMarketItems={secondaryMarketItems}
-        />
+        <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
         {auth.loading || !userData ? (
