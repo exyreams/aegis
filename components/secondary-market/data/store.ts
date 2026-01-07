@@ -130,6 +130,7 @@ interface MarketState {
   orders: Order[];
   notifications: TradeNotification[];
   cashBalance: number;
+  privateAudits: LoanListing[];
   
   // Actions
   initialize: () => void;
@@ -138,6 +139,9 @@ interface MarketState {
   sellLoan: (listingId: string, amount: number, price: number) => Promise<{ success: boolean; message: string }>;
   runDueDiligence: (listingId: string) => Promise<void>;
   removePosition: (positionId: string) => void;
+  addPrivateAudit: (audit: LoanListing) => void;
+  renamePrivateAudit: (id: string, newName: string) => void;
+  deletePrivateAudit: (id: string) => void;
 }
 
 export const useMarketStore = create<MarketState>()(
@@ -148,6 +152,7 @@ export const useMarketStore = create<MarketState>()(
       orders: [],
       notifications: [],
       cashBalance: 250000000, // $250M Opening Balance
+      privateAudits: [],
 
       initialize: () => {
         // Hydration logic if needed, usually auto-handled by persist
@@ -166,7 +171,8 @@ export const useMarketStore = create<MarketState>()(
           portfolio: MOCK_PORTFOLIO,
           orders: [],
           notifications: [],
-          cashBalance: 250000000
+          cashBalance: 250000000,
+          privateAudits: [],
         });
       },
 
@@ -268,6 +274,26 @@ export const useMarketStore = create<MarketState>()(
       
       runDueDiligence: async (listingId) => {
           // Updates the 'viewed' or 'audited' state if we track that
+      },
+
+      addPrivateAudit: (audit) => {
+        set((state) => ({
+          privateAudits: [audit, ...state.privateAudits]
+        }));
+      },
+
+      renamePrivateAudit: (id, newName) => {
+        set((state) => ({
+          privateAudits: state.privateAudits.map(a => 
+            a.id === id ? { ...a, borrower: newName } : a
+          )
+        }));
+      },
+
+      deletePrivateAudit: (id) => {
+        set((state) => ({
+          privateAudits: state.privateAudits.filter(a => a.id !== id)
+        }));
       }
 
     }),
