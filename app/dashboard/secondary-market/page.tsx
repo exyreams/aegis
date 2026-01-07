@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/navigation";
 import { SiteHeader } from "@/components/layout";
@@ -23,6 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
+import { Label } from "@/components/ui/Label";
 import { useAuth } from "@/hooks/useAuth";
 import {
   TrendingUp,
@@ -130,11 +138,13 @@ export default function SecondaryMarketPage() {
   const [riskFilter, setRiskFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [tradeLoan, setTradeLoan] = useState<LoanListing | null>(null);
+  const [tradeAmount, setTradeAmount] = useState<number>(1000000); // Default $1M
+  const [isExecutingTrade, setIsExecutingTrade] = useState(false);
   const itemsPerPage = 10;
 
   // Load loan listings from Store
-  const listings = useMarketStore((state) => state.listings);
-  const portfolio = useMarketStore((state) => state.portfolio); // To check ownership
+  const { listings, portfolio, buyLoan, cashBalance } = useMarketStore();
   const loanListings: LoanListing[] = listings;
 
   // Mock market statistics
@@ -1190,14 +1200,13 @@ export default function SecondaryMarketPage() {
                                             <Button
                                               className="w-full justify-between h-11"
                                               onClick={() => {
-                                                toast.success(
-                                                  "Purchase interest submitted"
-                                                );
+                                                setTradeLoan(listing);
+                                                setTradeAmount(Math.min(listing.outstandingAmount, 1000000));
                                               }}
                                             >
                                               <span className="flex items-center gap-2">
                                                 <ShoppingCart className="h-4 w-4" />
-                                                Express Interest
+                                                Initiate Trade
                                               </span>
                                               <ArrowRight className="h-4 w-4" />
                                             </Button>
@@ -1338,6 +1347,96 @@ export default function SecondaryMarketPage() {
           </div>
         </div>
       </SidebarInset>
+
+      {/* Trade Implementation Modal */}
+      <Dialog open={!!tradeLoan} onOpenChange={(open) => !open && setTradeLoan(null)}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Initiate Secondary Trade</DialogTitle>
+                <DialogDescription>
+                    Review investment details for {tradeLoan?.borrower}
+                </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-6 space-y-6">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border space-y-3">
+                    <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground uppercase font-bold tracking-widest">Available Allocation</span>
+                        <span className="font-mono font-bold">{formatCurrency(tradeLoan?.outstandingAmount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground uppercase font-bold tracking-widest">Market Price</span>
+                        <span className="font-mono">{((tradeLoan?.askingPrice || 0) / (tradeLoan?.outstandingAmount || 1) * 100).toFixed(2)}% of Par</span>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <Label htmlFor="tradeAmount" className="text-xs font-bold uppercase tracking-wider">Purchase Amount (USD)</Label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-mono">$</span>
+                        <Input 
+                            id="tradeAmount"
+                            type="number"
+                            value={tradeAmount}
+                            onChange={(e) => setTradeAmount(Number(e.target.value))}
+                            className="pl-8 font-mono text-lg h-12"
+                        />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                        Min: $100K | Max: {formatCurrency(tradeLoan?.outstandingAmount || 0)}
+                    </p>
+                </div>
+
+                <div className="border-t pt-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground font-medium">Estimated Cost</span>
+                        <span className="font-bold">
+                            {formatCurrency(tradeAmount * ((tradeLoan?.askingPrice || 0) / (tradeLoan?.outstandingAmount || 1)))}
+                        </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground font-medium">Expected Yield</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                            {tradeLoan?.yieldToMaturity.toFixed(2)}%
+                        </span>
+                    </div>
+                    {tradeAmount > cashBalance && (
+                        <p className="text-xs text-red-500 font-medium flex items-center gap-1.5 mt-2">
+                             <AlertTriangle className="h-3 w-3" />
+                             Insufficient cash balance ({formatCurrency(cashBalance)})
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => setTradeLoan(null)} disabled={isExecutingTrade}>Cancel</Button>
+                <Button 
+                    className="bg-blue-600 hover:bg-blue-500 text-white min-w-[120px]"
+                    disabled={isExecutingTrade || tradeAmount <= 0 || tradeAmount > (tradeLoan?.outstandingAmount || 0) || tradeAmount > cashBalance}
+                    onClick={async () => {
+                        if (!tradeLoan) return;
+                        setIsExecutingTrade(true);
+                        try {
+                            const result = await buyLoan(tradeLoan.id, tradeAmount);
+                            if (result.success) {
+                                toast.success(result.message);
+                                setTradeLoan(null);
+                            } else {
+                                toast.error(result.message);
+                            }
+                        } catch {
+                            toast.error("Trade failed. Please try again.");
+                        } finally {
+                            setIsExecutingTrade(false);
+                        }
+                    }}
+                >
+                    {isExecutingTrade ? "Executing..." : "Confirm Trade"}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }

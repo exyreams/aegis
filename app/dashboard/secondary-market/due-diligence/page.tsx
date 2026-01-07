@@ -648,8 +648,8 @@ export default function DueDiligenceDashboard() {
             {/* Stats Grid - Muted Enterprise Style */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Total Pipeline Value */}
-              <Card className="relative overflow-hidden border-none shadow-md bg-white dark:bg-zinc-900 ring-1 ring-zinc-200 dark:ring-zinc-800">
-                <div className="absolute top-0 right-0 p-3 opacity-5">
+              <Card className="relative overflow-hidden border-none shadow-md bg-linear-to-br from-slate-50 to-zinc-100 dark:from-slate-900 dark:to-zinc-950 ring-1 ring-zinc-200 dark:ring-zinc-800 hover:ring-zinc-400 dark:hover:ring-zinc-600 transition-all duration-300">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                   <TrendingUp className="w-12 h-12 text-zinc-900 dark:text-white" />
                 </div>
                 <CardHeader className="pb-2">
@@ -667,9 +667,9 @@ export default function DueDiligenceDashboard() {
               </Card>
 
               {/* Average Score */}
-              <Card className="relative overflow-hidden border-none shadow-md bg-white dark:bg-zinc-900 ring-1 ring-zinc-200 dark:ring-zinc-800">
-                <div className="absolute top-0 right-0 p-3 opacity-5">
-                  <Activity className="w-12 h-12 text-zinc-900 dark:text-white" />
+              <Card className="relative overflow-hidden border-none shadow-md bg-linear-to-br from-blue-50 to-indigo-100 dark:from-blue-950/20 dark:to-indigo-950/20 ring-1 ring-blue-500/20 dark:ring-blue-500/10 hover:ring-blue-500/40 transition-all duration-300">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Activity className="w-12 h-12 text-blue-600" />
                 </div>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Avg. Score</CardTitle>
@@ -679,13 +679,13 @@ export default function DueDiligenceDashboard() {
                     <p className="text-2xl font-bold tracking-tight">{stats.avgScore}</p>
                     <span className="text-muted-foreground text-xs mb-1 font-medium">/100</span>
                   </div>
-                  <Progress value={stats.avgScore} className="h-1 mt-3 bg-zinc-100 dark:bg-zinc-800" />
+                  <Progress value={stats.avgScore} className="h-1 mt-3 bg-blue-100 dark:bg-blue-900/30" />
                 </CardContent>
               </Card>
 
               {/* Verified */}
-              <Card className="relative overflow-hidden border-none shadow-md bg-white dark:bg-zinc-900 ring-1 ring-emerald-500/20 dark:ring-emerald-500/10">
-                <div className="absolute top-0 right-0 p-3 opacity-5">
+              <Card className="relative overflow-hidden border-none shadow-md bg-linear-to-br from-emerald-50 to-teal-100 dark:from-emerald-950/20 dark:to-teal-950/20 ring-1 ring-emerald-500/20 dark:ring-emerald-500/10 hover:ring-emerald-500/40 transition-all duration-300">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
                   <ShieldCheck className="w-12 h-12 text-emerald-500" />
                 </div>
                 <CardHeader className="pb-2">
@@ -695,7 +695,7 @@ export default function DueDiligenceDashboard() {
                   <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
                     {stats.verified}
                   </p>
-                   <div className="flex items-center mt-2 text-[10px] text-zinc-500 uppercase font-medium">
+                   <div className="flex items-center mt-2 text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-medium">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />
                     Settlement Ready
                   </div>
@@ -703,8 +703,8 @@ export default function DueDiligenceDashboard() {
               </Card>
 
               {/* In Review */}
-              <Card className="relative overflow-hidden border-none shadow-md bg-white dark:bg-zinc-900 ring-1 ring-amber-500/20 dark:ring-amber-500/10">
-                <div className="absolute top-0 right-0 p-3 opacity-5">
+              <Card className="relative overflow-hidden border-none shadow-md bg-linear-to-br from-amber-50 to-orange-100 dark:from-amber-950/20 dark:to-orange-950/20 ring-1 ring-amber-500/20 dark:ring-amber-500/10 hover:ring-amber-500/40 transition-all duration-300">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
                   <Clock className="w-12 h-12 text-amber-500" />
                 </div>
                 <CardHeader className="pb-2">
@@ -714,7 +714,7 @@ export default function DueDiligenceDashboard() {
                   <p className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
                     {stats.reviewing}
                   </p>
-                  <div className="flex items-center mt-2 text-[10px] text-zinc-500 uppercase font-medium">
+                  <div className="flex items-center mt-2 text-[10px] text-amber-600 dark:text-amber-400 uppercase font-medium">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />
                     Pending Analysis
                   </div>
@@ -722,8 +722,8 @@ export default function DueDiligenceDashboard() {
               </Card>
 
               {/* Flagged */}
-              <Card className="relative overflow-hidden border-none shadow-md bg-white dark:bg-zinc-900 ring-1 ring-rose-500/20 dark:ring-rose-500/10">
-                <div className="absolute top-0 right-0 p-3 opacity-5">
+              <Card className="relative overflow-hidden border-none shadow-md bg-linear-to-br from-rose-50 to-red-100 dark:from-rose-950/20 dark:to-red-950/20 ring-1 ring-rose-500/20 dark:ring-rose-500/10 hover:ring-rose-500/40 transition-all duration-300">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
                   <AlertTriangle className="w-12 h-12 text-rose-500" />
                 </div>
                 <CardHeader className="pb-2">
@@ -733,7 +733,7 @@ export default function DueDiligenceDashboard() {
                   <p className="text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">
                     {stats.flagged}
                   </p>
-                  <div className="flex items-center mt-2 text-[10px] text-zinc-500 uppercase font-medium">
+                  <div className="flex items-center mt-2 text-[10px] text-red-600 dark:text-red-400 uppercase font-medium">
                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2" />
                     Requires Action
                   </div>

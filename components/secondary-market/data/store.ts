@@ -32,7 +32,12 @@ const MOCK_PORTFOLIO: PortfolioPosition[] = [
     tradeRiskSignal: "SAFE",
     lastUpdated: "2 mins ago",
     aiAnalysis: "Strong cash flow coverage (2.1x) and stable leverage. Ideal hold for yield.",
-    riskFactors: []
+    riskFactors: [],
+    sectorRegion: "Americas",
+    listingDate: "2024-11-01",
+    status: "active",
+    description: "Stable cash-flow industrial holding.",
+    highlights: ["High Coverage Ratio"]
   },
   {
     id: "3",
@@ -61,7 +66,12 @@ const MOCK_PORTFOLIO: PortfolioPosition[] = [
     tradeRiskSignal: "SAFE",
     lastUpdated: "5 mins ago",
     aiAnalysis: "Outperforming renewable sector benchmarks. Regulatory tailwinds strong.",
-    riskFactors: []
+    riskFactors: [],
+    sectorRegion: "Europe",
+    listingDate: "2024-10-10",
+    status: "active",
+    description: "Strategic investment in domestic renewable infrastructure.",
+    highlights: ["Regulatory Tailwinds"]
   },
   {
     id: "5",
@@ -90,7 +100,12 @@ const MOCK_PORTFOLIO: PortfolioPosition[] = [
     tradeRiskSignal: "REVIEW_REQUIRED",
     lastUpdated: "1 hour ago",
     aiAnalysis: "EBITDA margin compression detected. Watch leverage ratio closely next quarter.",
-    riskFactors: ["Margin Compression", "Sector Volatility"]
+    riskFactors: ["Margin Compression", "Sector Volatility"],
+    sectorRegion: "Americas",
+    listingDate: "2024-11-20",
+    status: "active",
+    description: "Manufacturing equipment and facility loan.",
+    highlights: ["Margin Watch"]
   },
   {
     id: "18",
@@ -119,7 +134,12 @@ const MOCK_PORTFOLIO: PortfolioPosition[] = [
     tradeRiskSignal: "HIGH_RISK",
     lastUpdated: "30 mins ago",
     aiAnalysis: "Covenant breach detected. Recommend exit or restructuring discussion.",
-    riskFactors: ["Covenant Breach", "Seasonal Revenue", "High Leverage"]
+    riskFactors: ["Covenant Breach", "Seasonal Revenue", "High Leverage"],
+    sectorRegion: "Europe",
+    listingDate: "2024-09-01",
+    status: "active",
+    description: "Hospitality loan with significant seasonal exposure.",
+    highlights: ["Covenant Breach Risk"]
   }
 ];
 
@@ -267,12 +287,42 @@ export const useMarketStore = create<MarketState>()(
         return { success: true, message: "Trade executed successfully" };
       },
 
-      sellLoan: async (listingId, amount, price) => {
-          // Implementation for selling
-          return { success: true, message: "Order placed" };
+      sellLoan: async (positionId, amount, price) => {
+          const { portfolio, orders, notifications } = get();
+          const position = portfolio.find(p => p.positionId === positionId);
+          
+          if (!position) return { success: false, message: "Position not found" };
+          
+          const order: Order = {
+            id: `ORD-${Date.now()}`,
+            loanId: position.id,
+            borrower: position.borrower,
+            type: "SELL",
+            amount,
+            price,
+            status: "OPEN",
+            date: new Date().toISOString()
+          };
+
+          const notification: TradeNotification = {
+            id: `NOT-${Date.now()}`,
+            title: "Sell Order Placed",
+            message: `Sell order for ${position.borrower} listed at ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)}`,
+            type: "info",
+            timestamp: Date.now(),
+            read: false
+          };
+
+          set({
+            portfolio: portfolio.filter(p => p.positionId !== positionId),
+            orders: [order, ...orders],
+            notifications: [notification, ...notifications]
+          });
+
+          return { success: true, message: "Sell order listed on marketplace" };
       },
       
-      runDueDiligence: async (listingId) => {
+      runDueDiligence: async () => {
           // Updates the 'viewed' or 'audited' state if we track that
       },
 

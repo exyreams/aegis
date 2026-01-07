@@ -24,9 +24,11 @@ import {
   TrendingUp,
   TrendingDown,
   Scale,
+  Presentation,
 } from "lucide-react";
 import { useMarketStore } from "@/components/secondary-market/data/store";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const { auth } = useAuth();
@@ -79,6 +81,12 @@ export default function DashboardPage() {
                     </div>
                     
                     <div className="flex items-center gap-3">
+                        <a href="/pitch.html" target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white h-11 px-6 backdrop-blur-sm gap-2 group">
+                                <Presentation className="h-4 w-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                                Platform Strategy
+                            </Button>
+                        </a>
                         <Link href="/dashboard/secondary-market/due-diligence">
                             <Button className="bg-white text-slate-950 hover:bg-slate-200 border-0 h-11 px-6 shadow-xl shadow-white/10 font-semibold gap-2">
                                 <ShieldCheck className="h-4 w-4" />
@@ -86,7 +94,7 @@ export default function DashboardPage() {
                             </Button>
                         </Link>
                         <Link href="/dashboard/secondary-market">
-                            <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white h-11 px-6 backdrop-blur-sm gap-2">
+                            <Button variant="outline" className="border-white/20 bg-white/10 hover:bg-white/20 text-white h-11 px-6 backdrop-blur-sm gap-2">
                                 <Activity className="h-4 w-4" />
                                 Market View
                             </Button>
@@ -95,7 +103,7 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full">
+        <div className="flex flex-1 flex-col p-6 space-y-8 max-w-[1600px] mx-auto w-full">
               {/* Refined Stats Overview */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Cash Balance */}
@@ -266,14 +274,22 @@ export default function DashboardPage() {
                             <CardTitle className="text-sm">VDR Gateway</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <Button variant="outline" className="w-full justify-between h-10 group bg-zinc-50 dark:bg-zinc-800/50 hover:border-primary transition-all">
+                            <Button 
+                                variant="outline" 
+                                className="w-full justify-between h-10 group bg-zinc-50 dark:bg-zinc-800/50 hover:border-primary transition-all"
+                                onClick={() => toast.info("VDR encrypted connection active", { description: "Legal root access restricted to Deal Lead." })}
+                            >
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-blue-500" />
                                     <span className="text-xs font-semibold">Legal VDR Root</span>
                                 </div>
                                 <ArrowUpRight className="h-3 w-3 opacity-30 group-hover:opacity-100 transition-opacity" />
                             </Button>
-                            <Button variant="outline" className="w-full justify-between h-10 group bg-zinc-50 dark:bg-zinc-800/50 hover:border-primary transition-all">
+                            <Button 
+                                variant="outline" 
+                                className="w-full justify-between h-10 group bg-zinc-50 dark:bg-zinc-800/50 hover:border-primary transition-all"
+                                onClick={() => toast.info("Settlement Gateway Online", { description: "Connecting to SWIFT trans-border rail..." })}
+                            >
                                 <div className="flex items-center gap-2">
                                     <Wallet className="h-4 w-4 text-emerald-500" />
                                     <span className="text-xs font-semibold">Treasury Settlement</span>

@@ -977,7 +977,7 @@ export default function DueDiligenceDetailPage() {
                 <div className="flex justify-between items-start mb-16">
                   <div className="space-y-1 font-serif">
                     <p className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-40">STRICTLY PRIVILEGED & CONFIDENTIAL</p>
-                    <p className="text-[10px] font-bold tracking-[0.1em] uppercase opacity-30">EXECUTION VERSION</p>
+                    <p className="text-[10px] font-bold tracking-widest uppercase opacity-30">EXECUTION VERSION</p>
                   </div>
                   <div className="text-right font-serif opacity-30">
                     <p className="text-[10px] font-bold uppercase">DATED AS OF</p>
