@@ -2,10 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  Dashboard,
-
-} from "@/components/icons";
+import { Dashboard } from "@/components/icons";
 import {
   ShoppingCart,
   Briefcase,
@@ -59,11 +56,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Analytics",
       url: "/dashboard/secondary-market/analytics",
       icon: PieChart,
-    },
-    {
-      title: "About",
-      url: "/dashboard/about",
-      icon: Info,
     },
   ];
 
