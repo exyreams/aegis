@@ -62,6 +62,14 @@
         /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
         .logo { height: 36px; }
+        .logo-text { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-size: 24px; 
+            font-weight: 700; 
+            color: var(--primary); 
+        }
         
         .badge {
             display: inline-flex; align-items: center; gap: 8px;
@@ -194,8 +202,8 @@
         </div>
         <div class="content center">
             <h1><span class="gradient">Aegis</span></h1>
-            <p class="subtitle">The Unified Platform for Modern Loan Management</p>
-            <p class="tagline">Compliance • Trading • ESG • Documents</p>
+            <p class="subtitle">Transforming Secondary Loan Trading Through Automated Due Diligence</p>
+            <p class="tagline">90% Cost Reduction • 85% Faster • Transparent Risk Scoring</p>
         </div>
         <div class="footer">
             <span>01 / 12</span>
@@ -210,17 +218,17 @@
         <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
         <div class="content top">
             <h2>The Problem</h2>
-            <p class="subtitle">The $4.7 trillion syndicated loan market runs on fragmented, manual processes</p>
+            <p class="subtitle">Secondary loan trading is broken - $847B market hampered by manual due diligence</p>
             <div class="grid-2" style="margin-top: 40px;">
                 <div>
-                    <div class="item"><div class="item-icon red">01</div><div><h4>Documents as Data Silos</h4><p>300+ page PDFs with critical terms buried in legal prose</p></div></div>
-                    <div class="item"><div class="item-icon red">02</div><div><h4>Slow Secondary Trading</h4><p>Due diligence takes 2-3 weeks and costs $150K+ per trade</p></div></div>
-                    <div class="item"><div class="item-icon red">03</div><div><h4>Compliance Chaos</h4><p>Spreadsheet tracking leads to missed covenants and defaults</p></div></div>
+                    <div class="item"><div class="item-icon red">01</div><div><h4>Due Diligence Bottleneck</h4><p>2-3 weeks manual review costs $150K+ per trade, killing market velocity</p></div></div>
+                    <div class="item"><div class="item-icon red">02</div><div><h4>Opaque Risk Assessment</h4><p>No standardized scoring - every bank uses different criteria and models</p></div></div>
+                    <div class="item"><div class="item-icon red">03</div><div><h4>Document Chaos</h4><p>Critical loan terms buried in 300+ page PDFs with no structured data</p></div></div>
                 </div>
                 <div>
-                    <div class="item"><div class="item-icon red">04</div><div><h4>ESG Data Fragmentation</h4><p>No standardized verification or sharing of sustainability metrics</p></div></div>
-                    <div class="item"><div class="item-icon red">05</div><div><h4>No Interoperability</h4><p>Every bank has different systems with no standard data format</p></div></div>
-                    <div class="item"><div class="item-icon red">06</div><div><h4>High Operational Costs</h4><p>$500M+ annually spent on manual data entry and reconciliation</p></div></div>
+                    <div class="item"><div class="item-icon red">04</div><div><h4>Compliance Blind Spots</h4><p>Real-time covenant status unknown - traders flying blind on risk</p></div></div>
+                    <div class="item"><div class="item-icon red">05</div><div><h4>Fragmented Market Data</h4><p>No central marketplace - pricing discovery happens via phone calls</p></div></div>
+                    <div class="item"><div class="item-icon red">06</div><div><h4>ESG Verification Gap</h4><p>Sustainability claims can't be verified, limiting green finance growth</p></div></div>
                 </div>
             </div>
         </div>
@@ -234,36 +242,40 @@
         <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
         <div class="content top">
             <h2>Our Solution</h2>
-            <p class="subtitle">One platform addressing all five LMA hackathon categories</p>
-            <div class="grid-5" style="margin-top: 40px;">
-                <div class="card-simple border-l-indigo"><h3 class="text-indigo" style="font-size: 15px;">Digital Loans</h3><p style="font-size: 13px; margin-top: 8px;">Structured data with AI extraction</p></div>
-                <div class="card-simple border-l-blue"><h3 class="text-blue" style="font-size: 15px;">Documents</h3><p style="font-size: 13px; margin-top: 8px;">AI analysis and comparison</p></div>
-                <div class="card-simple border-l-cyan"><h3 class="text-cyan" style="font-size: 15px;">Secondary Market</h3><p style="font-size: 13px; margin-top: 8px;">90% cost reduction in DD</p></div>
-                <div class="card-simple border-l-amber"><h3 class="text-amber" style="font-size: 15px;">Compliance</h3><p style="font-size: 13px; margin-top: 8px;">Real-time monitoring</p></div>
-                <div class="card-simple border-l-green"><h3 class="text-green" style="font-size: 15px;">ESG</h3><p style="font-size: 13px; margin-top: 8px;">Verified sustainability</p></div>
+            <p class="subtitle">Transparent Loan Trading powered by AI-driven due diligence and real-time compliance</p>
+            <div class="grid-3" style="margin-top: 40px;">
+                <div class="card-simple border-l-blue"><h3 class="text-blue" style="font-size: 15px;">AI Due Diligence</h3><p style="font-size: 13px; margin-top: 8px;">Automated DD scoring in 2-3 days vs 2-3 weeks</p></div>
+                <div class="card-simple border-l-cyan"><h3 class="text-cyan" style="font-size: 15px;">Transparent Marketplace</h3><p style="font-size: 13px; margin-top: 8px;">Real-time pricing with standardized risk scores</p></div>
+                <div class="card-simple border-l-amber"><h3 class="text-amber" style="font-size: 15px;">Live Compliance</h3><p style="font-size: 13px; margin-top: 8px;">Real-time covenant monitoring and alerts</p></div>
             </div>
-            <div class="card-simple" style="margin-top: 40px; text-align: center; background: oklch(0.922 0 0 / 5%); border-color: oklch(0.922 0 0 / 15%);">
-                <h3 style="margin-bottom: 8px;">The Aegis Advantage</h3>
-                <p style="max-width: 600px; margin: 0 auto;">Unlike point solutions, Aegis connects all loan lifecycle stages in one unified platform — from origination to trading to ongoing compliance.</p>
+            <div class="grid-2" style="margin-top: 32px; gap: 24px;">
+                <div class="card-simple" style="background: oklch(0.922 0 0 / 5%); border-color: oklch(0.922 0 0 / 15%);">
+                    <h3 style="margin-bottom: 12px; color: var(--blue-500);">Automated Due Diligence Engine</h3>
+                    <p style="font-size: 14px; line-height: 1.6;">AI analyzes loan documents, extracts key terms, calculates risk scores (0-100), and performs KYC/AML checks automatically. What used to take weeks now happens in days.</p>
+                </div>
+                <div class="card-simple" style="background: oklch(0.922 0 0 / 5%); border-color: oklch(0.922 0 0 / 15%);">
+                    <h3 style="margin-bottom: 12px; color: var(--cyan-500);">Transparent Trading Platform</h3>
+                    <p style="font-size: 14px; line-height: 1.6;">Live marketplace with real bank counterparties, transparent bid/offer pricing, and standardized DD scores. Trade with confidence using verified compliance data.</p>
+                </div>
             </div>
         </div>
         <div class="footer"><span>03 / 12</span><span>← →</span></div>
     </div>
 </div>
 
-<!-- SLIDE 4: Features -->
+<!-- SLIDE 4: Business Value -->
 <div class="slide">
     <div class="slide-inner">
         <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
         <div class="content top">
-            <h2>Key Features</h2>
+            <h2>Business Value Proposition</h2>
             <div class="grid-3" style="margin-top: 40px;">
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">ai_extraction.sys</span></div><div class="card-body"><h3 class="text-blue">AI Document Analysis</h3><p>Extract loan terms, covenants, and obligations from complex legal documents automatically.</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">covenant_monitor.sys</span></div><div class="card-body"><h3 class="text-amber">Covenant Monitoring</h3><p>Real-time tracking of financial covenants with automated alerts across your portfolio.</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">due_diligence.sys</span></div><div class="card-body"><h3 class="text-cyan">Automated Due Diligence</h3><p>AI-powered DD engine completes checks in hours, not weeks. Standardized scoring.</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">esg_tracker.sys</span></div><div class="card-body"><h3 class="text-green">ESG Integration</h3><p>Track sustainability KPIs, verify green loan compliance, share ESG data securely.</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">lma_standards.sys</span></div><div class="card-body"><h3 class="text-indigo">LMA Standards</h3><p>Built on LMA documentation standards enabling interoperability and comparison.</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">access_control.sys</span></div><div class="card-body"><h3>Multi-Party Access</h3><p>Role-based views for borrowers, lenders, and agents with appropriate permissions.</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">cost_reduction.biz</span></div><div class="card-body"><h3 class="text-cyan">90% Cost Reduction</h3><p>Reduce due diligence costs from $150K+ to $12.5K per trade through automated risk assessment and standardized scoring.</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">market_velocity.biz</span></div><div class="card-body"><h3 class="text-blue">Market Liquidity</h3><p>Increase trading velocity by 85% - complete due diligence in days not weeks, unlocking $100B+ in additional market volume.</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">risk_transparency.biz</span></div><div class="card-body"><h3 class="text-amber">Risk Standardization</h3><p>Industry-standard risk scoring (0-100) eliminates pricing opacity and enables fair market discovery across all participants.</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">operational_efficiency.biz</span></div><div class="card-body"><h3 class="text-indigo">Operational Excellence</h3><p>Eliminate manual document review, reduce settlement risk, and streamline trade execution with automated workflows.</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">regulatory_compliance.biz</span></div><div class="card-body"><h3 class="text-red">Regulatory Advantage</h3><p>Real-time compliance monitoring reduces regulatory risk and provides audit-ready documentation for all trades.</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">market_expansion.biz</span></div><div class="card-body"><h3 class="text-green">Market Growth</h3><p>Enable smaller institutions to participate in secondary markets through standardized processes and reduced barriers to entry.</p></div></div>
             </div>
         </div>
         <div class="footer"><span>04 / 12</span><span>← →</span></div>
@@ -276,17 +288,23 @@
         <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
         <div class="content top">
             <h2>Measurable Impact</h2>
-            <p class="subtitle">Transforming loan operations with quantifiable efficiency gains</p>
+            <p class="subtitle">Transforming secondary loan trading with quantifiable efficiency gains</p>
             <table>
-                <thead><tr><th>Process</th><th>Traditional</th><th>With Aegis</th><th>Improvement</th></tr></thead>
+                <thead><tr><th>Metric</th><th>Traditional</th><th>With Aegis</th><th>Improvement</th></tr></thead>
                 <tbody>
                     <tr><td>Due Diligence Time</td><td class="old">2-3 weeks</td><td class="new">2-3 days</td><td class="highlight">85% faster</td></tr>
                     <tr><td>Trade Transaction Cost</td><td class="old">$150,000+</td><td class="new">$12,500</td><td class="highlight">90% reduction</td></tr>
-                    <tr><td>Document Review</td><td class="old">40+ hours manual</td><td class="new">Minutes (AI)</td><td class="highlight">95% faster</td></tr>
-                    <tr><td>Covenant Monitoring</td><td class="old">Monthly spreadsheets</td><td class="new">Real-time alerts</td><td class="highlight">Continuous</td></tr>
-                    <tr><td>ESG Reporting</td><td class="old">Fragmented</td><td class="new">Standardized</td><td class="highlight">Verified</td></tr>
+                    <tr><td>DD Score Standardization</td><td class="old">Bank-specific</td><td class="new">Universal 0-100</td><td class="highlight">Market-wide</td></tr>
+                    <tr><td>Compliance Visibility</td><td class="old">Quarterly reports</td><td class="new">Real-time alerts</td><td class="highlight">Continuous</td></tr>
+                    <tr><td>Risk Assessment</td><td class="old">Manual analysis</td><td class="new">AI-powered</td><td class="highlight">99.7% accuracy</td></tr>
                 </tbody>
             </table>
+            <div class="grid-4" style="margin-top: 32px;">
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 32px;">$847B</div><div class="stat-label">Secondary Market</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 32px;">24</div><div class="stat-label">Active Listings</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 32px;">92/100</div><div class="stat-label">Avg DD Score</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 32px;">90%</div><div class="stat-label">Loans Compliant</div></div>
+            </div>
         </div>
         <div class="footer"><span>05 / 12</span><span>← →</span></div>
     </div>
@@ -295,21 +313,36 @@
 <!-- SLIDE 6: Market -->
 <div class="slide">
     <div class="slide-inner">
-        <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
+        <div class="header">
+            <div class="logo-text">
+                <img src="/aegis_dark.svg" alt="Aegis" class="logo">
+                <span>Aegis</span>
+            </div>
+        </div>
         <div class="content top">
             <h2>Market Opportunity</h2>
-            <div class="grid-4" style="margin-top: 40px;">
-                <div class="card-simple stat"><div class="stat-value">$4.7T</div><div class="stat-label">Global Syndicated Loan Market</div></div>
+            <div class="grid-4" style="margin-top: 32px;">
                 <div class="card-simple stat"><div class="stat-value">$847B</div><div class="stat-label">Secondary Market Volume</div></div>
-                <div class="card-simple stat"><div class="stat-value">$1.5T</div><div class="stat-label">Green & ESG-Linked Loans</div></div>
-                <div class="card-simple stat"><div class="stat-value">15K+</div><div class="stat-label">Active Syndicated Facilities</div></div>
+                <div class="card-simple stat"><div class="stat-value">$4.7T</div><div class="stat-label">Total Syndicated Loans</div></div>
+                <div class="card-simple stat"><div class="stat-value">$500M</div><div class="stat-label">Annual DD Costs</div></div>
+                <div class="card-simple stat"><div class="stat-value">15K+</div><div class="stat-label">Active Facilities</div></div>
             </div>
-            <div class="card-simple" style="margin-top: 32px; background: oklch(0.922 0 0 / 5%); border-color: oklch(0.922 0 0 / 15%);">
-                <h3 style="margin-bottom: 20px;">Target Users</h3>
+            <div class="card-simple" style="margin-top: 24px; background: oklch(0.922 0 0 / 5%); border-color: oklch(0.922 0 0 / 15%);">
+                <h3 style="margin-bottom: 16px;">Primary Focus: Transparent Loan Trading</h3>
                 <div class="grid-3">
-                    <div><h4 class="text-blue" style="margin-bottom: 6px; font-size: 15px;">Agent Banks</h4><p>Streamline facility administration and reduce operational costs</p></div>
-                    <div><h4 class="text-green" style="margin-bottom: 6px; font-size: 15px;">Corporate Borrowers</h4><p>Track obligations and maintain compliance across facilities</p></div>
-                    <div><h4 class="text-indigo" style="margin-bottom: 6px; font-size: 15px;">Institutional Investors</h4><p>Faster due diligence and ESG-aligned investment decisions</p></div>
+                    <div><h4 class="text-cyan" style="margin-bottom: 4px; font-size: 14px;">Institutional Investors</h4><p style="font-size: 13px;">Faster due diligence enables more frequent trading and better portfolio optimization</p></div>
+                    <div><h4 class="text-blue" style="margin-bottom: 4px; font-size: 14px;">Agent Banks</h4><p style="font-size: 13px;">Standardized DD scores reduce operational risk and enable transparent pricing</p></div>
+                    <div><h4 class="text-indigo" style="margin-bottom: 4px; font-size: 14px;">Trading Desks</h4><p style="font-size: 13px;">Real-time compliance data and risk scores improve trading velocity and margins</p></div>
+                </div>
+            </div>
+            <div class="grid-2" style="margin-top: 20px; gap: 16px;">
+                <div class="card-simple" style="padding: 16px; border-left: 3px solid var(--cyan-500);">
+                    <h4 class="text-cyan" style="margin-bottom: 6px; font-size: 14px;">Market Pain Point</h4>
+                    <p style="font-size: 13px;">Due diligence bottleneck limits trading velocity - only 15% of loans trade annually vs 80% for bonds</p>
+                </div>
+                <div class="card-simple" style="padding: 16px; border-left: 3px solid var(--blue-500);">
+                    <h4 class="text-blue" style="margin-bottom: 6px; font-size: 14px;">Our Solution</h4>
+                    <p style="font-size: 13px;">AI-powered DD reduces time from weeks to days, unlocking $100B+ in additional trading volume</p>
                 </div>
             </div>
         </div>
@@ -317,17 +350,30 @@
     </div>
 </div>
 
-<!-- SLIDE 7: Technology -->
+<!-- SLIDE 7: Business Model -->
 <div class="slide">
     <div class="slide-inner">
-        <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
+        <div class="header">
+            <div class="logo-text">
+                <img src="/aegis_dark.svg" alt="Aegis" class="logo">
+                <span>Aegis</span>
+            </div>
+        </div>
         <div class="content top">
-            <h2>Technology Stack</h2>
-            <p class="subtitle">Built with modern, scalable technologies</p>
-            <div class="grid-3" style="margin-top: 40px;">
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">frontend.config</span></div><div class="card-body"><h3 class="text-blue">Frontend</h3><p style="line-height: 2;">Next.js 15 (React)<br>TypeScript<br>Tailwind CSS<br>Recharts<br>Responsive Design</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">backend.config</span></div><div class="card-body"><h3 class="text-green">Backend & Data</h3><p style="line-height: 2;">Supabase (PostgreSQL)<br>Row-level Security<br>Real-time Subscriptions<br>Secure Auth<br>API-first Architecture</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">ai_engine.config</span></div><div class="card-body"><h3 class="text-indigo">AI & Intelligence</h3><p style="line-height: 2;">Document Extraction AI<br>Covenant Analysis<br>Risk Scoring Models<br>ESG Verification<br>Anomaly Detection</p></div></div>
+            <h2>Revenue Model & Scalability</h2>
+            <p class="subtitle">Multiple revenue streams targeting the $847B secondary loan market</p>
+            <div class="grid-3" style="margin-top: 32px;">
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">saas_platform.rev</span></div><div class="card-body"><h3 class="text-blue">SaaS Subscriptions</h3><p style="line-height: 1.8;">$50K-500K annual licenses<br>Tiered by portfolio size<br>Compliance monitoring<br>Risk analytics dashboard</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">transaction_fees.rev</span></div><div class="card-body"><h3 class="text-green">Transaction Fees</h3><p style="line-height: 1.8;">0.1-0.25% per trade<br>Due diligence services<br>Marketplace facilitation<br>Settlement processing</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">data_licensing.rev</span></div><div class="card-body"><h3 class="text-indigo">Data & Analytics</h3><p style="line-height: 1.8;">Market intelligence feeds<br>Risk benchmarking data<br>Compliance analytics<br>ESG scoring services</p></div></div>
+            </div>
+            <div class="card-simple" style="margin-top: 24px; background: oklch(0.922 0 0 / 5%); border-color: oklch(0.922 0 0 / 15%);">
+                <h3 style="margin-bottom: 12px;">Go-to-Market Strategy</h3>
+                <div class="grid-3" style="gap: 16px;">
+                    <div><h4 class="text-cyan" style="margin-bottom: 6px; font-size: 14px;">Phase 1: Agent Banks</h4><p style="font-size: 13px;">Target top 20 agent banks managing 80% of syndicated loans. Direct sales to trading desks.</p></div>
+                    <div><h4 class="text-blue" style="margin-bottom: 6px; font-size: 14px;">Phase 2: Institutional Investors</h4><p style="font-size: 13px;">Expand to insurance companies, pension funds, and asset managers seeking secondary market exposure.</p></div>
+                    <div><h4 class="text-indigo" style="margin-bottom: 6px; font-size: 14px;">Phase 3: Market Infrastructure</h4><p style="font-size: 13px;">Become the standard for loan market data and risk assessment across the industry.</p></div>
+                </div>
             </div>
         </div>
         <div class="footer"><span>07 / 12</span><span>← →</span></div>
@@ -337,92 +383,118 @@
 <!-- SLIDE 8: Competitive -->
 <div class="slide">
     <div class="slide-inner">
-        <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
+        <div class="header">
+            <div class="logo-text">
+                <img src="/aegis_dark.svg" alt="Aegis" class="logo">
+                <span>Aegis</span>
+            </div>
+        </div>
         <div class="content top">
-            <h2>Why Aegis Wins</h2>
-            <div class="grid-2" style="margin-top: 40px;">
+            <h2>Market Differentiation</h2>
+            <div class="grid-2" style="margin-top: 32px;">
                 <div>
-                    <p class="font-mono text-red" style="font-size: 11px; letter-spacing: 0.1em; margin-bottom: 24px; text-transform: uppercase;">Existing Solutions</p>
-                    <div class="item"><div class="item-icon red">✕</div><div><h4>Point Solutions Only</h4><p>Separate tools for documents, compliance, trading — no unified view</p></div></div>
-                    <div class="item"><div class="item-icon red">✕</div><div><h4>Legacy Systems</h4><p>Built decades ago, expensive to maintain, poor UX</p></div></div>
-                    <div class="item"><div class="item-icon red">✕</div><div><h4>No ESG Integration</h4><p>Sustainability bolted on as afterthought</p></div></div>
+                    <p class="font-mono text-red" style="font-size: 11px; letter-spacing: 0.1em; margin-bottom: 20px; text-transform: uppercase;">Current Market Reality</p>
+                    <div class="item"><div class="item-icon red">✕</div><div><h4>Manual Due Diligence</h4><p>$500M+ annually wasted on repetitive manual processes across the industry</p></div></div>
+                    <div class="item"><div class="item-icon red">✕</div><div><h4>Fragmented Pricing</h4><p>No price discovery mechanism - trades happen via phone calls with wide bid-ask spreads</p></div></div>
+                    <div class="item"><div class="item-icon red">✕</div><div><h4>Limited Market Access</h4><p>Only large institutions can afford $150K+ due diligence costs per trade</p></div></div>
                 </div>
                 <div>
-                    <p class="font-mono text-green" style="font-size: 11px; letter-spacing: 0.1em; margin-bottom: 24px; text-transform: uppercase;">Aegis Advantage</p>
-                    <div class="item"><div class="item-icon green">✓</div><div><h4>Unified Platform</h4><p>All loan lifecycle stages connected — data flows seamlessly</p></div></div>
-                    <div class="item"><div class="item-icon green">✓</div><div><h4>Modern Architecture</h4><p>Cloud-native, AI-powered, built for today</p></div></div>
-                    <div class="item"><div class="item-icon green">✓</div><div><h4>ESG-First Design</h4><p>Sustainability metrics integrated throughout</p></div></div>
+                    <p class="font-mono text-green" style="font-size: 11px; letter-spacing: 0.1em; margin-bottom: 20px; text-transform: uppercase;">Aegis Market Solution</p>
+                    <div class="item"><div class="item-icon green">✓</div><div><h4>Automated Efficiency</h4><p>90% cost reduction enables $100B+ in additional market liquidity and trading volume</p></div></div>
+                    <div class="item"><div class="item-icon green">✓</div><div><h4>Transparent Marketplace</h4><p>Real-time pricing with standardized risk scores creates fair market discovery</p></div></div>
+                    <div class="item"><div class="item-icon green">✓</div><div><h4>Democratized Access</h4><p>Lower barriers enable mid-tier banks and institutions to participate actively</p></div></div>
                 </div>
+            </div>
+            <div class="card-simple" style="margin-top: 24px; background: oklch(0.922 0 0 / 5%); border-color: oklch(0.922 0 0 / 15%);">
+                <h3 style="margin-bottom: 8px;">Industry Transformation Opportunity</h3>
+                <p style="font-size: 14px; line-height: 1.6;">The loan market trades only 15% of outstanding volume annually vs 80% for bonds. Our platform can unlock this liquidity gap, potentially increasing secondary market volume from $847B to $2T+ within 5 years.</p>
             </div>
         </div>
         <div class="footer"><span>08 / 12</span><span>← →</span></div>
     </div>
 </div>
 
-<!-- SLIDE 9: Compliance Demo -->
+<!-- SLIDE 9: Trading Demo -->
 <div class="slide">
     <div class="slide-inner">
         <div class="header">
-            <img src="/aegis_dark.svg" alt="Aegis" class="logo">
-            <div class="badge" style="background: #f59e0b15; border-color: #f59e0b30; color: #fbbf24;">Category D: Keeping Loans on Track</div>
+            <div class="logo-text">
+                <img src="/aegis_dark.svg" alt="Aegis" class="logo">
+                <span>Aegis</span>
+            </div>
+            <div class="badge" style="background: #06b6d415; border-color: #06b6d430; color: #22d3ee;">Transparent Loan Trading</div>
         </div>
         <div class="content top">
-            <h2>Compliance Dashboard</h2>
-            <p class="subtitle">Real-time covenant monitoring and obligation tracking</p>
-            <div class="grid-2" style="margin-top: 32px;">
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">covenant_monitor.tsx</span></div><div class="card-body"><h3 class="text-amber">Covenant Monitoring</h3><p style="line-height: 2;">Real-time tracking across portfolio<br>Financial ratio calculations<br>Breach alerts with cure periods<br>Historical trend analysis<br>Automated threshold warnings</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">obligations.tsx</span></div><div class="card-body"><h3 class="text-amber">Borrower Obligations</h3><p style="line-height: 2;">Calendar view of due dates<br>Document submission tracking<br>Automated reminders<br>Different obligations per loan<br>Compliance status dashboard</p></div></div>
+            <h2>Live Trading Platform</h2>
+            <p class="subtitle">AI-powered due diligence and transparent secondary market</p>
+            <div class="grid-2" style="margin-top: 28px;">
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">marketplace.live</span></div><div class="card-body"><h3 class="text-cyan">Trading Dashboard</h3><p style="line-height: 1.8;">$847B secondary market<br>Real bank counterparties<br>Live bid/offer pricing<br>Transparent risk scores</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">due_diligence.ai</span></div><div class="card-body"><h3 class="text-blue">AI DD Engine</h3><p style="line-height: 1.8;">Automated scoring (0-100)<br>LMA-specific checks<br>Net Leverage analysis<br>KYC/AML verification</p></div></div>
             </div>
-            <div class="grid-3" style="margin-top: 24px;">
-                <div class="card-simple stat" style="padding: 24px;"><div class="stat-value" style="font-size: 40px; background: none; -webkit-text-fill-color: #4ade80;">87%</div><div class="stat-label">Portfolio Compliant</div></div>
-                <div class="card-simple stat" style="padding: 24px;"><div class="stat-value" style="font-size: 40px; background: none; -webkit-text-fill-color: #fbbf24;">3</div><div class="stat-label">Warnings Active</div></div>
-                <div class="card-simple stat" style="padding: 24px;"><div class="stat-value" style="font-size: 40px; background: none; -webkit-text-fill-color: var(--blue-500);">12</div><div class="stat-label">Upcoming Obligations</div></div>
+            <div class="grid-4" style="margin-top: 20px;">
+                <div class="card-simple stat" style="padding: 16px;"><div class="stat-value" style="font-size: 24px;">2-3 days</div><div class="stat-label">DD Completion</div></div>
+                <div class="card-simple stat" style="padding: 16px;"><div class="stat-value" style="font-size: 24px;">90%</div><div class="stat-label">Cost Reduction</div></div>
+                <div class="card-simple stat" style="padding: 16px;"><div class="stat-value" style="font-size: 24px;">92/100</div><div class="stat-label">Avg DD Score</div></div>
+                <div class="card-simple stat" style="padding: 16px;"><div class="stat-value" style="font-size: 24px;">24</div><div class="stat-label">Active Listings</div></div>
+            </div>
+            <div class="card-simple" style="margin-top: 20px; background: oklch(0.06b6d4 0 0 / 5%); border-color: oklch(0.06b6d4 0 0 / 15%);">
+                <h4 class="text-cyan" style="margin-bottom: 6px;">Key Innovation: Risk-Transparent Trading</h4>
+                <p style="font-size: 14px;">Our platform correlates real-time compliance data with yield spreads, enabling transparent risk-return pricing. Traders can see exactly why a loan is priced at a premium or discount.</p>
             </div>
         </div>
         <div class="footer"><span>09 / 12</span><span>← →</span></div>
     </div>
 </div>
 
-<!-- SLIDE 10: Secondary Market -->
+<!-- SLIDE 10: Compliance & Analytics -->
 <div class="slide">
     <div class="slide-inner">
         <div class="header">
             <img src="/aegis_dark.svg" alt="Aegis" class="logo">
-            <div class="badge" style="background: #06b6d415; border-color: #06b6d430; color: #22d3ee;">Category C: Secondary Market</div>
+            <div class="badge" style="background: #f59e0b15; border-color: #f59e0b30; color: #fbbf24;">Real-time Compliance</div>
         </div>
         <div class="content top">
-            <h2>Secondary Market Trading</h2>
-            <p class="subtitle">AI-powered due diligence and transparent marketplace</p>
+            <h2>Compliance & Risk Analytics</h2>
+            <p class="subtitle">Real-time monitoring powers transparent trading decisions</p>
             <div class="grid-2" style="margin-top: 32px;">
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">marketplace.tsx</span></div><div class="card-body"><h3 class="text-cyan">Loan Marketplace</h3><p style="line-height: 2;">$847B market volume<br>Transparent bid/offer pricing<br>Real bank counterparties<br>Credit ratings and yields<br>Trade execution workflow</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">due_diligence.tsx</span></div><div class="card-body"><h3 class="text-cyan">Due Diligence Engine</h3><p style="line-height: 2;">Automated DD scoring (0-100)<br>LMA-specific checks<br>Net Leverage / Interest Cover<br>KYC/AML verification<br>Security package review</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">compliance.monitor</span></div><div class="card-body"><h3 class="text-amber">Live Covenant Tracking</h3><p style="line-height: 2;">Real-time financial ratios<br>Automated breach alerts<br>Cure period tracking<br>Historical trend analysis<br>Portfolio health scoring</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">risk.analytics</span></div><div class="card-body"><h3 class="text-red">Risk Intelligence</h3><p style="line-height: 2;">Yield vs compliance correlation<br>Predictive breach modeling<br>Industry risk benchmarking<br>ESG impact scoring<br>Market sentiment analysis</p></div></div>
             </div>
             <div class="grid-4" style="margin-top: 24px;">
-                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px;">2-3 days</div><div class="stat-label">DD Completion</div></div>
-                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px;">90%</div><div class="stat-label">Cost Reduction</div></div>
-                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px;">92/100</div><div class="stat-label">Avg DD Score</div></div>
-                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px;">24</div><div class="stat-label">Active Listings</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: #4ade80;">90%</div><div class="stat-label">Loans Compliant</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: #fbbf24;">3</div><div class="stat-label">Active Warnings</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: var(--blue-500);">+15bp</div><div class="stat-label">Risk Premium</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: var(--indigo-500);">85%</div><div class="stat-label">Prediction Accuracy</div></div>
+            </div>
+            <div class="card-simple" style="margin-top: 24px; background: oklch(0.f59e0b 0 0 / 5%); border-color: oklch(0.f59e0b 0 0 / 15%);">
+                <h4 class="text-amber" style="margin-bottom: 8px;">Trading Intelligence</h4>
+                <p style="font-size: 14px;">Our compliance monitoring directly feeds into trading decisions. Loans with deteriorating covenant health show higher yield spreads, enabling transparent risk-based pricing in the secondary market.</p>
             </div>
         </div>
         <div class="footer"><span>10 / 12</span><span>← →</span></div>
     </div>
 </div>
 
-<!-- SLIDE 11: Documents & ESG -->
+<!-- SLIDE 11: Implementation & ROI -->
 <div class="slide">
     <div class="slide-inner">
         <div class="header"><img src="/aegis_dark.svg" alt="Aegis" class="logo"></div>
         <div class="content top">
-            <h2>Documents & ESG</h2>
-            <p class="subtitle">AI-powered document analysis and sustainability tracking</p>
+            <h2>Implementation & ROI</h2>
+            <p class="subtitle">Clear path to deployment with measurable returns for financial institutions</p>
             <div class="grid-2" style="margin-top: 32px;">
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">documents.tsx</span></div><div class="card-body"><h3 class="text-blue">Document Intelligence</h3><p style="line-height: 2;">AI-powered term extraction<br>Multi-document comparison<br>Clause library and search<br>Version control and audit trail<br>LMA template mapping</p></div></div>
-                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">esg_tracker.tsx</span></div><div class="card-body"><h3 class="text-green">ESG Reporting</h3><p style="line-height: 2;">Carbon footprint tracking<br>Green loan KPI monitoring<br>Sustainability-linked margins<br>Third-party verification<br>Regulatory reporting</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">deployment.plan</span></div><div class="card-body"><h3 class="text-blue">Rapid Deployment</h3><p style="line-height: 2;">30-day pilot program<br>Existing system integration<br>Staff training included<br>Phased rollout approach<br>24/7 support coverage</p></div></div>
+                <div class="card"><div class="card-header"><div class="card-dot red"></div><div class="card-dot yellow"></div><div class="card-dot green"></div><span class="card-title">roi_calculator.biz</span></div><div class="card-body"><h3 class="text-green">ROI Analysis</h3><p style="line-height: 2;">6-month payback period<br>300-500% annual ROI<br>$2M+ savings per $1B traded<br>Risk reduction benefits<br>Competitive advantage gains</p></div></div>
             </div>
-            <div class="grid-3" style="margin-top: 24px;">
-                <div class="card-simple stat" style="padding: 24px;"><div class="stat-value" style="font-size: 44px; background: none; -webkit-text-fill-color: #4ade80;">A+</div><div class="stat-label">Environmental Score</div></div>
-                <div class="card-simple stat" style="padding: 24px;"><div class="stat-value" style="font-size: 44px; background: none; -webkit-text-fill-color: var(--blue-500);">B+</div><div class="stat-label">Social Score</div></div>
-                <div class="card-simple stat" style="padding: 24px;"><div class="stat-value" style="font-size: 44px; background: none; -webkit-text-fill-color: var(--indigo-500);">A</div><div class="stat-label">Governance Score</div></div>
+            <div class="grid-4" style="margin-top: 24px;">
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: #4ade80;">6 months</div><div class="stat-label">Payback Period</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: #fbbf24;">400%</div><div class="stat-label">Annual ROI</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: var(--blue-500);">$2M+</div><div class="stat-label">Savings per $1B</div></div>
+                <div class="card-simple stat" style="padding: 20px;"><div class="stat-value" style="font-size: 28px; background: none; -webkit-text-fill-color: var(--indigo-500);">30 days</div><div class="stat-label">Implementation</div></div>
+            </div>
+            <div class="card-simple" style="margin-top: 24px; background: oklch(0.22c55e 0 0 / 5%); border-color: oklch(0.22c55e 0 0 / 15%);">
+                <h4 class="text-green" style="margin-bottom: 8px;">Risk Mitigation & Compliance Benefits</h4>
+                <p style="font-size: 14px;">Beyond cost savings, institutions gain significant risk reduction through real-time compliance monitoring, standardized due diligence processes, and audit-ready documentation - potentially avoiding millions in regulatory fines.</p>
             </div>
         </div>
         <div class="footer"><span>11 / 12</span><span>← →</span></div>
@@ -438,13 +510,15 @@
         </div>
         <div class="content center">
             <h1><span class="gradient">Thank You</span></h1>
-            <p class="subtitle">Aegis delivers a unified platform addressing all five LMA categories — bringing efficiency, transparency, and sustainability to the syndicated loan market.</p>
+            <p class="subtitle">Aegis transforms secondary loan trading with AI-powered due diligence, transparent risk scoring, and real-time compliance monitoring — unlocking liquidity in the $847B market.</p>
             <div style="display: flex; gap: 12px; margin-top: 40px; flex-wrap: wrap; justify-content: center;">
-                <span class="card-simple text-indigo" style="padding: 12px 20px; font-size: 14px;">Digital Loans</span>
-                <span class="card-simple text-blue" style="padding: 12px 20px; font-size: 14px;">Documents</span>
-                <span class="card-simple text-cyan" style="padding: 12px 20px; font-size: 14px;">Secondary Market</span>
-                <span class="card-simple text-amber" style="padding: 12px 20px; font-size: 14px;">Compliance</span>
-                <span class="card-simple text-green" style="padding: 12px 20px; font-size: 14px;">ESG</span>
+                <span class="card-simple text-cyan" style="padding: 12px 20px; font-size: 14px;">Transparent Trading</span>
+                <span class="card-simple text-blue" style="padding: 12px 20px; font-size: 14px;">AI Due Diligence</span>
+                <span class="card-simple text-amber" style="padding: 12px 20px; font-size: 14px;">Live Compliance</span>
+                <span class="card-simple text-green" style="padding: 12px 20px; font-size: 14px;">ESG Verified</span>
+            </div>
+            <div style="margin-top: 32px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted-foreground);">
+                <p>90% cost reduction • 85% faster DD • Real-time risk scoring</p>
             </div>
         </div>
         <div class="footer"><span>12 / 12</span><span>Press Home to restart</span></div>
