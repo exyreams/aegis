@@ -38,23 +38,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Dashboard,
     },
     {
-      title: "Marketplace",
-      url: "/dashboard/secondary-market",
+      title: "Market",
+      url: "/dashboard/market",
       icon: ShoppingCart,
     },
     {
       title: "Portfolio",
-      url: "/dashboard/secondary-market/portfolio",
+      url: "/dashboard/portfolio",
       icon: Briefcase,
     },
     {
       title: "Due Diligence",
-      url: "/dashboard/secondary-market/due-diligence",
+      url: "/dashboard/due-diligence",
       icon: FileSearch,
     },
     {
       title: "Analytics",
-      url: "/dashboard/secondary-market/analytics",
+      url: "/dashboard/analytics",
       icon: PieChart,
     },
   ];
