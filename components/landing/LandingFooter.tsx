@@ -4,22 +4,28 @@ import Link from "next/link";
 import { Github, Twitter, Linkedin, Hexagon } from "lucide-react";
 
 const FOOTER_LINKS = {
+  Trading: [
+    { label: "Secondary Market", href: "#" },
+    { label: "Due Diligence API", href: "#" },
+    { label: "Risk Scoring", href: "#" },
+    { label: "Marketplace Access", href: "#" },
+  ],
   Platform: [
-    { label: "Smart Covenants", href: "#" },
-    { label: "Privacy Architecture", href: "#" },
-    { label: "Network Topology", href: "#" },
+    { label: "Compliance Monitor", href: "#" },
+    { label: "Analytics Dashboard", href: "#" },
+    { label: "Integration Guide", href: "#" },
     { label: "API Documentation", href: "#" },
   ],
   Company: [
     { label: "About Aegis", href: "#" },
-    { label: "Security Audit", href: "#" },
-    { label: "Compliance", href: "#" },
+    { label: "Security", href: "#" },
+    { label: "LMA Partnership", href: "#" },
     { label: "Contact", href: "#" },
   ],
   Legal: [
     { label: "Terms of Service", href: "#" },
     { label: "Privacy Policy", href: "#" },
-    { label: "SLA Agreement", href: "#" },
+    { label: "Trading Agreement", href: "#" },
   ],
 };
 
@@ -39,9 +45,9 @@ export function LandingFooter() {
               <span className="font-bold text-lg tracking-tight">Aegis</span>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Institutional-grade lending infrastructure powered by Canton
-              Network. Engineered for privacy, compliance, and atomic
-              settlement.
+              Transparent loan trading platform powered by AI-driven due
+              diligence. Transforming the $847B secondary market with 90% cost
+              reduction and real-time risk scoring.
             </p>
             <div className="flex gap-4 pt-2">
               <Link
@@ -90,7 +96,7 @@ export function LandingFooter() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
           <div>
-            &copy; {new Date().getFullYear()} Aegis Financial Technologies. All
+            &copy; {new Date().getFullYear()} Aegis Trading Technologies. All
             rights reserved.
           </div>
           <div className="flex gap-4">

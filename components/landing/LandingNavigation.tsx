@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 
 const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Security", href: "#security" },
-  { label: "Network", href: "#stats" },
-  { label: "Documentation", href: "#docs" },
+  { label: "Trading Platform", href: "#features" },
+  { label: "Due Diligence", href: "#security" },
+  { label: "Market Data", href: "#stats" },
+  { label: "API Docs", href: "#docs" },
 ];
 
 export function LandingNavigation() {
@@ -82,7 +82,7 @@ export function LandingNavigation() {
                 </Link>
                 <Link href="/auth">
                   <Button className="bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50 font-mono text-xs uppercase tracking-wide">
-                    Initialize_Access
+                    Start_Trading
                   </Button>
                 </Link>
               </>
@@ -115,7 +115,7 @@ export function LandingNavigation() {
           <div className="pt-4 border-t border-border flex flex-col gap-3">
             <Link href="/auth">
               <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                Initialize_Access
+                Start_Trading
               </Button>
             </Link>
           </div>

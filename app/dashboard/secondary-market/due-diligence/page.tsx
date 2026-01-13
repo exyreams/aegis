@@ -15,12 +15,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/Tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import {
@@ -88,7 +83,6 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LoanListing } from "@/components/secondary-market/data/types";
 
-
 const riskCategories = [
   { name: "Legal Risk", key: "legal", color: "bg-violet-500" },
   { name: "Credit Risk", key: "credit", color: "bg-blue-500" },
@@ -124,7 +118,12 @@ export default function DueDiligenceDashboard() {
   const [lastSimulationId, setLastSimulationId] = useState<string | null>(null);
   const [isPrivateAudit, setIsPrivateAudit] = useState(false);
   const [sampleLoaded, setSampleLoaded] = useState(false);
-  const { privateAudits, addPrivateAudit, renamePrivateAudit, deletePrivateAudit } = useMarketStore();
+  const {
+    privateAudits,
+    addPrivateAudit,
+    renamePrivateAudit,
+    deletePrivateAudit,
+  } = useMarketStore();
   const [editingAuditId, setEditingAuditId] = useState<string | null>(null);
   const [newAuditName, setNewAuditName] = useState("");
 
@@ -226,51 +225,59 @@ export default function DueDiligenceDashboard() {
 
   const handleStartAudit = async () => {
     if (!selectedLoanId && !isPrivateAudit) return;
-    
+
     setIsStarting(true);
     setIsSimulating(true);
     setSimulationStep(0);
 
     // Simulate the "Vibe" console steps
     for (let i = 0; i < simulationSteps.length; i++) {
-        setSimulationStep(i);
-        await new Promise(resolve => setTimeout(resolve, simulationSteps[i].delay));
+      setSimulationStep(i);
+      await new Promise((resolve) =>
+        setTimeout(resolve, simulationSteps[i].delay)
+      );
     }
 
     // Success state
     let targetId = selectedLoanId;
     if (isPrivateAudit) {
-        const newId = `audit-${Date.now()}`;
-        targetId = newId;
-        const newAudit: EnhancedLoan = {
-            id: newId,
-            borrower: "Dynamic Logistics Corp",
-            industry: "Transportation & Logistics",
-            loanAmount: 50000000,
-            dueDiligenceScore: 88,
-            status: "active",
-            riskLevel: "low",
-            originalLender: "Sample Bank NA",
-            maturityDate: "2029-12-31",
-            askingPrice: 48500000,
-            yieldToMaturity: 6.4,
-            outstandingAmount: 49500000,
-            interestRate: 5.5,
-            creditRating: "B+",
-            sectorRegion: "North America",
-            description: "Institutional term loan for expansion of logistics network.",
-            highlights: ["Secured by fleet assets", "Strong cash flow coverage"],
-            listingDate: new Date().toISOString().split('T')[0],
-            verifiedItems: 6,
-            totalItems: 6,
-            lastActivity: new Date(),
-            riskBreakdown: { legal: 92, credit: 85, compliance: 90, documentation: 95 },
-            estimatedValue: 49200000,
-            priority: "medium"
-        };
-        addPrivateAudit(newAudit);
+      const newId = `audit-${Date.now()}`;
+      targetId = newId;
+      const newAudit: EnhancedLoan = {
+        id: newId,
+        borrower: "Dynamic Logistics Corp",
+        industry: "Transportation & Logistics",
+        loanAmount: 50000000,
+        dueDiligenceScore: 88,
+        status: "active",
+        riskLevel: "low",
+        originalLender: "Sample Bank NA",
+        maturityDate: "2029-12-31",
+        askingPrice: 48500000,
+        yieldToMaturity: 6.4,
+        outstandingAmount: 49500000,
+        interestRate: 5.5,
+        creditRating: "B+",
+        sectorRegion: "North America",
+        description:
+          "Institutional term loan for expansion of logistics network.",
+        highlights: ["Secured by fleet assets", "Strong cash flow coverage"],
+        listingDate: new Date().toISOString().split("T")[0],
+        verifiedItems: 6,
+        totalItems: 6,
+        lastActivity: new Date(),
+        riskBreakdown: {
+          legal: 92,
+          credit: 85,
+          compliance: 90,
+          documentation: 95,
+        },
+        estimatedValue: 49200000,
+        priority: "medium",
+      };
+      addPrivateAudit(newAudit);
     }
-    
+
     setLastSimulationId(targetId);
     setSimulationFinished(true);
     setIsSimulating(false);
@@ -317,7 +324,7 @@ export default function DueDiligenceDashboard() {
   const formatTimeAgo = (date: Date | string | number) => {
     const d = new Date(date);
     if (isNaN(d.getTime())) return "Updated recently";
-    
+
     // Use a fixed "now" reference to keep the function pure during a single render
     const baseDate = new Date("2026-01-01").getTime();
     const hours = Math.floor((baseDate - d.getTime()) / (1000 * 60 * 60));
@@ -344,304 +351,392 @@ export default function DueDiligenceDashboard() {
           {/* Institutional Section Header */}
           <div className="px-6 md:px-8 py-6">
             <div className="relative overflow-hidden rounded-4xl bg-slate-950 text-white shadow-2xl">
-                {/* Abstract Background Elements */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3" />
+              {/* Abstract Background Elements */}
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
+              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3" />
 
-                <div className="relative z-10 p-8 lg:p-10">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                    {/* Title Section */}
-                    <div className="space-y-4 max-w-2xl">
-                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs text-blue-200">
-                        <Scale className="h-3 w-3" />
-                        <span>LMA Standard Framework</span>
-                      </div>
-                      <div className="space-y-2">
-                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                          Due Diligence Center
-                        </h1>
-                        <p className="text-slate-400 text-base leading-relaxed">
-                          Automated compliance verification for secondary loan trades. Review legal 
-                          documentation, assess credit risks, and ensure regulatory adherence 
-                          before transaction settlement.
-                        </p>
-                      </div>
+              <div className="relative z-10 p-8 lg:p-10">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                  {/* Title Section */}
+                  <div className="space-y-4 max-w-2xl">
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs text-blue-200">
+                      <Scale className="h-3 w-3" />
+                      <span>LMA Standard Framework</span>
                     </div>
+                    <div className="space-y-2">
+                      <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                        Due Diligence Center
+                      </h1>
+                      <p className="text-slate-400 text-base leading-relaxed">
+                        Automated compliance verification for secondary loan
+                        trades. Review legal documentation, assess credit risks,
+                        and ensure regulatory adherence before transaction
+                        settlement.
+                      </p>
+                    </div>
+                  </div>
 
-                    {/* Quick Actions */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-10 px-4 group gap-2"
-                    onClick={() => useMarketStore.getState().resetMarket()}
-                >
-                    <RefreshCw className="h-4 w-4 text-muted-foreground group-hover:rotate-180 transition-transform duration-500" />
-                    Reset Workspace
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
-                        <Download className="h-4 w-4" />
-                        Export Reports
-                      </Button>
+                  {/* Quick Actions */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10 px-4 group gap-2 text-muted-foreground"
+                      onClick={() => useMarketStore.getState().resetMarket()}
+                    >
+                      <RefreshCw className="h-4 w-4 text-muted-foreground group-hover:rotate-180 transition-transform duration-500" />
+                      Reset Workspace
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/70"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export Reports
+                    </Button>
 
-                      <Dialog
-                        open={isNewAuditOpen}
-                        onOpenChange={setIsNewAuditOpen}
-                      >
-                        <DialogTrigger asChild>
-                          <Button 
-                            className="bg-blue-600 hover:bg-blue-500 text-white px-5 gap-2"
-                            onClick={() => {
-                                setSimulationFinished(false);
-                                setIsSimulating(false);
-                                setIsStarting(false);
-                                setSelectedLoanId("");
-                                setSampleLoaded(false);
-                                setIsPrivateAudit(false);
-                            }}
-                          >
-                            <Sparkles className="h-4 w-4" />
-                            New Audit
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-lg">
-                      {simulationFinished ? (
-                        <div className="py-12 flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
-                          <div className="relative">
-                            <div className="h-24 w-24 rounded-full bg-emerald-500/10 flex items-center justify-center border-2 border-emerald-500/20">
-                              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-                            </div>
-                            <div className="absolute -top-1 -right-1">
+                    <Dialog
+                      open={isNewAuditOpen}
+                      onOpenChange={setIsNewAuditOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-5 gap-2"
+                          onClick={() => {
+                            setSimulationFinished(false);
+                            setIsSimulating(false);
+                            setIsStarting(false);
+                            setSelectedLoanId("");
+                            setSampleLoaded(false);
+                            setIsPrivateAudit(false);
+                          }}
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          New Audit
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-lg">
+                        {simulationFinished ? (
+                          <div className="py-12 flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                            <div className="relative">
+                              <div className="h-24 w-24 rounded-full bg-emerald-500/10 flex items-center justify-center border-2 border-emerald-500/20">
+                                <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+                              </div>
+                              <div className="absolute -top-1 -right-1">
                                 <span className="flex h-6 w-6 relative">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative flex rounded-full h-6 w-6 bg-emerald-500 border-2 border-white dark:border-zinc-950 items-center justify-center">
-                                        <Sparkles className="h-3 w-3 text-white" />
-                                    </span>
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span className="relative flex rounded-full h-6 w-6 bg-emerald-500 border-2 border-white dark:border-zinc-950 items-center justify-center">
+                                    <Sparkles className="h-3 w-3 text-white" />
+                                  </span>
                                 </span>
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <h3 className="text-2xl font-bold text-foreground">Analysis Complete</h3>
-                            <p className="text-sm text-muted-foreground max-w-[280px]">
-                                AI Due Diligence Score generated with <span className="font-bold text-foreground">98% confidence</span>. 
-                                Audit persists in your local workspace.
-                            </p>
-                          </div>
 
-                          <div className="flex flex-col gap-3 w-full max-w-[240px]">
-                            <Button 
+                            <div className="space-y-2">
+                              <h3 className="text-2xl font-bold text-foreground">
+                                Analysis Complete
+                              </h3>
+                              <p className="text-sm text-muted-foreground max-w-[280px]">
+                                AI Due Diligence Score generated with{" "}
+                                <span className="font-bold text-foreground">
+                                  98% confidence
+                                </span>
+                                . Audit persists in your local workspace.
+                              </p>
+                            </div>
+
+                            <div className="flex flex-col gap-3 w-full max-w-[240px]">
+                              <Button
                                 className="w-full gap-2 bg-blue-600 hover:bg-blue-500 text-white h-11"
                                 onClick={() => {
-                                    setIsNewAuditOpen(false);
-                                    setSimulationFinished(false);
-                                    router.push(`/dashboard/secondary-market/due-diligence/${lastSimulationId}`);
+                                  setIsNewAuditOpen(false);
+                                  setSimulationFinished(false);
+                                  router.push(
+                                    `/dashboard/secondary-market/due-diligence/${lastSimulationId}`
+                                  );
                                 }}
-                            >
+                              >
                                 <FileSearch className="h-4 w-4" />
                                 Open Analysis
-                            </Button>
-                            <Button 
-                                variant="ghost" 
+                              </Button>
+                              <Button
+                                variant="ghost"
                                 className="w-full"
                                 onClick={() => {
-                                    setIsNewAuditOpen(false);
-                                    setSimulationFinished(false);
+                                  setIsNewAuditOpen(false);
+                                  setSimulationFinished(false);
                                 }}
-                            >
+                              >
                                 Back to Dashboard
-                            </Button>
-                          </div>
-                        </div>
-                      ) : isSimulating ? (
-                        <div className="py-12 flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in duration-300">
-                          <div className="relative">
-                            <div className="h-24 w-24 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+                              </Button>
                             </div>
                           </div>
-                          
-                          <div className="space-y-3 w-full max-w-sm">
-                            <div className="flex justify-between text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                        ) : isSimulating ? (
+                          <div className="py-12 flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in duration-300">
+                            <div className="relative">
+                              <div className="h-24 w-24 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+                              </div>
+                            </div>
+
+                            <div className="space-y-3 w-full max-w-sm">
+                              <div className="flex justify-between text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                                 <span>AI Analysis Engine</span>
-                                <span>{Math.round(((simulationStep + 1) / simulationSteps.length) * 100)}%</span>
-                            </div>
-                            <Progress value={((simulationStep + 1) / simulationSteps.length) * 100} className="h-1.5" />
-                            <div className="h-6 flex items-center justify-center">
+                                <span>
+                                  {Math.round(
+                                    ((simulationStep + 1) /
+                                      simulationSteps.length) *
+                                      100
+                                  )}
+                                  %
+                                </span>
+                              </div>
+                              <Progress
+                                value={
+                                  ((simulationStep + 1) /
+                                    simulationSteps.length) *
+                                  100
+                                }
+                                className="h-1.5"
+                              />
+                              <div className="h-6 flex items-center justify-center">
                                 <p className="text-sm font-medium text-foreground bg-primary/5 px-3 py-1 rounded-full border border-primary/10 transition-all duration-300">
-                                    {simulationSteps[simulationStep].text}
+                                  {simulationSteps[simulationStep].text}
                                 </p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="grid grid-cols-2 gap-3 w-full">
-                            {simulationSteps.map((step, idx) => (
-                                <div 
-                                    key={idx} 
-                                    className={cn(
-                                        "flex items-center gap-2 text-[11px] font-medium p-2 rounded-lg border transition-all duration-500",
-                                        idx < simulationStep 
-                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800"
-                                            : idx === simulationStep
-                                            ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 animate-pulse"
-                                            : "bg-muted/50 text-muted-foreground border-transparent opacity-50"
-                                    )}
+                            <div className="grid grid-cols-2 gap-3 w-full">
+                              {simulationSteps.map((step, idx) => (
+                                <div
+                                  key={idx}
+                                  className={cn(
+                                    "flex items-center gap-2 text-[11px] font-medium p-2 rounded-lg border transition-all duration-500",
+                                    idx < simulationStep
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800"
+                                      : idx === simulationStep
+                                      ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 animate-pulse"
+                                      : "bg-muted/50 text-muted-foreground border-transparent opacity-50"
+                                  )}
                                 >
-                                    {idx < simulationStep ? (
-                                        <CheckCircle2 className="h-3 w-3" />
-                                    ) : (
-                                        <CircleDot className={cn("h-3 w-3", idx === simulationStep && "animate-spin")} />
-                                    )}
-                                    {step.text.split(":")[0]}
+                                  {idx < simulationStep ? (
+                                    <CheckCircle2 className="h-3 w-3" />
+                                  ) : (
+                                    <CircleDot
+                                      className={cn(
+                                        "h-3 w-3",
+                                        idx === simulationStep && "animate-spin"
+                                      )}
+                                    />
+                                  )}
+                                  {step.text.split(":")[0]}
                                 </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <DialogHeader>
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="p-2.5 rounded-xl bg-primary/10">
-                                <FileSearch className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <DialogTitle>Initiate Due Diligence</DialogTitle>
-                                <DialogDescription className="mt-0.5">
-                                  Begin automated verification process
-                                </DialogDescription>
-                              </div>
+                              ))}
                             </div>
-                          </DialogHeader>
+                          </div>
+                        ) : (
+                          <>
+                            <DialogHeader>
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2.5 rounded-xl bg-primary/10">
+                                  <FileSearch className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                  <DialogTitle>
+                                    Initiate Due Diligence
+                                  </DialogTitle>
+                                  <DialogDescription className="mt-0.5">
+                                    Begin automated verification process
+                                  </DialogDescription>
+                                </div>
+                              </div>
+                            </DialogHeader>
 
-                          <Tabs defaultValue="market" className="w-full mt-4" onValueChange={(v) => setIsPrivateAudit(v === "private")}>
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="market">Market Asset</TabsTrigger>
-                                <TabsTrigger value="private">Private Side Audit</TabsTrigger>
-                            </TabsList>
-                            
-                            <TabsContent value="market" className="py-4 space-y-5">
+                            <Tabs
+                              defaultValue="market"
+                              className="w-full mt-4"
+                              onValueChange={(v) =>
+                                setIsPrivateAudit(v === "private")
+                              }
+                            >
+                              <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="market">
+                                  Market Asset
+                                </TabsTrigger>
+                                <TabsTrigger value="private">
+                                  Private Side Audit
+                                </TabsTrigger>
+                              </TabsList>
+
+                              <TabsContent
+                                value="market"
+                                className="py-4 space-y-5"
+                              >
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium">Select Marketplace Loan</Label>
-                                    <Select onValueChange={setSelectedLoanId} value={selectedLoanId}>
-                                        <SelectTrigger className="h-11">
-                                            <SelectValue placeholder="Choose a loan..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {listings.map((loan) => (
-                                                <SelectItem key={loan.id} value={loan.id}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Building2 className="h-3.5 w-3.5" />
-                                                        <span>{loan.borrower}</span>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                  <Label className="text-sm font-medium">
+                                    Select Marketplace Loan
+                                  </Label>
+                                  <Select
+                                    onValueChange={setSelectedLoanId}
+                                    value={selectedLoanId}
+                                  >
+                                    <SelectTrigger className="h-11">
+                                      <SelectValue placeholder="Choose a loan..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {listings.map((loan) => (
+                                        <SelectItem
+                                          key={loan.id}
+                                          value={loan.id}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <Building2 className="h-3.5 w-3.5" />
+                                            <span>{loan.borrower}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                                 <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                                        <ListChecks className="h-4 w-4 text-primary" />
-                                        Automated LMA Checks
-                                    </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">
-                                        We will cross-reference the registered documents on the Marketplace 
-                                        with the LMA Standard Framework.
-                                    </p>
+                                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                                    <ListChecks className="h-4 w-4 text-primary" />
+                                    Automated LMA Checks
+                                  </div>
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    We will cross-reference the registered
+                                    documents on the Marketplace with the LMA
+                                    Standard Framework.
+                                  </p>
                                 </div>
-                            </TabsContent>
+                              </TabsContent>
 
-                            <TabsContent value="private" className="py-4 space-y-5">
+                              <TabsContent
+                                value="private"
+                                className="py-4 space-y-5"
+                              >
                                 <div className="space-y-4">
-                                    <div className={cn(
-                                        "border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 transition-colors",
-                                        sampleLoaded ? "bg-emerald-50 border-emerald-300 dark:bg-emerald-950/20" : "bg-muted/30 hover:border-primary/50"
-                                    )}>
-                                        {sampleLoaded ? (
-                                            <>
-                                                <div className="p-3 bg-emerald-100 rounded-full text-emerald-600">
-                                                    <FileCheck className="h-6 w-6" />
-                                                </div>
-                                                <div className="text-center">
-                                                    <p className="font-semibold text-emerald-900 dark:text-emerald-100 italic">&quot;LMA_Credit_Agreement_v3.pdf&quot;</p>
-                                                    <p className="text-xs text-emerald-600">Sample Document Loaded (2.4 MB)</p>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="p-3 bg-primary/10 rounded-full text-primary">
-                                                    <FileUp className="h-6 w-6" />
-                                                </div>
-                                                <div className="text-center">
-                                                    <p className="font-medium">Drop confidential docs here</p>
-                                                    <p className="text-xs text-muted-foreground">PDF, Word, or Scanned Images up to 20MB</p>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
+                                  <div
+                                    className={cn(
+                                      "border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 transition-colors",
+                                      sampleLoaded
+                                        ? "bg-emerald-50 border-emerald-300 dark:bg-emerald-950/20"
+                                        : "bg-muted/30 hover:border-primary/50"
+                                    )}
+                                  >
+                                    {sampleLoaded ? (
+                                      <>
+                                        <div className="p-3 bg-emerald-100 rounded-full text-emerald-600">
+                                          <FileCheck className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-center">
+                                          <p className="font-semibold text-emerald-900 dark:text-emerald-100 italic">
+                                            &quot;LMA_Credit_Agreement_v3.pdf&quot;
+                                          </p>
+                                          <p className="text-xs text-emerald-600">
+                                            Sample Document Loaded (2.4 MB)
+                                          </p>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="p-3 bg-primary/10 rounded-full text-primary">
+                                          <FileUp className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-center">
+                                          <p className="font-medium">
+                                            Drop confidential docs here
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            PDF, Word, or Scanned Images up to
+                                            20MB
+                                          </p>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
 
-                                    <div className="flex justify-center">
-                                        <Button 
-                                            variant="secondary" 
-                                            size="sm" 
-                                            className="h-9 gap-2 text-xs font-semibold"
-                                            onClick={() => setSampleLoaded(true)}
-                                            disabled={sampleLoaded}
-                                        >
-                                            <FileDown className="h-3.5 w-3.5" />
-                                            {sampleLoaded ? "Sample Loaded" : "Load Sample LMA Doc"}
-                                        </Button>
-                                    </div>
+                                  <div className="flex justify-center">
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="h-9 gap-2 text-xs font-semibold"
+                                      onClick={() => setSampleLoaded(true)}
+                                      disabled={sampleLoaded}
+                                    >
+                                      <FileDown className="h-3.5 w-3.5" />
+                                      {sampleLoaded
+                                        ? "Sample Loaded"
+                                        : "Load Sample LMA Doc"}
+                                    </Button>
+                                  </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Borrower Name (Optional)</Label>
-                                        <Input placeholder="e.g. Acme Corp" className="h-9 text-xs" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Asset Class</Label>
-                                        <Select defaultValue="leveraged">
-                                            <SelectTrigger className="h-9 text-xs">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="leveraged">Leveraged Loan</SelectItem>
-                                                <SelectItem value="investment">Investment Grade</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">
+                                      Borrower Name (Optional)
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. Acme Corp"
+                                      className="h-9 text-xs"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">
+                                      Asset Class
+                                    </Label>
+                                    <Select defaultValue="leveraged">
+                                      <SelectTrigger className="h-9 text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="leveraged">
+                                          Leveraged Loan
+                                        </SelectItem>
+                                        <SelectItem value="investment">
+                                          Investment Grade
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
                                 </div>
-                            </TabsContent>
-                          </Tabs>
+                              </TabsContent>
+                            </Tabs>
 
-                          <DialogFooter className="gap-2 mt-6">
-                            <Button
-                              variant="ghost"
-                              onClick={() => setIsNewAuditOpen(false)}
-                              disabled={isStarting}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              onClick={handleStartAudit}
-                              disabled={(isPrivateAudit ? !sampleLoaded : !selectedLoanId) || isStarting}
-                              className="min-w-[140px] gap-2 bg-blue-600 hover:bg-blue-500 text-white"
-                            >
-                              Start Analysis
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </DialogFooter>
-                        </>
-                      )}
-                    </DialogContent>
-                  </Dialog>
+                            <DialogFooter className="gap-2 mt-6">
+                              <Button
+                                variant="ghost"
+                                onClick={() => setIsNewAuditOpen(false)}
+                                disabled={isStarting}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleStartAudit}
+                                disabled={
+                                  (isPrivateAudit
+                                    ? !sampleLoaded
+                                    : !selectedLoanId) || isStarting
+                                }
+                                className="min-w-[140px] gap-2 bg-blue-600 hover:bg-blue-500 text-white"
+                              >
+                                Start Analysis
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            </DialogFooter>
+                          </>
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
           {/* Main Content */}
           <div className="max-w-[1600px] mx-auto w-full px-6 md:px-8 py-8 space-y-8">
@@ -653,7 +748,9 @@ export default function DueDiligenceDashboard() {
                   <TrendingUp className="w-12 h-12 text-zinc-900 dark:text-white" />
                 </div>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pipeline Value</CardTitle>
+                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Pipeline Value
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold tracking-tight">
@@ -672,14 +769,23 @@ export default function DueDiligenceDashboard() {
                   <Activity className="w-12 h-12 text-blue-600" />
                 </div>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Avg. Score</CardTitle>
+                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Avg. Score
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-end gap-1">
-                    <p className="text-2xl font-bold tracking-tight">{stats.avgScore}</p>
-                    <span className="text-muted-foreground text-xs mb-1 font-medium">/100</span>
+                    <p className="text-2xl font-bold tracking-tight">
+                      {stats.avgScore}
+                    </p>
+                    <span className="text-muted-foreground text-xs mb-1 font-medium">
+                      /100
+                    </span>
                   </div>
-                  <Progress value={stats.avgScore} className="h-1 mt-3 bg-blue-100 dark:bg-blue-900/30" />
+                  <Progress
+                    value={stats.avgScore}
+                    className="h-1 mt-3 bg-blue-100 dark:bg-blue-900/30"
+                  />
                 </CardContent>
               </Card>
 
@@ -689,13 +795,15 @@ export default function DueDiligenceDashboard() {
                   <ShieldCheck className="w-12 h-12 text-emerald-500" />
                 </div>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Verified</CardTitle>
+                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Verified
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
                     {stats.verified}
                   </p>
-                   <div className="flex items-center mt-2 text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-medium">
+                  <div className="flex items-center mt-2 text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-medium">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />
                     Settlement Ready
                   </div>
@@ -708,7 +816,9 @@ export default function DueDiligenceDashboard() {
                   <Clock className="w-12 h-12 text-amber-500" />
                 </div>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">In Review</CardTitle>
+                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    In Review
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
@@ -727,7 +837,9 @@ export default function DueDiligenceDashboard() {
                   <AlertTriangle className="w-12 h-12 text-rose-500" />
                 </div>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Flagged</CardTitle>
+                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Flagged
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">
@@ -922,8 +1034,8 @@ export default function DueDiligenceDashboard() {
                                         <TooltipTrigger asChild>
                                           <div
                                             onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
+                                              e.preventDefault();
+                                              e.stopPropagation();
                                             }}
                                             className={cn(
                                               "w-6 h-1.5 rounded-full opacity-80",
@@ -970,9 +1082,11 @@ export default function DueDiligenceDashboard() {
                                 size="sm"
                                 className="gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    router.push(`/dashboard/secondary-market/due-diligence/${loan.id}`);
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  router.push(
+                                    `/dashboard/secondary-market/due-diligence/${loan.id}`
+                                  );
                                 }}
                               >
                                 View Report
@@ -985,46 +1099,67 @@ export default function DueDiligenceDashboard() {
                                     size="icon"
                                     className="h-8 w-8"
                                     onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
+                                      e.preventDefault();
+                                      e.stopPropagation();
                                     }}
                                   >
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem className="gap-2" onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setEditingAuditId(loan.id);
-                                        setNewAuditName(loan.borrower);
-                                    }}>
+                                  <DropdownMenuItem
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setEditingAuditId(loan.id);
+                                      setNewAuditName(loan.borrower);
+                                    }}
+                                  >
                                     <Pencil className="h-4 w-4" />
                                     Rename Audit
                                   </DropdownMenuItem>
-                                  {loan.id.startsWith('audit-') && (
-                                    <DropdownMenuItem 
-                                        className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10" 
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            deletePrivateAudit(loan.id);
-                                        }}
+                                  {loan.id.startsWith("audit-") && (
+                                    <DropdownMenuItem
+                                      className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        deletePrivateAudit(loan.id);
+                                      }}
                                     >
-                                        <Trash2 className="h-4 w-4" />
-                                        Delete Audit
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete Audit
                                     </DropdownMenuItem>
                                   )}
-                                  <DropdownMenuItem className="gap-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                  <DropdownMenuItem
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                  >
                                     <Download className="h-4 w-4" />
                                     Download Report
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="gap-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                  <DropdownMenuItem
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                  >
                                     <RefreshCw className="h-4 w-4" />
                                     Re-run Analysis
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="gap-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                  <DropdownMenuItem
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                  >
                                     <ExternalLink className="h-4 w-4" />
                                     View Listing
                                   </DropdownMenuItem>
@@ -1185,32 +1320,44 @@ export default function DueDiligenceDashboard() {
             </div>
           </div>
           {/* Rename Dialog */}
-          <Dialog open={!!editingAuditId} onOpenChange={(open) => !open && setEditingAuditId(null)}>
+          <Dialog
+            open={!!editingAuditId}
+            onOpenChange={(open) => !open && setEditingAuditId(null)}
+          >
             <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Rename Audit</DialogTitle>
-                    <DialogDescription>
-                        Update the display name for this compliance audit.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="py-4">
-                    <Label htmlFor="auditName">Borrower / Asset Name</Label>
-                    <Input 
-                        id="auditName" 
-                        value={newAuditName} 
-                        onChange={(e) => setNewAuditName(e.target.value)} 
-                        className="mt-2"
-                    />
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setEditingAuditId(null)}>Cancel</Button>
-                    <Button onClick={() => {
-                        if (editingAuditId && newAuditName) {
-                            renamePrivateAudit(editingAuditId, newAuditName);
-                            setEditingAuditId(null);
-                        }
-                    }}>Save Changes</Button>
-                </DialogFooter>
+              <DialogHeader>
+                <DialogTitle>Rename Audit</DialogTitle>
+                <DialogDescription>
+                  Update the display name for this compliance audit.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <Label htmlFor="auditName">Borrower / Asset Name</Label>
+                <Input
+                  id="auditName"
+                  value={newAuditName}
+                  onChange={(e) => setNewAuditName(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingAuditId(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (editingAuditId && newAuditName) {
+                      renamePrivateAudit(editingAuditId, newAuditName);
+                      setEditingAuditId(null);
+                    }
+                  }}
+                >
+                  Save Changes
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>

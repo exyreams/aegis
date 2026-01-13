@@ -6,35 +6,35 @@ import { ArrowRight, Terminal, Activity, Server, Shield } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 
-// Simulated Loan Platform Activity
+// Simulated Trading Platform Activity
 const MOCK_TRANSACTIONS = [
   {
-    hash: "LN_7f3a2b",
-    type: "DOC_GENERATED",
-    amount: "$15M Term Loan",
+    hash: "DD_7f3a2b",
+    type: "DD_COMPLETED",
+    amount: "Score: 92/100",
     time: "2ms ago",
   },
   {
     hash: "TR_9c8d1e",
     type: "TRADE_EXECUTED",
-    amount: "Secondary Market",
+    amount: "$25M Position",
     time: "45ms ago",
   },
   {
     hash: "CV_1a4f5c",
-    type: "COVENANT_BREACH",
-    amount: "Alert Triggered",
+    type: "COVENANT_ALERT",
+    amount: "Warning Issued",
     time: "120ms ago",
   },
   {
-    hash: "ESG_3d9e2a",
-    type: "ESG_REPORTED",
-    amount: "Carbon Neutral",
+    hash: "MP_3d9e2a",
+    type: "MARKETPLACE_BID",
+    amount: "$50M Listed",
     time: "350ms ago",
   },
   {
-    hash: "DD_5b1c8f",
-    type: "DUE_DILIGENCE",
+    hash: "RS_5b1c8f",
+    type: "RISK_SCORED",
     amount: "Auto-Verified",
     time: "800ms ago",
   },
@@ -54,7 +54,7 @@ export function HeroSection() {
           hash: `0x${Math.random()
             .toString(16)
             .substring(2, 4)}...${Math.random().toString(16).substring(2, 6)}`,
-          type: ["RFQ_CREATE", "BID_SUBMIT", "SETTLEMENT", "AUDIT_LOG"][
+          type: ["DD_SCORED", "TRADE_MATCHED", "RISK_UPDATED", "COMPLIANCE_OK"][
             Math.floor(Math.random() * 4)
           ],
           amount: `$${(Math.random() * 50 + 1).toFixed(1)}M`,
@@ -85,17 +85,16 @@ export function HeroSection() {
 
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
-                Complete Loan
+                Transparent Loan
               </span>
               <br />
-              Lifecycle Platform
+              Trading Platform
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-              End-to-end loan management from document creation to ESG
-              reporting. Digitize agreements, automate trading, monitor
-              compliance, and track sustainability metrics in one integrated
-              platform.
+              Transform secondary loan trading with AI-powered due diligence,
+              real-time risk scoring, and transparent marketplace. Reduce costs
+              by 90% and complete trades in days, not weeks.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -125,26 +124,26 @@ export function HeroSection() {
             <div className="grid grid-cols-3 gap-8 pt-8 border-t border-border">
               <div>
                 <div className="text-muted-foreground text-xs font-mono uppercase mb-1">
-                  Total_Loan_Volume
+                  Secondary_Market
                 </div>
                 <div className="text-2xl font-mono font-bold text-foreground">
-                  $2.8B+
+                  $847B
                 </div>
               </div>
               <div>
                 <div className="text-muted-foreground text-xs font-mono uppercase mb-1">
-                  Active_Facilities
+                  Cost_Reduction
                 </div>
                 <div className="text-2xl font-mono font-bold text-foreground">
-                  1,247
+                  90%
                 </div>
               </div>
               <div>
                 <div className="text-muted-foreground text-xs font-mono uppercase mb-1">
-                  Platform_Uptime
+                  DD_Time_Saved
                 </div>
                 <div className="text-2xl font-mono font-bold text-primary">
-                  99.9%
+                  85%
                 </div>
               </div>
             </div>

@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 
 import type { ComponentType } from "react";
 
-
-
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -15,8 +13,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/Sidebar";
 import { cn } from "@/lib/utils";
-
-
 
 export function NavMain({
   items,
@@ -33,8 +29,8 @@ export function NavMain({
 
   return (
     <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu className="space-y-2">
+      <SidebarGroupContent className="flex flex-col gap-1">
+        <SidebarMenu className="space-y-1">
           {items.map((item, index) => {
             if (item.separator) {
               return (
@@ -73,12 +69,6 @@ export function NavMain({
               </SidebarMenuItem>
             );
           })}
-
-
-
-
-
-
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
